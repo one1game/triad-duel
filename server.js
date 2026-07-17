@@ -251,8 +251,9 @@ function executeAiAction(session) {
   if (best.type === 'attack') {
     const { actor, target, damage, kill, critMul } = best; const isCrit = critMul > 1; if (isCrit) actor.critReady = false;
     const tgtIdx = session.playerCards.indexOf(target);
+    const actIdx = session.enemyCards.indexOf(actor);
     const coverTank = tryTankCover(session.playerCards, tgtIdx);
-    if (coverTank) { logEntries.push(`🛡 ${coverTank.name} прикрыл ${target.name}!`); const r = doAiEndTurn(session); return { log: logEntries, gameEnd: r, action: { type: 'attack_blocked', actor: actor.name } }; }
+    if (coverTank) { logEntries.push(`🛡 ${coverTank.name} прикрыл ${target.name}!`); const r = doAiEndTurn(session); return { log: logEntries, gameEnd: r, action: { type: 'attack_blocked', actor: actor.name, actorIdx: actIdx } }; }
     const wasAlive = target.hp > 0; target.hp = Math.max(0, target.hp - damage); const isDead = target.hp <= 0 && wasAlive;
     if (actor.id === 'assa_04' && isDead) { actor.mana = Math.min(MAX_MANA, actor.mana + 2); logEntries.push(`Враг: ${actor.passive}: +2 маны!`); }
     let am = `${actor.name} → ${target.name} -${damage} HP`; if (getDefBonus(target) > 0) am += ` [${target.passive} -${getDefBonus(target)}]`;
@@ -261,26 +262,28 @@ function executeAiAction(session) {
     if (ta && target.id === ta.id && actor.hp > 0) { actor.hp = Math.max(0, actor.hp - 1); logEntries.push(`${ta.passive}: отражает 1 урон в ${actor.name}!`); }
     if (actor.type === 'mage') { const sp = tryMageSplash(actor, session.playerCards, tgtIdx); if (sp) sp.forEach(s => logEntries.push(`Враг: ${actor.passive}: ${s.damage} урона по ${s.neighbor.name}!`)); }
     const as = tryAssaSplash(actor, session.playerCards, tgtIdx, damage); if (as) logEntries.push(`Враг: ${actor.passive}: ${as.damage} урона по ${as.neighbor.name}!`);
-    const r = doAiEndTurn(session); return { log: logEntries, gameEnd: r, action: { type: 'attack', actor: actor.name, target: target.name, damage, isCrit, isDead } };
+    const r = doAiEndTurn(session); return { log: logEntries, gameEnd: r, action: { type: 'attack', actor: actor.name, actorIdx: actIdx, target: target.name, targetIdx: tgtIdx, damage, isCrit, isDead } };
   }
   if (best.type === 'taunt') {
     const { actor } = best; actor.mana -= 2; actor.tauntActive = true;
+    const actIdx = session.enemyCards.indexOf(actor);
     if (actor.id === 'tank_05') { actor.hp = Math.min(actor.maxHp, actor.hp + 2); logEntries.push(`Враг: ${actor.name} — ${actor.passive}: +2 HP!`); }
     logEntries.push(`Враг: ${actor.name} применяет ПРОВОКАЦИЮ!`);
-    const r = doAiEndTurn(session); return { log: logEntries, gameEnd: r, action: { type: 'taunt', actor: actor.name } };
+    const r = doAiEndTurn(session); return { log: logEntries, gameEnd: r, action: { type: 'taunt', actor: actor.name, actorIdx: actIdx } };
   }
   if (best.type === 'crit') {
     const { actor, target, damage, kill, mul } = best; actor.mana -= 2;
     if (actor.id === 'assa_01' && Math.random() < 0.3) { actor.mana = Math.min(MAX_MANA, actor.mana + 1); logEntries.push(`Враг: ${actor.passive}: мана возвращена!`); }
     const tgtIdx = session.playerCards.indexOf(target);
+    const actIdx = session.enemyCards.indexOf(actor);
     const c = tryTankCover(session.playerCards, tgtIdx);
-    if (c) { logEntries.push(`🛡 ${c.name} прикрыл ${target.name}!`); const r = doAiEndTurn(session); return { log: logEntries, gameEnd: r, action: { type: 'crit_blocked', actor: actor.name } }; }
+    if (c) { logEntries.push(`🛡 ${c.name} прикрыл ${target.name}!`); const r = doAiEndTurn(session); return { log: logEntries, gameEnd: r, action: { type: 'crit_blocked', actor: actor.name, actorIdx: actIdx } }; }
     const w = target.hp > 0; target.hp = Math.max(0, target.hp - damage); const d = target.hp <= 0 && w;
     if (actor.id === 'assa_04' && d) { actor.mana = Math.min(MAX_MANA, actor.mana + 2); logEntries.push(`Враг: ${actor.passive}: +2 маны!`); }
     logEntries.push(`Враг: ${actor.name} — КРИТ${mul === 2.5 ? ' x2.5' : ' x2'} в ${target.name}! ${damage} урона.${d ? ' [УБИТ]' : ''}`);
     const ta = session.playerCards.find(e => e.tauntActive && e.hp > 0 && e.id === 'tank_02');
     if (ta && target.id === ta.id && actor.hp > 0) { actor.hp = Math.max(0, actor.hp - 1); logEntries.push(`${ta.passive}: отражает 1 урон в ${actor.name}!`); }
-    const r = doAiEndTurn(session); return { log: logEntries, gameEnd: r, action: { type: 'crit', actor: actor.name, target: target.name, damage, isDead: d } };
+    const r = doAiEndTurn(session); return { log: logEntries, gameEnd: r, action: { type: 'crit', actor: actor.name, actorIdx: actIdx, target: target.name, targetIdx: tgtIdx, damage, isCrit: true, isDead: d } };
   }
   if (best.type === 'fireball') {
     const { actor, target, damage, kill, cost } = best; actor.mana -= cost;
@@ -294,8 +297,9 @@ function executeAiAction(session) {
     if (actor.id === 'mage_09' && d) { actor.hp = Math.min(actor.maxHp, actor.hp + 2); actor.mana = Math.min(MAX_MANA, actor.mana + 1); logEntries.push(`Враг: ${actor.passive}: +2 HP, +1 маны!`); }
     logEntries.push(`Враг: ${actor.name} — ОГНЕННЫЙ ШАР в ${target.name}! ${damage} урона.${d ? ' [УБИТ]' : ''}`);
     const tgtIdx = session.playerCards.indexOf(target);
+    const actIdx = session.enemyCards.indexOf(actor);
     const sp = tryMageSplash(actor, session.playerCards, tgtIdx); if (sp) sp.forEach(s => logEntries.push(`Враг: ${actor.passive}: ${s.damage} урона по ${s.neighbor.name}!`));
-    const r = doAiEndTurn(session); return { log: logEntries, gameEnd: r, action: { type: 'fireball', actor: actor.name, target: target.name, damage, isDead: d } };
+    const r = doAiEndTurn(session); return { log: logEntries, gameEnd: r, action: { type: 'fireball', actor: actor.name, actorIdx: actIdx, target: target.name, targetIdx: tgtIdx, damage, isDead: d } };
   }
   const r = doAiEndTurn(session); return { log: logEntries, gameEnd: r };
 }
@@ -318,7 +322,7 @@ app.post('/api/new-campaign', (req, res) => {
 
 // ═══════════════ API: GET STATE ═══════════════
 app.get('/api/state/:sessionId', (req, res) => {
-  const s = getSession(req.params.sessionId); if (!s) return res.status(404).json({ error: 'Session not found' }); res.json(s);
+  const s = getSession(req.params.sessionId); if (!s) return res.status(404).json({ error: 'Session not found' }); res.json({ sessionId: req.params.sessionId, ...s });
 });
 
 // ═══════════════ API: SHOP ═══════════════
@@ -335,7 +339,7 @@ app.post('/api/buy/:sessionId', (req, res) => {
   if (s.playerGold < c.price) return res.status(400).json({ error: 'Not enough gold' });
   if (s.playerCollection.includes(cardId)) return res.status(400).json({ error: 'Card already owned' });
   s.playerGold -= c.price; s.playerCollection.push(cardId);
-  res.json({ playerGold: s.playerGold, playerCollection: s.playerCollection, purchased: c });
+  res.json({ playerGold: s.playerGold, playerCollection: s.playerCollection, selectedDeck: s.selectedDeck, cardUpgrades: s.cardUpgrades, purchased: c });
 });
 
 // ═══════════════ API: UPGRADE ═══════════════

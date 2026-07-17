@@ -1222,7 +1222,7 @@ function animateAiAction(action){
   if(!action)return;
   setTimeout(()=>{
     const aE=el('enemyRow').querySelector(`[data-idx="${action.actorIdx}"]`);
-    const dE=el('playerRow').querySelector(`[data-idx="${action.targetIdx}"]`);
+    const dE=action.targetIdx!=null?el('playerRow').querySelector(`[data-idx="${action.targetIdx}"]`):null;
     if(action.type==='attack'||action.type==='crit'||action.type==='fireball'){
       if(aE)aE.classList.add('attacking');
       if(dE){dE.classList.add('taking-damage');if(action.damage>0){dmgNum(dE,action.damage,action.type==='crit'?'#c08030':(action.type==='fireball'?'#e07830':'#c04030'));impact(dE);if(action.isCrit)critText(dE);if(action.isDead){dE.classList.add('dying');deathFx(dE);sfx.death()}}}
@@ -1232,6 +1232,9 @@ function animateAiAction(action){
     }else if(action.type==='taunt'){
       sfx.taunt();
       flash('radial-gradient(rgba(138,74,26,.15),transparent)');
+    }else if(action.type==='attack_blocked'||action.type==='crit_blocked'){
+      if(aE)aE.classList.add('attacking');
+      sfx.attack();
     }
     setTimeout(()=>{if(aE)aE.classList.remove('attacking');if(dE)dE.classList.remove('taking-damage')},450);
   },200);
