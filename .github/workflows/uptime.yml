@@ -1,0 +1,13 @@
+name: Uptime Ping
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'  # every 10 minutes
+  workflow_dispatch:  # manual trigger
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render server
+        run: curl -s -o /dev/null -w "Status: %{http_code}" https://triad-duel-server.onrender.com/api/new-campaign -X POST
