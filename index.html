@@ -1,0 +1,1464 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Triad Duel — Триада Дуэли</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Cinzel:wght@400;600;800&family=Inter:wght@300;400;600&display=swap');
+  
+  :root {
+    --bg-deep: #030304;
+    --bg-surface: #0c0c0f;
+    --bg-panel: rgba(12, 12, 15, 0.85);
+    --border-dim: #1a1a1f;
+    --border-glow: #2a2a30;
+    --accent-gold: #c4a265;
+    --accent-gold-bright: #f0d68a;
+    --accent-blood: #5a1a1a;
+    --accent-blood-bright: #8a2a2a;
+    --text-primary: #e8e4dc;
+    --text-dim: #9a9a94;
+    --mana-dim: #2a2530;
+    --mana-glow: #9a8aae;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    background-color: var(--bg-deep);
+    background-image: 
+      radial-gradient(ellipse at 50% 0%, #1a1010 0%, transparent 70%),
+      radial-gradient(ellipse at 0% 100%, #0a0a12 0%, transparent 60%),
+      radial-gradient(ellipse at 100% 100%, #0a0a12 0%, transparent 60%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Inter', sans-serif;
+    color: var(--text-primary);
+    overflow-x: hidden;
+    user-select: none;
+    position: relative;
+  }
+
+  /* Кинематографический виньет и шум */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(circle at center, transparent 40%, rgba(0,0,0,0.8) 100%);
+    pointer-events: none;
+    z-index: 999;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 998;
+    opacity: 0.4;
+  }
+
+  #particlesCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; opacity: 0.6; }
+  
+  .screen-flash { position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 50; opacity: 0; transition: opacity 0.2s ease-out; mix-blend-mode: overlay; }
+  .screen-flash.active { opacity: 1; }
+
+  .screen { display: none; width: 100%; max-width: 1100px; padding: 24px; position: relative; z-index: 10; }
+  .screen.active { display: flex; flex-direction: column; align-items: center; gap: 24px; animation: fadeIn 0.6s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Типографика и заголовки */
+  .gold-display { display: inline-flex; align-items: center; gap: 6px; font-family: 'Cinzel', serif; font-size: 16px; font-weight: 600; color: var(--accent-gold-bright); text-shadow: 0 0 20px rgba(240, 214, 138, 0.4); letter-spacing: 1px; }
+  .gold-display img { width: 18px; height: 18px; object-fit: contain; }
+  
+  .btn {
+    background: rgba(20, 20, 25, 0.6);
+    border: 1px solid var(--border-dim);
+    color: var(--text-dim);
+    font-family: 'Cinzel', serif;
+    padding: 12px 28px;
+    cursor: pointer;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 12px;
+    font-weight: 600;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn::before {
+    content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+    transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .btn:hover::before { left: 100%; }
+  .btn:hover { border-color: var(--accent-gold); color: var(--accent-gold-bright); box-shadow: 0 0 25px rgba(138, 115, 85, 0.12); transform: translateY(-1px); }
+  .btn:active { transform: scale(0.96); transition: transform 0.1s ease; }
+  
+  .btn.gold-btn { border-color: var(--accent-gold); color: var(--accent-gold-bright); background: rgba(138, 115, 85, 0.05); transition: all 0.35s cubic-bezier(0.4,0,0.2,1); }
+  .btn.gold-btn:hover { background: rgba(138, 115, 85, 0.15); box-shadow: 0 0 30px rgba(138, 115, 85, 0.25); transform: translateY(-2px); }
+  .btn.small { padding: 6px 16px; font-size: 10px; letter-spacing: 1.5px; }
+  .btn:disabled { opacity: 0.2; pointer-events: none; border-color: var(--border-dim); color: var(--text-dim); }
+
+  .btn.ability-btn {
+    border-color: #5a4a6a; color: #b8a8c8; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 11px; padding: 8px 16px; letter-spacing: 0.5px; text-transform: none;
+  }
+  .btn.ability-btn:hover { border-color: #9a8aae; color: #d0c0e0; box-shadow: 0 0 15px rgba(154, 138, 174, 0.3); background: rgba(154, 138, 174, 0.1); }
+
+  #endTurnBtn {
+    font-size: 13px; padding: 14px 40px; border-color: var(--accent-blood); color: #a05050; margin-top: 12px;
+    animation: pulse-blood 2.5s ease-in-out infinite;
+  }
+  @keyframes pulse-blood { 0%, 100% { box-shadow: 0 0 8px rgba(90, 26, 26, 0.15); border-color: var(--accent-blood); } 50% { box-shadow: 0 0 25px rgba(138, 42, 42, 0.5); border-color: var(--accent-blood-bright); color: #c06060; } }
+
+  /* МЕНЮ */
+  #menuScreen { justify-content: center; min-height: 100vh; }
+  .menu-title { font-family: 'UnifrakturCook', cursive; font-size: 72px; color: var(--accent-gold-bright); text-shadow: 0 0 40px rgba(196, 162, 101, 0.5), 0 0 80px rgba(0,0,0,0.8); letter-spacing: 6px; text-align: center; margin-bottom: 8px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); animation: titleIdle 4s ease-in-out infinite; }
+  @keyframes titleIdle { 0%,100% { text-shadow: 0 0 40px rgba(196,162,101,0.45), 0 0 80px rgba(0,0,0,0.8); } 50% { text-shadow: 0 0 70px rgba(196,162,101,0.7), 0 0 100px rgba(0,0,0,0.9); } }
+  .menu-subtitle { font-family: 'Cinzel', serif; font-size: 13px; color: var(--text-dim); letter-spacing: 6px; margin-bottom: 48px; text-transform: uppercase; border-top: 1px solid var(--border-dim); border-bottom: 1px solid var(--border-dim); padding: 12px 0; width: 100%; max-width: 400px; text-align: center; }
+  .menu-buttons { display: flex; flex-direction: column; gap: 16px; align-items: center; width: 100%; max-width: 320px; }
+  .menu-buttons .btn { width: 100%; text-align: center; padding: 16px; font-size: 14px; }
+  .footer { position: fixed; bottom: 24px; width: 100%; text-align: center; font-size: 10px; color: var(--text-dim); letter-spacing: 3px; text-transform: uppercase; }
+
+  /* НАСТРОЙКИ */
+  #settingsOverlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(3, 3, 4, 0.95); backdrop-filter: blur(10px); z-index: 1000; justify-content: center; align-items: center; flex-direction: column; gap: 32px; }
+  #settingsOverlay.show { display: flex; animation: fadeIn 0.3s ease-out; }
+  .settings-title { font-family: 'Cinzel', serif; font-size: 24px; color: var(--accent-gold-bright); letter-spacing: 4px; text-transform: uppercase; }
+  .setting-row { display: flex; align-items: center; gap: 20px; font-size: 14px; color: var(--text-primary); letter-spacing: 1px; }
+  .toggle { width: 56px; height: 28px; background: #1a1a1f; border-radius: 14px; cursor: pointer; position: relative; transition: background 0.3s; border: 1px solid var(--border-dim); }
+  .toggle.on { background: #2a3a20; border-color: #4a6a30; }
+  .toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; background: #4a4a50; border-radius: 50%; transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55); box-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+  .toggle.on::after { left: 31px; background: #8ab860; }
+  .setting-slider { -webkit-appearance: none; appearance: none; width: 160px; height: 6px; background: #1a1a1f; border-radius: 3px; outline: none; border: 1px solid var(--border-dim); cursor: pointer; }
+  .setting-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--accent-gold-bright); cursor: pointer; border: 2px solid var(--accent-gold); box-shadow: 0 0 8px rgba(138,115,85,0.3); }
+  .setting-slider::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--accent-gold-bright); cursor: pointer; border: 2px solid var(--accent-gold); }
+  .setting-val { font-family: 'Cinzel',serif; font-size: 12px; color: var(--accent-gold-bright); min-width: 36px; text-align: right; }
+
+  /* МАГАЗИН И КОЛЛЕКЦИЯ */
+  #shopScreen.active { align-self: stretch; margin-top: 0; height: 100vh; overflow: hidden; padding: 0; }
+  .shop-header { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 12px 24px 12px; border-bottom: 1px solid var(--border-dim); flex-shrink: 0; background: var(--bg-deep); }
+  .shop-tabs { display: flex; gap: 0; margin-bottom: 0; flex-shrink: 0; background: var(--bg-deep); padding: 16px 24px 0; }
+  .shop-tab {
+    font-family: 'Cinzel', serif; font-size: 14px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
+    padding: 10px 28px; cursor: pointer; border: 1px solid var(--border-dim); background: transparent;
+    color: var(--text-dim); transition: all 0.35s cubic-bezier(0.4,0,0.2,1); border-radius: 2px 2px 0 0; position: relative;
+  }
+  .shop-tab::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--accent-gold); transform: scaleX(0); transition: transform 0.35s cubic-bezier(0.4,0,0.2,1); }
+  .shop-tab:hover::after { transform: scaleX(1); }
+  .shop-tab:first-child { border-right: none; }
+  .shop-tab:hover { color: var(--accent-gold-bright); border-color: var(--accent-gold); }
+  .shop-tab.active { color: var(--accent-gold-bright); border-color: var(--accent-gold); background: rgba(138,115,85,0.08); }
+  .shop-tab.active::after { transform: scaleX(1); }
+  .shop-bg-video {
+     position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover;
+     opacity: 0.4; pointer-events: none; z-index: 0; filter: blur(2px);
+     transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+   }
+  .section-title { font-family: 'Cinzel', serif; font-size: 18px; color: var(--accent-gold-bright); letter-spacing: 3px; text-transform: uppercase; transition: all 0.3s ease; }
+  .card-grid { display: grid; grid-template-columns: repeat(3, 180px); gap: 20px; justify-content: center; width: 100%; contain: layout style; }
+  #shopGrid { flex: 1; overflow-y: auto; min-height: 0; padding: 12px 24px; scrollbar-width: thin; scrollbar-color: var(--border-glow) transparent; }
+  #shopGrid::-webkit-scrollbar { width: 4px; }
+  #shopGrid::-webkit-scrollbar-thumb { background: var(--border-glow); border-radius: 2px; }
+  .shop-footer { flex-shrink: 0; background: var(--bg-deep); padding: 8px 24px 16px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  @keyframes cardFadeUp { from { opacity: 0; transform: translateY(24px) scale(0.92); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  
+  .shop-card {
+    width: 180px; height: 270px; background: var(--bg-surface); border: 1px solid var(--border-dim);
+    transition: all 0.3s ease; position: relative; overflow: hidden; border-radius: 4px;
+    animation: cardFadeUp 0.5s cubic-bezier(0.2,0.8,0.2,1) backwards;
+  }
+  .shop-card:hover { border-color: var(--accent-gold); transform: translateY(-6px) scale(1.02); box-shadow: 0 20px 40px rgba(0,0,0,0.7), 0 0 25px rgba(138, 115, 85, 0.15); }
+  .shop-card-img { width: 100%; height: 100%; object-fit: cover; display: block; filter: brightness(0.92); transition: filter 0.4s ease, transform 0.5s ease; image-rendering: auto; }
+  .shop-card:hover .shop-card-img { filter: brightness(1.08); transform: scale(1.06); }
+  .shop-card-name {
+    position: absolute; bottom: 48px; left: 50%; transform: translateX(-50%); z-index: 5; pointer-events: none;
+    font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700; color: #e0d8c8; text-align: center;
+    letter-spacing: 0.5px; text-transform: uppercase; text-shadow: 0 1px 3px rgba(0,0,0,0.95);
+    background: rgba(0,0,0,0.65); padding: 4px 8px; border-radius: 2px; border: 1px solid rgba(255,255,255,0.06);
+    white-space: nowrap; max-width: 160px; overflow: hidden; text-overflow: ellipsis;
+  }
+  .shop-card-price {
+    position: absolute; bottom: 12px; left: 12px; font-family: 'Cinzel', serif; font-size: 14px; font-weight: 700;
+    color: var(--accent-gold-bright); text-shadow: 0 1px 6px rgba(0,0,0,0.95); z-index: 5; pointer-events: none;
+  }
+  .shop-card-price img { width: 16px; height: 16px; vertical-align: middle; margin-right: 3px; }
+  .shop-card-passive {
+    position: absolute; bottom: 34px; left: 50%; transform: translateX(-50%);
+    z-index: 5; pointer-events: none; font-family: 'Inter', sans-serif;
+    font-size: 7px; color: #9a8aae; text-align: center;
+    text-shadow: 0 1px 3px rgba(0,0,0,.95); white-space: nowrap;
+    max-width: 160px; overflow: hidden; text-overflow: ellipsis;
+  }
+  .shop-card-buy {
+    position: absolute; bottom: 10px; right: 10px; font-size: 11px; padding: 5px 14px; z-index: 5;
+    background: rgba(0,0,0,0.75); border: 1px solid var(--accent-gold); color: var(--accent-gold-bright);
+    cursor: pointer; font-family: 'Cinzel', serif; font-weight: 600; transition: all 0.25s ease; border-radius: 2px;
+  }
+  .shop-card-buy:hover { background: rgba(138,115,85,0.3); transform: scale(1.05); box-shadow: 0 0 12px rgba(138,115,85,0.2); }
+  .shop-card-buy:active { transform: scale(0.93); transition: transform 0.08s ease; }
+  .shop-card-buy:disabled { opacity: 0.35; cursor: default; border-color: var(--border-dim); color: var(--text-dim); }
+  .shop-card:nth-child(1) { animation-delay: 0.02s; } .shop-card:nth-child(2) { animation-delay: 0.05s; } .shop-card:nth-child(3) { animation-delay: 0.08s; } .shop-card:nth-child(4) { animation-delay: 0.11s; }
+  .shop-card:nth-child(5) { animation-delay: 0.14s; } .shop-card:nth-child(6) { animation-delay: 0.17s; } .shop-card:nth-child(7) { animation-delay: 0.20s; } .shop-card:nth-child(8) { animation-delay: 0.23s; }
+  .shop-card:nth-child(9) { animation-delay: 0.26s; } .shop-card:nth-child(10) { animation-delay: 0.29s; } .shop-card:nth-child(11) { animation-delay: 0.32s; } .shop-card:nth-child(12) { animation-delay: 0.35s; }
+
+  .deck-card {
+    width: 180px; height: 270px; background: var(--bg-surface); border: 1px solid var(--border-dim);
+    cursor: pointer; transition: all 0.3s ease; position: relative; overflow: hidden; border-radius: 4px;
+    animation: cardFadeUp 0.5s cubic-bezier(0.2,0.8,0.2,1) backwards;
+  }
+  .deck-card:hover { border-color: var(--accent-gold); transform: translateY(-5px) scale(1.02); box-shadow: 0 15px 35px rgba(0,0,0,0.6), 0 0 20px rgba(138,115,85,0.12); }
+  .deck-card.selected-deck { border-color: var(--accent-gold-bright) !important; box-shadow: 0 0 25px rgba(138, 115, 85, 0.3), inset 0 0 15px rgba(138, 115, 85, 0.08); transition: all 0.35s cubic-bezier(0.2,0.8,0.2,1); }
+  .deck-card-img { width: 100%; height: 270px; object-fit: cover; display: block; filter: brightness(0.92); transition: filter 0.4s ease, transform 0.5s ease; image-rendering: auto; }
+  .deck-card:hover .deck-card-img { filter: brightness(1.08); transform: scale(1.06); }
+  .deck-card.selected-deck .deck-card-img { filter: brightness(1.08); }
+  .deck-card:nth-child(1) { animation-delay: 0.02s; } .deck-card:nth-child(2) { animation-delay: 0.05s; } .deck-card:nth-child(3) { animation-delay: 0.08s; } .deck-card:nth-child(4) { animation-delay: 0.11s; }
+  .deck-card:nth-child(5) { animation-delay: 0.14s; } .deck-card:nth-child(6) { animation-delay: 0.17s; } .deck-card:nth-child(7) { animation-delay: 0.20s; } .deck-card:nth-child(8) { animation-delay: 0.23s; }
+  .deck-card:nth-child(9) { animation-delay: 0.26s; } .deck-card:nth-child(10) { animation-delay: 0.29s; } .deck-card:nth-child(11) { animation-delay: 0.32s; } .deck-card:nth-child(12) { animation-delay: 0.35s; }
+  .deck-card:nth-child(13) { animation-delay: 0.38s; } .deck-card:nth-child(14) { animation-delay: 0.41s; } .deck-card:nth-child(15) { animation-delay: 0.44s; }
+  .deck-card-name { font-size: 10px; text-align: center; padding: 8px 4px; color: var(--text-primary); font-family: 'Cinzel', serif; line-height: 1.3; }
+  .deck-info-btn { position: absolute; top: 6px; right: 6px; width: 22px; height: 22px; border-radius: 50%; background: rgba(0,0,0,.6); border: 1px solid var(--border-dim); color: var(--text-dim); font-size: 12px; cursor: pointer; z-index: 6; display: flex; align-items: center; justify-content: center; transition: all .3s; font-family: 'Inter', sans-serif; }
+  .deck-info-btn:hover { border-color: var(--accent-gold); color: var(--accent-gold-bright); box-shadow: 0 0 8px rgba(138,115,85,.2); }
+  .deck-select-count { text-align: center; font-size: 13px; color: var(--accent-gold-bright); letter-spacing: 2px; font-family: 'Cinzel', serif; margin-top: 16px; transition: opacity 0.4s ease; }
+  .deck-empty { color: var(--text-dim); font-size: 13px; text-align: center; padding: 40px; font-style: italic; border: 1px dashed var(--border-dim); width: 100%; }
+
+  /* ХАОС (прокачка) */
+  .chaos-card {
+    width: 180px; height: auto; background: transparent;
+    transition: all 0.3s ease; position: relative; overflow: visible;
+    animation: cardFadeUp 0.5s cubic-bezier(0.2,0.8,0.2,1) backwards;
+  }
+  .chaos-card-frame {
+    width: 180px; position: relative; overflow: hidden; border-radius: 4px;
+    border: 1px solid var(--border-dim); transition: all 0.3s ease;
+  }
+  .chaos-card:hover .chaos-card-frame { border-color: var(--accent-gold); box-shadow: 0 15px 35px rgba(0,0,0,0.6), 0 0 20px rgba(138,115,85,0.12); }
+  .chaos-card:hover { transform: translateY(-5px) scale(1.02); }
+  .chaos-card-img { width: 100%; height: 270px; object-fit: cover; display: block; filter: brightness(0.92); cursor: pointer; transition: filter 0.4s ease; image-rendering: auto; }
+  .chaos-card:hover .chaos-card-img { filter: brightness(1.08); }
+  .chaos-card-name {
+    position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); z-index: 5; pointer-events: none;
+    font-family: 'Cinzel', serif; font-size: 10px; font-weight: 700; color: #e0d8c8; text-align: center;
+    letter-spacing: 0.5px; text-transform: uppercase; text-shadow: 0 1px 3px rgba(0,0,0,0.95);
+    background: rgba(0,0,0,0.65); padding: 3px 6px; border-radius: 2px; white-space: nowrap;
+  }
+  .chaos-card-class {
+    position: absolute; bottom: 76px; left: 50%; transform: translateX(-50%); z-index: 5; pointer-events: none;
+    font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 600; text-align: center;
+    letter-spacing: 0.5px; text-transform: uppercase; text-shadow: 0 1px 3px rgba(0,0,0,0.95);
+    background: rgba(0,0,0,0.5); padding: 1px 6px; border-radius: 2px; white-space: nowrap;
+  }
+  .chaos-card-passive {
+    position: absolute; bottom: 64px; left: 50%; transform: translateX(-50%); z-index: 5; pointer-events: none;
+    font-family: 'Inter', sans-serif; font-size: 7px; color: #9a8aae; text-align: center;
+    text-shadow: 0 1px 3px rgba(0,0,0,.95); white-space: nowrap;
+  }
+  @keyframes pulse-upgrade {
+    0%,100% { box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+    50% { box-shadow: 0 2px 8px rgba(106,58,122,0.15); }
+  }
+  .chaos-upgrades {
+    display: flex; gap: 2px; z-index: 5;
+    padding: 9px 0 0; background: rgba(15,12,20,0.92);
+  }
+  .chaos-upg-btn {
+    flex: 1; border: none; color: var(--text-primary);
+    font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 600; cursor: pointer;
+    border-radius: 0; transition: all 0.2s ease;
+    position: relative; overflow: visible; padding: 0; min-height: 50px;
+    background: linear-gradient(180deg, rgba(55,45,60,0.9) 0%, rgba(25,20,30,0.95) 100%);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+  .chaos-upg-btn:not(.locked) { animation: pulse-upgrade 3s ease-in-out infinite; }
+  .chaos-upg-btn[data-stat="hp"]:not(.locked) { border-top: 2px solid rgba(180,60,60,0.4); }
+  .chaos-upg-btn[data-stat="atk"]:not(.locked) { border-top: 2px solid rgba(200,130,40,0.4); }
+  .chaos-upg-btn[data-stat="mana"]:not(.locked) { border-top: 2px solid rgba(120,70,180,0.4); }
+  .chaos-upg-btn:not(.locked):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+  .chaos-upg-btn[data-stat="hp"]:hover:not(.locked) { background: linear-gradient(180deg, rgba(160,40,40,0.7) 0%, rgba(120,30,30,0.8) 100%); box-shadow: 0 0 20px rgba(200,50,50,0.4), inset 0 1px 0 rgba(255,255,255,0.08), 0 4px 12px rgba(0,0,0,0.4); }
+  .chaos-upg-btn[data-stat="atk"]:hover:not(.locked) { background: linear-gradient(180deg, rgba(180,120,30,0.7) 0%, rgba(140,90,20,0.8) 100%); box-shadow: 0 0 20px rgba(220,160,40,0.4), inset 0 1px 0 rgba(255,255,255,0.08), 0 4px 12px rgba(0,0,0,0.4); }
+  .chaos-upg-btn[data-stat="mana"]:hover:not(.locked) { background: linear-gradient(180deg, rgba(80,40,120,0.7) 0%, rgba(60,30,90,0.8) 100%); box-shadow: 0 0 20px rgba(130,80,200,0.4), inset 0 1px 0 rgba(255,255,255,0.08), 0 4px 12px rgba(0,0,0,0.4); }
+  .chaos-upg-btn:active:not(.locked) { transform: scale(0.95); }
+  .chaos-upg-btn.locked { opacity: 1; cursor: pointer; color: var(--text-primary); animation: none; }
+  .chaos-upg-btn::after {
+    content: attr(data-tip); position: absolute; bottom: 105%; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.9); color: #e0d8c8; font-size: 10px; font-weight: 500; white-space: nowrap;
+    padding: 4px 8px; border-radius: 3px; pointer-events: none; opacity: 0; transition: opacity 0.2s;
+    z-index: 10; border: 1px solid rgba(255,255,255,0.1);
+  }
+  .chaos-upg-btn[data-stat="hp"]::after { left: 0; transform: none; }
+  .chaos-upg-btn[data-stat="mana"]::after { left: auto; right: 0; transform: none; }
+  .chaos-upg-btn:hover::after { opacity: 1; }
+  .chaos-upg-icon { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+  .chaos-upg-label { display: none; }
+  .chaos-card:nth-child(1) { animation-delay: 0.02s; } .chaos-card:nth-child(2) { animation-delay: 0.05s; } .chaos-card:nth-child(3) { animation-delay: 0.08s; } .chaos-card:nth-child(4) { animation-delay: 0.11s; }
+  .chaos-card:nth-child(5) { animation-delay: 0.14s; } .chaos-card:nth-child(6) { animation-delay: 0.17s; } .chaos-card:nth-child(7) { animation-delay: 0.20s; } .chaos-card:nth-child(8) { animation-delay: 0.23s; }
+  .chaos-card:nth-child(9) { animation-delay: 0.26s; } .chaos-card:nth-child(10) { animation-delay: 0.29s; } .chaos-card:nth-child(11) { animation-delay: 0.32s; } .chaos-card:nth-child(12) { animation-delay: 0.35s; }
+
+  .shop-toast {
+    position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.9); color: var(--accent-gold-bright); font-family: 'Cinzel',serif;
+    font-size: 14px; font-weight: 600; padding: 12px 24px; border-radius: 4px;
+    border: 1px solid var(--accent-gold); pointer-events: none; opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease; z-index: 100;
+    display: flex; align-items: center; gap: 8px; white-space: nowrap;
+  }
+  .shop-toast.show { opacity: 1; transform: translateX(-50%) translateY(-8px); }
+  .shop-toast img { width: 18px; height: 18px; }
+
+  /* БОЙ */
+  .battle-header {
+    width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 16px 24px;
+    background: var(--bg-panel); backdrop-filter: blur(12px);
+    border: 1px solid var(--border-dim); border-radius: 2px; position: relative;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  }
+  .battle-header::after { content: ''; position: absolute; bottom: 0; left: 10%; right: 10%; height: 1px; background: linear-gradient(90deg, transparent, var(--accent-gold), transparent); opacity: 0.3; }
+  .battle-header .title { font-family: 'UnifrakturCook', cursive; font-size: 28px; color: var(--accent-gold-bright); text-shadow: 0 0 20px rgba(138, 115, 85, 0.2); letter-spacing: 3px; text-align: center; flex: 1; }
+  
+  .turn-indicator {
+    font-family: 'Cinzel', serif; font-size: 12px; padding: 8px 20px; border: 1px solid var(--border-dim);
+    color: var(--text-dim); text-transform: uppercase; letter-spacing: 3px; transition: all 0.4s; background: rgba(0,0,0,0.3);
+  }
+  .turn-indicator.enemy-turn { border-color: var(--accent-blood-bright); color: #c06060; box-shadow: 0 0 15px rgba(138, 42, 42, 0.2); animation: pulse-enemy 2s infinite; }
+  @keyframes pulse-enemy { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+  .battlefield { display: flex; flex-direction: column; gap: 32px; width: 100%; padding: 20px 0; position: relative; }
+  .battlefield::before {
+    content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+    transform: translateY(-50%);
+  }
+
+  .card-row { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; position: relative; z-index: 2; }
+  .card-row.waiting .card { filter: brightness(0.45) saturate(0.5); transition: filter 0.5s ease; }
+  .card-row.waiting .card.selected { filter: brightness(0.6) saturate(0.5); }
+  .card-row.active .card { filter: brightness(1) saturate(1); transition: filter 0.5s ease; }
+  .card-row.active .card.selected { filter: brightness(1.15) saturate(1.1); }
+  
+  .card {
+    width: 180px; height: 270px; position: relative; cursor: pointer;
+    transition: transform 0.35s cubic-bezier(0.2,0.8,0.2,1), border-color 0.3s ease, box-shadow 0.35s ease;
+    border-radius: 4px; overflow: hidden; border: 1px solid var(--border-dim);
+    background: var(--bg-surface); box-shadow: 0 15px 35px rgba(0,0,0,0.7);
+    will-change: transform; contain: layout style paint;
+  }
+  .card:hover { transform: translateY(-12px) scale(1.03); border-color: var(--border-glow); box-shadow: 0 25px 50px rgba(0,0,0,0.9), 0 0 20px rgba(255,255,255,0.03); z-index: 10; }
+  .card.selected { border-color: var(--accent-gold-bright) !important; box-shadow: 0 0 30px rgba(138, 115, 85, 0.3), 0 0 60px rgba(138, 115, 85, 0.1); transform: translateY(-15px) scale(1.05); animation: glow-gold 2.5s ease-in-out infinite alternate; z-index: 20; }
+  @keyframes glow-gold { from { box-shadow: 0 0 20px rgba(138, 115, 85, 0.15), 0 0 40px rgba(138,115,85,0.05); } to { box-shadow: 0 0 40px rgba(138, 115, 85, 0.45), 0 0 70px rgba(138,115,85,0.15); } }
+  
+  .card.taunting { border-color: #8a4a1a !important; box-shadow: 0 0 25px rgba(138, 74, 26, 0.4); }
+  .card.dead { filter: grayscale(100%) brightness(0.3) blur(1px); pointer-events: none; transform: scale(0.95) !important; border-color: #1a1a1a; }
+  .card.enemy-targetable { cursor: crosshair; border-color: var(--accent-blood); }
+  .card.enemy-targetable:hover { border-color: #e05040; box-shadow: 0 0 30px rgba(200, 50, 30, 0.7), 0 0 60px rgba(200, 50, 30, 0.3); transform: translateY(-8px) scale(1.03); }
+  .card.enemy-targetable:hover .card-image { filter: brightness(1.2); }
+
+  .card.attacking { animation: atkLunge 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  @keyframes atkLunge { 0% { transform: translateX(0) translateY(-15px) scale(1.05); } 40% { transform: translateX(25px) translateY(-20px) scale(1.1); } 100% { transform: translateX(0) translateY(-15px) scale(1.05); } }
+  
+  .card.taking-damage { animation: dmgShake 0.4s ease; }
+  @keyframes dmgShake { 0%, 100% { transform: translateX(0) translateY(-12px) scale(1.03); } 20% { transform: translateX(-8px) translateY(-12px) scale(1.03); } 40% { transform: translateX(8px) translateY(-12px) scale(1.03); } 60% { transform: translateX(-4px) translateY(-12px) scale(1.03); } }
+  
+  .card.dying { animation: disintegrate 0.8s ease forwards; }
+  @keyframes disintegrate { 0% { filter: brightness(1) grayscale(0); opacity: 1; } 40% { filter: brightness(2) grayscale(100%); opacity: 0.8; } 100% { filter: brightness(0) grayscale(100%) blur(4px); opacity: 0; transform: scale(0.8) translateY(20px); } }
+
+  .card-image { width: 100%; height: 100%; object-fit: cover; image-rendering: auto; }
+  
+  .card-overlay {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 50%;
+    background: linear-gradient(to top, rgba(3,3,4,0.95) 0%, rgba(3,3,4,0.7) 50%, transparent 100%);
+    padding: 40px 12px 12px; pointer-events: none; display: flex; flex-direction: column; justify-content: flex-end;
+  }
+  .card-name { font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700; color: #e0d8c8; text-align: center; margin-bottom: 2px; letter-spacing: 0.5px; text-transform: uppercase; text-shadow: 0 1px 3px rgba(0,0,0,0.95); line-height: 1.2; background: rgba(0,0,0,0.65); padding: 4px 6px; border-radius: 2px; border: 1px solid rgba(255,255,255,0.06); display: inline-block; max-width: 100%; }
+  .card-role {
+      position: absolute; bottom: 8px; right: 10px; font-family: 'Inter', sans-serif; font-size: 7px; font-weight: 700;
+      letter-spacing: 0.5px; text-transform: uppercase; pointer-events: none; z-index: 5;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.95);
+    }
+
+  /* HP и Мана */
+  .hp-bar-wrap { position: absolute; top: 0; left: 0; right: 0; height: 3px; background: rgba(0,0,0,0.8); z-index: 5; }
+  .hp-bar { height: 100%; background: #3a5a3a; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s; box-shadow: 0 0 8px currentColor; }
+  .hp-bar.warning { background: #7a6a2a; }
+  .hp-bar.danger { background: #8a2a2a; box-shadow: 0 0 10px rgba(138, 42, 42, 0.8); }
+  
+  .hp-text {
+    position: absolute; top: 8px; right: 8px; font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700;
+    color: rgba(255,255,255,0.9); text-shadow: 0 0 6px rgba(0,0,0,0.9), 0 0 2px black; pointer-events: none; z-index: 5;
+    background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 2px; border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .atk-badge {
+    position: absolute; top: 8px; left: 8px; font-family: 'Cinzel', serif; font-size: 14px; font-weight: 900;
+    color: #d47050; text-shadow: 0 0 6px rgba(0,0,0,0.9); pointer-events: none; z-index: 5;
+    background: rgba(0,0,0,0.7); padding: 3px 8px; border-radius: 2px;
+    border: 1px solid rgba(180,80,50,0.4); line-height: 1;
+  }
+
+  .mana-orbs { position: absolute; bottom: 8px; left: 8px; display: flex; gap: 4px; pointer-events: none; z-index: 5; }
+  .mana-orb { width: 7px; height: 7px; border-radius: 50%; background: var(--mana-dim); border: 1px solid #6a5a70; transition: all 0.4s; }
+  .mana-orb.filled { background: var(--mana-glow); box-shadow: 0 0 8px rgba(154, 138, 174, 0.6); border-color: #b8a8c8; }
+
+  /* Панель действий и лог */
+  .ability-panel { display: flex; gap: 12px; justify-content: center; align-items: center; min-height: 44px; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 4px; border: 1px solid transparent; transition: border-color 0.3s; }
+  .ability-panel:has(.ability-btn) { border-color: var(--border-dim); background: rgba(12, 12, 15, 0.6); }
+
+  .action-hint { font-size: 12px; color: var(--text-dim); text-align: center; letter-spacing: 1px; font-family: 'Inter', sans-serif; min-height: 20px; transition: color 0.3s; }
+  .action-hint .key { color: var(--accent-gold-bright); font-weight: 600; }
+
+  .round-timer { text-align: center; padding: 6px 0; }
+  .round-timer-text { font-family: 'Cinzel', serif; font-size: 22px; font-weight: 800; color: #c08030; letter-spacing: 3px; }
+  .round-timer-text.warning { color: #e0a040; }
+  .round-timer-text.danger { color: #e05040; animation: pulse-enemy 1s ease-in-out infinite; }
+
+  .battle-log {
+    background: rgba(5, 5, 6, 0.8); backdrop-filter: blur(8px);
+    border: 1px solid var(--border-dim); border-radius: 2px;
+    padding: 16px; max-height: 120px; overflow-y: auto;
+    font-family: 'Inter', sans-serif; font-size: 12px; line-height: 1.7;
+    color: var(--text-dim); text-align: left; width: 100%;
+    scrollbar-width: thin; scrollbar-color: var(--border-glow) transparent;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+  }
+  .battle-log::-webkit-scrollbar { width: 4px; }
+  .battle-log::-webkit-scrollbar-thumb { background: var(--border-glow); border-radius: 2px; }
+  .battle-log .log-entry { padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.02); animation: lfi 0.4s ease; }
+  @keyframes lfi { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+  
+  .log-player { color: var(--accent-gold-bright); font-weight: 600; }
+  .log-enemy { color: #a05050; font-weight: 600; }
+  .log-dmg { color: #c07060; font-weight: 700; }
+  .log-death { color: #8a1a1a; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+  .log-victory { color: var(--accent-gold-bright); font-size: 14px; font-weight: 700; letter-spacing: 1px; }
+  .log-defeat { color: #8a1a1a; font-size: 14px; font-weight: 700; letter-spacing: 1px; }
+  .log-ability { color: #b8a8c8; font-style: italic; }
+  .log-crit { color: #c08030; font-weight: 800; text-shadow: 0 0 8px rgba(192, 128, 48, 0.4); }
+
+  /* Эффекты урона */
+  .damage-number {
+    position: absolute; pointer-events: none; z-index: 100;
+    font-family: 'Cinzel', serif; font-weight: 900; font-size: 26px;
+    color: #c04030; text-shadow: 0 0 15px rgba(192, 64, 48, 0.8), 0 0 30px rgba(192, 64, 48, 0.4);
+    animation: dmgF 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  }
+  @keyframes dmgF { 0% { transform: translateY(0) scale(0.5); opacity: 0; } 20% { transform: translateY(-10px) scale(1.2); opacity: 1; } 100% { transform: translateY(-50px) scale(0.8); opacity: 0; } }
+  
+  .crit-text {
+    position: absolute; pointer-events: none; z-index: 101;
+    font-family: 'UnifrakturCook', cursive; font-size: 20px;
+    color: #c08030; text-shadow: 0 0 15px rgba(192, 128, 48, 0.9);
+    animation: critF 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  }
+  @keyframes critF { 0% { transform: translateY(0) scale(0) rotate(-10deg); opacity: 0; } 30% { transform: translateY(-15px) scale(1.3) rotate(5deg); opacity: 1; } 100% { transform: translateY(-40px) scale(1) rotate(0deg); opacity: 0; } }
+
+  .impact-particle {
+    position: absolute; pointer-events: none; z-index: 90; border-radius: 50%;
+    animation: imp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  }
+  @keyframes imp { 0% { transform: translate(0,0) scale(1); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; } }
+
+  /* Результат */
+  #resultOverlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(3, 3, 4, 0.95); backdrop-filter: blur(15px); z-index: 2000; justify-content: center; align-items: center; flex-direction: column; gap: 24px; }
+  #resultOverlay.show { display: flex; animation: fadeIn 0.5s ease-out; }
+  .result-text { font-family: 'UnifrakturCook', cursive; font-size: 64px; text-align: center; letter-spacing: 6px; animation: ra 1s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  @keyframes ra { from { transform: scale(0.8); opacity: 0; filter: blur(10px); } to { transform: scale(1); opacity: 1; filter: blur(0); } }
+  .result-text.win { color: var(--accent-gold-bright); text-shadow: 0 0 50px rgba(138, 115, 85, 0.4); }
+  .result-text.lose { color: #6a1a1a; text-shadow: 0 0 50px rgba(106, 26, 26, 0.5); }
+  .result-gold { font-family: 'Cinzel', serif; font-size: 18px; color: var(--text-primary); letter-spacing: 2px; margin-top: -10px; }
+
+  /* ═══════════════════════════════════════════ */
+  /* МОБИЛЬНАЯ АДАПТАЦИЯ                       */
+  /* ═══════════════════════════════════════════ */
+
+  /* --- TABLET / SMALL LAPTOP (< 1024px) --- */
+  @media (max-width: 1024px) {
+    .screen { max-width: 100%; padding: 16px; }
+  }
+
+  /* --- TABLET (< 768px) --- */
+  @media (max-width: 768px) {
+    body { align-items: flex-start; padding-top: 8px; }
+    body::before { opacity: 0.6; }
+    body::after { opacity: 0.25; }
+    #particlesCanvas { opacity: 0.35; }
+
+    .screen { padding: 10px; gap: 16px; }
+    .screen.active { gap: 16px; }
+
+    /* Меню */
+    .menu-title { font-size: 36px; letter-spacing: 3px; }
+    .menu-subtitle { font-size: 10px; letter-spacing: 4px; margin-bottom: 32px; padding: 8px 0; }
+    .menu-buttons { gap: 10px; max-width: 260px; }
+    .menu-buttons .btn { padding: 14px; font-size: 12px; }
+
+    /* Заголовки секций */
+    .section-title { font-size: 14px; letter-spacing: 2px; }
+    .shop-tabs { padding: 12px 14px 0; }
+    .shop-header { flex-wrap: wrap; gap: 10px; padding: 10px 14px; }
+    #shopGrid { padding: 10px 14px; }
+    .shop-footer { padding: 6px 14px 12px; }
+    .gold-display { font-size: 13px; }
+
+    /* Карточки — компактный размер */
+    .card { width: 130px; height: 195px; }
+    .card-image { width: 130px; height: 195px; }
+    .atk-badge { font-size: 11px; padding: 2px 6px; top: 5px; left: 5px; }
+    .hp-text { font-size: 9px; padding: 1px 4px; top: 5px; right: 5px; }
+    .card-name { font-size: 8px; padding: 3px 4px; }
+    .card-role { font-size: 6px; bottom: 5px; right: 6px; }
+    .card-overlay { height: 55%; padding: 30px 6px 8px; }
+    .mana-orbs { bottom: 5px; left: 5px; gap: 3px; }
+    .mana-orb { width: 5px; height: 5px; }
+    .dot-status { font-size: 7px !important; top: 20px !important; left: 5px !important; }
+
+    /* Сетка магазина — 3 колонки */
+    .card-grid { grid-template-columns: repeat(3, 130px); gap: 14px; }
+    .shop-card { width: 130px; height: 195px; }
+    .shop-card-img { width: 130px; height: 195px; }
+    .deck-card { width: 130px; height: 195px; }
+    .deck-card-img { width: 130px; height: 195px; }
+    .shop-card-name { font-size: 8px; bottom: 38px; padding: 3px 5px; }
+    .shop-card-price { font-size: 11px; bottom: 8px; left: 8px; }
+    .shop-card-passive { font-size: 6px; bottom: 26px; max-width: 110px; }
+    .shop-card-buy { font-size: 9px; padding: 4px 10px; bottom: 6px; right: 6px; }
+    .deck-info-btn { width: 18px; height: 18px; font-size: 10px; top: 4px; right: 4px; }
+
+    /* Вкладки магазина */
+    .shop-tab { font-size: 11px; padding: 8px 18px; letter-spacing: 1.5px; }
+
+    /* Бой */
+    .battle-header { padding: 8px 12px; margin-bottom: 8px; }
+    .battle-header .title { font-size: 16px; }
+    .battlefield { gap: 24px; }
+    .card-row { gap: 10px; }
+    .card-row { justify-content: center; }
+
+    /* Бой: ряд игрока выше, ряд врага ниже — макс компакт */
+    .battlefield { padding: 8px 0; }
+
+    /* Кнопки действий */
+    .btn { padding: 10px 18px; font-size: 10px; letter-spacing: 1.5px; min-height: 40px; display: inline-flex; align-items: center; justify-content: center; }
+    .btn.small { padding: 6px 12px; font-size: 9px; }
+    .btn.ability-btn { padding: 8px 12px; font-size: 10px; min-height: 40px; }
+    #endTurnBtn { padding: 12px 28px; font-size: 11px; }
+
+    .ability-panel { flex-wrap: wrap; gap: 8px; padding: 6px; }
+    .action-hint { font-size: 10px; }
+
+    /* Лог */
+    .battle-log { max-height: 80px; font-size: 10px; padding: 10px; }
+    .battle-log .log-entry { padding: 2px 0; }
+
+    /* Индикатор хода */
+    .turn-indicator { font-size: 12px; }
+
+    /* Футер */
+    .footer { font-size: 8px; bottom: 12px; letter-spacing: 2px; }
+
+    /* Настройки */
+    #settingsOverlay { gap: 20px; }
+    .settings-title { font-size: 18px; }
+    .setting-row { font-size: 12px; gap: 14px; }
+    .setting-slider { width: 120px; }
+
+    /* Результат */
+    .result-large-title { font-size: 36px; }
+    .result-text { font-size: 18px; }
+    .result-gold { font-size: 15px; }
+
+    /* Детали карты */
+    .card-detail { flex-direction: column; padding: 20px; gap: 16px; max-width: 340px; }
+    .card-detail-img { width: 120px; height: 180px; align-self: center; }
+    .card-detail-name { font-size: 15px; }
+    .card-detail-stat { font-size: 11px; }
+    .card-detail-passive .passive-name { font-size: 11px; }
+    .card-detail-passive .passive-desc { font-size: 10px; }
+    .card-detail-lore { font-size: 10px; }
+    .card-detail-close { width: 28px; height: 28px; font-size: 14px; top: 8px; right: 8px; }
+
+    /* Анимации — мягче */
+    .card.attacking { animation: atkLungeM 0.35s cubic-bezier(0.2,0.8,0.2,1); }
+    @keyframes atkLungeM { 0%{transform: translateX(0) translateY(-8px) scale(1.03)} 40%{transform: translateX(15px) translateY(-10px) scale(1.05)} 100%{transform: translateX(0) translateY(-8px) scale(1.03)} }
+    .card.taking-damage { animation: dmgShakeM 0.35s ease; }
+    @keyframes dmgShakeM { 0%,100%{transform: translateX(0) translateY(-6px) scale(1.02)} 20%{transform: translateX(-5px) translateY(-6px) scale(1.02)} 40%{transform: translateX(5px) translateY(-6px) scale(1.02)} 60%{transform: translateX(-3px) translateY(-6px) scale(1.02)} }
+    .card.selected { transform: translateY(-8px) scale(1.03) !important; }
+    .card:hover { transform: translateY(-6px) scale(1.02); }
+    .card.enemy-targetable:hover { transform: translateY(-4px) scale(1.01); }
+    .damage-number { font-size: 20px; }
+    /* Хаос — компакт */
+    .chaos-card { width: 130px; }
+    .chaos-card-frame { width: 130px; }
+    .chaos-card-name { font-size: 9px; bottom: 80px; }
+    .chaos-card-class { font-size: 7px; bottom: 68px; }
+    .chaos-card-passive { font-size: 6px; bottom: 56px; max-width: 100px; }
+    .chaos-upgrades { padding: 6px 0 0; }
+    .chaos-upg-btn { font-size: 8px; min-height: 42px; }
+    .chaos-upg-icon { width: 100%; height: 100%; }
+    .chaos-upg-label { font-size: 7px; }
+    .shop-card-name { font-size: 9px; bottom: 42px; }
+    .shop-card-price { font-size: 11px; bottom: 8px; }
+    .shop-card-passive { font-size: 6px; bottom: 30px; }
+    .shop-card-buy { font-size: 8px; padding: 3px 9px; bottom: 6px; }
+    .deck-card-name { font-size: 9px; }
+    .result-text { font-size: 40px; }
+    .result-gold { font-size: 14px; }
+    .round-timer-text { font-size: 18px; }
+    .round-timer { padding: 4px 0; }
+    .settings-title { font-size: 16px; }
+    .setting-row { font-size: 12px; }
+  }
+
+  #cardDetailOverlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(3, 3, 4, 0.95); backdrop-filter: blur(15px); z-index: 3000; justify-content: center; align-items: center; }
+  #cardDetailOverlay.show { display: flex; animation: fadeIn 0.3s ease-out; }
+  .card-detail { display: flex; gap: 28px; background: var(--bg-panel); border: 1px solid var(--border-glow); padding: 32px; border-radius: 4px; max-width: 600px; position: relative; box-shadow: 0 25px 60px rgba(0,0,0,0.8); }
+  .card-detail-close { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,.5); border: 1px solid var(--border-dim); color: var(--text-dim); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .3s; font-family: Inter, sans-serif; }
+  .card-detail-close:hover { border-color: var(--accent-gold); color: var(--accent-gold-bright); }
+  .card-detail-info { display: flex; flex-direction: column; gap: 10px; flex: 1; min-width: 0; }
+  .card-detail-name { font-family: Cinzel, serif; font-size: 20px; font-weight: 700; color: var(--accent-gold-bright); letter-spacing: 2px; text-transform: uppercase; }
+  .card-detail-role { font-size: 12px; color: var(--text-dim); letter-spacing: 1px; }
+  .card-detail-stat-row { display: flex; gap: 24px; margin-top: 6px; font-family: Cinzel, serif; }
+  .card-detail-stat { font-size: 14px; color: var(--text-primary); }
+  .card-detail-passive { margin-top: 10px; padding: 12px; background: rgba(0,0,0,.3); border: 1px solid var(--border-dim); border-radius: 2px; }
+  .card-detail-passive .passive-name { font-family: Cinzel, serif; font-size: 13px; font-weight: 700; color: #b8a8c8; letter-spacing: 1px; text-transform: uppercase; }
+  .card-detail-passive .passive-desc { font-family: Inter, sans-serif; font-size: 11px; color: var(--text-dim); margin-top: 4px; line-height: 1.5; }
+  .card-detail-lore { font-family: Inter, sans-serif; font-size: 11px; color: var(--text-dim); font-style: italic; margin-top: 6px; line-height: 1.6; border-top: 1px solid var(--border-dim); padding-top: 10px; }
+  #cdImg { width: 180px; height: 270px; border-radius: 2px; object-fit: cover; border: 1px solid var(--border-dim); }
+
+</style>
+</head>
+<body>
+
+<canvas id="particlesCanvas"></canvas>
+<div class="screen-flash" id="screenFlash"></div>
+
+<div class="screen active" id="menuScreen">
+  <h1 class="menu-title">Triad Duel</h1>
+  <p class="menu-subtitle">Триада Дуэли</p>
+  <div class="menu-buttons">
+    <button class="btn gold-btn" onclick="newCampaign()">Новая кампания</button>
+    <button class="btn gold-btn" onclick="continueGame()">Продолжить</button>
+    <button class="btn" onclick="openSettings()">Настройки</button>
+  </div>
+</div>
+
+<div id="settingsOverlay">
+  <h2 class="settings-title">Настройки</h2>
+  <div class="setting-row">
+    <span>Звук</span>
+    <div class="toggle on" id="soundToggle" onclick="toggleSound()"></div>
+  </div>
+  <div class="setting-row">
+    <span>Яркость</span>
+    <input type="range" class="setting-slider" min="50" max="150" value="100" oninput="setBrightness(this.value)">
+    <span class="setting-val" id="brightnessVal">100%</span>
+  </div>
+  <div class="setting-row">
+    <span>Контраст</span>
+    <input type="range" class="setting-slider" min="50" max="150" value="100" oninput="setContrast(this.value)">
+    <span class="setting-val" id="contrastVal">100%</span>
+  </div>
+  <button class="btn gold-btn" onclick="closeSettings()">Назад</button>
+</div>
+
+<div class="screen" id="shopScreen">
+  <video id="bgClep" class="shop-bg-video" autoplay muted loop playsinline poster="img/game/thumb.jpg">
+    <source src="img/game/BG_clep.webm" type="video/webm">
+  </video>
+  <video id="bgWarp" class="shop-bg-video" autoplay muted loop playsinline poster="img/game/thumb.jpg" style="opacity:0">
+    <source src="img/game/BG_warp.webm" type="video/webm">
+  </video>
+  <video id="bgHaus" class="shop-bg-video" autoplay muted loop playsinline poster="img/game/thumb.jpg" style="opacity:0">
+    <source src="img/game/BG_haus.webm" type="video/webm">
+  </video>
+  <div class="shop-header">
+    <button class="btn small" onclick="backToMenu()">◂ Меню</button>
+    <span class="section-title" id="shopTabTitle">Склеп</span>
+    <span class="gold-display" id="shopGold">
+      <img src="img/game/Remains_icon.webp" alt=""> <span id="shopGoldAmt">100</span>
+    </span>
+  </div>
+  <div class="shop-tabs">
+    <button class="shop-tab active" id="tabShopBtn" onclick="showShopTab('shop')">Склеп</button>
+    <button class="shop-tab" id="tabInvBtn" onclick="showShopTab('inv')">Варп</button>
+    <button class="shop-tab" id="tabChaosBtn" onclick="showShopTab('chaos')">Хаос</button>
+  </div>
+  <div id="shopGrid" class="card-grid"></div>
+  <div class="shop-footer">
+    <div id="deckCount" class="deck-select-count" style="visibility:hidden">Выбрано: 0 / 3</div>
+    <button id="toBattleBtn" class="btn gold-btn" onclick="startBattle()" style="display:none" disabled>В бой!</button>
+  </div>
+  <div id="shopToast" class="shop-toast"></div>
+</div>
+
+<div id="cardDetailOverlay" onclick="closeCardDetail(event)">
+  <div class="card-detail" onclick="event.stopPropagation()">
+    <button class="card-detail-close" onclick="closeCardDetail()">✕</button>
+    <img id="cdImg" src="" alt="">
+    <div class="card-detail-info">
+      <div class="card-detail-name" id="cdName"></div>
+      <div class="card-detail-role" id="cdRole"></div>
+      <div class="card-detail-stat-row">
+        <div class="card-detail-stat">⚔ Атака: <span id="cdAtk">—</span></div>
+        <div class="card-detail-stat">❤ HP: <span id="cdHp">—</span></div>
+        <div class="card-detail-stat" id="cdPriceRow" style="display:none">
+          <img src="img/game/Remains_icon.webp" alt="" style="width:14px;height:14px;vertical-align:middle">
+          <span id="cdPrice" style="color:#c4a265;font-weight:700;"></span>
+        </div>
+      </div>
+      <div class="card-detail-passive">
+        <div class="passive-name" id="cdPassive">—</div>
+        <div class="passive-desc" id="cdPassiveDesc">—</div>
+      </div>
+      <div class="card-detail-lore" id="cdLore">—</div>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="battleScreen">
+  <div class="battle-header">
+    <button class="btn small" onclick="backToShop()">◂ Сдаться</button>
+    <span class="title" style="font-family:'UnifrakturCook',cursive;font-size:24px;color:#c4a265;text-shadow:0 0 20px rgba(138,115,85,0.2);">Битва</span>
+    <span class="turn-indicator" id="turnIndicator">Ваш ход</span>
+  </div>
+  <div class="battlefield">
+    <div class="card-row" id="enemyRow"></div>
+    <div class="card-row" id="playerRow"></div>
+  </div>
+  <div class="ability-panel" id="abilityPanel" style="min-height:44px;">
+    <span style="font-size:11px;color:#6a5a70;font-style:italic;">Выберите юнита для действий</span>
+  </div>
+  <div class="action-hint" id="actionHint">
+    <span class="key">Выберите юнита</span> — 1 действие за ход
+  </div>
+  <div class="round-timer"><span class="round-timer-text" id="roundTimerText">20</span></div>
+  <button id="endTurnBtn" class="btn" onclick="endPlayerTurn()" style="display:block;">Завершить ход</button>
+  <div class="battle-log" id="battleLog"></div>
+</div>
+
+<div id="resultOverlay">
+  <div class="result-text" id="resultText"></div>
+  <div class="result-gold" id="resultGold"></div>
+  <button class="btn gold-btn" onclick="backToShopFromResult()">Продолжить</button>
+</div>
+
+<div class="footer">Triad Duel &copy; 2025 &bull; Warhammer-inspired card battler</div>
+
+<script>
+// ═══ КОНСТАНТЫ ═══
+const API_BASE = "http://localhost:3001";
+const ALL_CARDS=[
+  // МАГИ (фаербол 3 маны = ATK урон)
+  {id:'mage_01',name:'Библиарий Кассиан',atk:6,hp:11,price:650,type:'mage',variance:0.10,passive:'Эрудит',passiveDesc:'Фаербол стоит 2 маны. Раскол: 5% шанс 1-3 урона соседним',lore:'Хранитель запретных знаний из библиотек Некрона. Веками изучал тёмные рукописи, но рассудок его давно покинул эти стены.'},
+  {id:'mage_02',name:'Малекит Проклятый',atk:7,hp:9,price:450,type:'mage',variance:0.25,passive:'Проклятие',passiveDesc:'Фаербол снижает ATK врага на 1. Раскол: 5% шанс 1-3 урона соседним',lore:'Когда-то был светлым магом, но проклятие Хаоса извратило его дар. Теперь его заклинания несут лишь страдания.'},
+  {id:'mage_03',name:'Азатот Посвящённый',atk:5,hp:14,price:500,type:'mage',variance:0.15,passive:'Жертва',passiveDesc:'Фаербол лечит мага на 2 HP. Раскол: 5% шанс 1-3 урона соседним',lore:'Служитель культа Азатота. Каждая жертва приближает его к слиянию с ядерным хаосом.'},
+  {id:'mage_04',name:'Гнилоуст Проповедник',atk:7,hp:10,price:500,type:'mage',variance:0.20,passive:'Чума',passiveDesc:'Фаербол = 1 урон/ход на 2 хода. Раскол: 5% шанс 1-3 урона соседним',lore:'Уста его источают чумные миазмы. Проповедует волю Дедушки Нургла среди смертных.'},
+  {id:'mage_05',name:'Иландра Хранительница Рун',atk:6,hp:12,price:750,type:'mage',variance:0.10,passive:'Рунный щит',passiveDesc:'Получает на 1 урона меньше. Раскол: 5% шанс 1-3 урона соседним',lore:'Последняя из ордена Рунных Стражей. Её щиты выдержали атаки самих демонов Варпа.'},
+  // НОВЫЕ МАГИ
+  {id:'mage_06',name:'Ксаль\'Торот',atk:7,hp:9,price:550,type:'mage',variance:0.20,passive:'Искажение',passiveDesc:'30% шанс: фаербол возвращает 1 ману. Раскол: 5% шанс 1-3 урона соседним',lore:'Бессмертный зодчий Первородного Хаоса. Управляет временем, стирая и возводя искажённые города из чужих снов и страхов.'},
+  {id:'mage_07',name:'Ксар\'лот',atk:6,hp:12,price:600,type:'mage',variance:0.15,passive:'Скверна',passiveDesc:'Фаербол +1 урона танкам. Раскол: 5% шанс 1-3 урона соседним',lore:'Древний маг, искажённый скверной Бездны. Его фолиант исписан запретными заклинаниями, а посох пульсирует потусторонним светом.'},
+  {id:'mage_08',name:'Каэр\'Тал',atk:7,hp:10,price:600,type:'mage',variance:0.25,passive:'Пожиратель',passiveDesc:'Фаербол крадёт 1 ману у врага. Раскол: 5% шанс 1-3 урона соседним',lore:'Пророк Варпа — его тело сосуд чистой энергии Хаоса. Третий глаз видит разломы реальностей и разрывает их своей волей.'},
+  {id:'mage_09',name:'Кадавр',atk:5,hp:14,price:500,type:'mage',variance:0.15,passive:'Сбор душ',passiveDesc:'Убийство фаерболом: +2 HP и +1 маны. Раскол: 5% шанс 1-3 урона соседним',lore:'Отрекшийся магистр смерти. Собирает осколки душ из пустоты, сплетая их в вихрь бесконечного проклятия.'},
+  {id:'mage_10',name:'Каэлис Векс',atk:8,hp:8,price:700,type:'mage',variance:0.20,passive:'Псай-шторм',passiveDesc:'Фаербол +2 урона при HP<50%. Раскол: 5% шанс 1-3 урона соседним',lore:'Беглый псайкер. Его разум искажает гравитацию, а воля обращает ментальную энергию в смертоносный шторм молний.'},
+  {id:'mage_11',name:'Слепая Оракул',atk:6,hp:12,price:650,type:'mage',variance:0.10,passive:'Оракул',passiveDesc:'40% шанс: фаербол стоит 1 ману. Раскол: 5% шанс 1-3 урона соседним',lore:'Её глаза закрыты, но она видит всё. Таро с символами хаоса парят в потоке warp-энергии — она читает саму ткань реальности.'},
+  // ТАНКИ (провокация 2 маны)
+  {id:'tank_01',name:'Железный Дредноут',atk:4,hp:20,price:650,type:'tank',variance:0.15,passive:'Броня',passiveDesc:'Провокация: -1 вх. урона. Прикрытие: 5% шанс забрать атаку с соседа без урона',lore:'Живая крепость, закованная в адамантий. Стоял на страже врат Кадии до самого конца.'},
+  {id:'tank_02',name:'Чумной Гигант',atk:3,hp:24,price:800,type:'tank',variance:0.20,passive:'Гнилая кровь',passiveDesc:'Провокация: отражает 1 урон. Прикрытие: 5% шанс забрать атаку с соседа без урона',lore:'Порождение гнилых садов Нургла. Его кровь — едкая жижа, разъедающая даже сталь.'},
+  {id:'tank_03',name:'Страж Некрона',atk:4,hp:18,price:700,type:'tank',variance:0.10,passive:'Ярость мёртвых',passiveDesc:'HP<50%: +2 ATK. Прикрытие: 5% шанс забрать атаку с соседа без урона',lore:'Пробуждённый от вечного сна воин древней расы. Чем ближе к смерти — тем яростнее бой.'},
+  {id:'tank_04',name:'Каменный Страж',atk:3,hp:22,price:850,type:'tank',variance:0.10,passive:'Каменная кожа',passiveDesc:'Всегда -1 вх. урона. Прикрытие: 5% шанс забрать атаку с соседа без урона',lore:'Голем, высеченный из горного хребта Мира Теней. Не чувствует ни боли, ни страха.'},
+  {id:'tank_05',name:'Шоггот-Брут',atk:4,hp:21,price:650,type:'tank',variance:0.25,passive:'Регенерация',passiveDesc:'Провокация лечит 2 HP. Прикрытие: 5% шанс забрать атаку с соседа без урона',lore:'Бесформенная тварь из глубин Иннсмута. Постоянно регенерирует, пожирая всё вокруг.'},
+  // УБИЙЦЫ (крит 2 маны = ATK×2 урон)
+  {id:'assa_01',name:'Ночной Клинок',atk:8,hp:8,price:500,type:'assa',variance:0.15,passive:'Теневой шаг',passiveDesc:'30% шанс: крит стоит 1 ману. Кровопускание: 5% шанс нанести половину урона соседу',lore:'Тень, скользящая между мирами. Его клинок видел кровь сотен жертв и не знает промаха.'},
+  {id:'assa_02',name:'Теневой Убийца',atk:9,hp:6,price:750,type:'assa',variance:0.10,passive:'Добивание',passiveDesc:'+2 урона целям с HP<50%. Кровопускание: 5% шанс нанести половину урона соседу',lore:'Мастер добивания. Чует слабость врага как акула чует кровь за мили.'},
+  {id:'assa_03',name:'Варп-Сталкер',atk:7,hp:10,price:650,type:'assa',variance:0.20,passive:'Фазовый сдвиг',passiveDesc:'Крит игнорирует провокацию. Кровопускание: 5% шанс нанести половину урона соседу',lore:'Ходок через Варп. Проходит сквозь защитные барьеры, словно их не существует.'},
+  {id:'assa_04',name:'Глубинный Хищник',atk:9,hp:7,price:750,type:'assa',variance:0.15,passive:'Хищник',passiveDesc:'Убийство даёт +2 маны. Кровопускание: 5% шанс нанести половину урона соседу',lore:'Вышел из Марианской впадины, где спят Древние. Каждое убийство питает его тёмную силу.'},
+  {id:'assa_05',name:'Жнец Снов',atk:9,hp:7,price:700,type:'assa',variance:0.25,passive:'Кошмар',passiveDesc:'Крит наносит x2.5 урона. Кровопускание: 5% шанс нанести половину урона соседу',lore:'Посланник Кошмара. Его серп пожинает не жизни — но сами души, обрекая жертв на вечные муки.'},
+];
+const IMG_BASE='img/cards/',CARDS_PER_SIDE=3,SHOP_SIZE=12,MAX_MANA=10;
+
+// ═══ ГЛОБАЛЬНОЕ СОСТОЯНИЕ ═══
+let sessionId=null;
+let playerGold=100,playerCollection=['mage_01','tank_01','assa_01'],selectedDeck=[],soundEnabled=true;
+let playerCards=[],enemyCards=[],activeIdx=-1,isPlayerTurn=true,gameOver=false;
+let abilitiesUsedThisTurn=new Set();
+let cardUpgrades={};
+let shopCards=[];
+let currentTab='shop';
+
+function upgradeCost(stat,level){return 150*Math.pow(2,level)}
+function getUp(cardId){if(!cardUpgrades[cardId])cardUpgrades[cardId]={hp:0,atk:0,mana:0};return cardUpgrades[cardId]}
+
+// ═══ API ═══
+async function api(path,opts={}){
+  const res=await fetch(API_BASE+path,{
+    headers:{'Content-Type':'application/json'},
+    ...opts
+  });
+  return res.json();
+}
+async function call(method,path,body){
+  return api(path,{method,body:body?JSON.stringify(body):undefined});
+}
+
+// Вспомогательная: обогатить карты сервера данными из ALL_CARDS
+function enrichCard(c){
+  const base=byId(c.id);
+  return base?{...base,...c}:c;
+}
+function enrichCards(arr){
+  return (arr||[]).map(enrichCard);
+}
+
+// ═══ DOM ═══
+const scr={menu:el('menuScreen'),shop:el('shopScreen'),battle:el('battleScreen')};
+function el(id){return document.getElementById(id)}
+function showScreen(n){Object.values(scr).forEach(s=>s.classList.remove('active'));scr[n].classList.add('active');el('resultOverlay').classList.remove('show');startBGM()}
+
+// ═══ ЗВУК ═══
+const sfx={select(){playSelect()},attack(){playAttack()},crit(){},fireball(){},taunt(){},death(){},victory(){},defeat(){},buy(){}};
+
+let sndSelect=null,sndAttack=null,sndBattleStart=null;
+function preloadSamples(){
+  sndSelect=new Audio('audio/select.wav');sndSelect.preload='auto';
+  sndAttack=new Audio('audio/attack.opus');sndAttack.preload='auto';
+  sndBattleStart=new Audio('audio/battle_start.wav');sndBattleStart.preload='auto';
+}
+function playSample(a){if(!soundEnabled||!a)return;try{a.currentTime=0;a.play().catch(()=>{})}catch(e){}}
+function playSelect(){playSample(sndSelect)}
+function playAttack(){playSample(sndAttack)}
+preloadSamples();
+
+// ═══ BGM ═══
+let bgmAudio=null,bgmPlaying=false;
+function initBGM(){
+  if(bgmAudio)return;
+  bgmAudio=new Audio('audio/bgm.mp3');
+  bgmAudio.loop=true;bgmAudio.volume=0.2;bgmAudio.preload='auto';
+}
+function startBGM(){
+  if(!soundEnabled||bgmPlaying)return;
+  initBGM();
+  if(!bgmAudio)return;
+  bgmPlaying=true;
+  bgmAudio.play().then(()=>{}).catch(()=>{bgmPlaying=false});
+}
+function stopBGM(){
+  if(!bgmPlaying||!bgmAudio)return;
+  bgmPlaying=false;
+  bgmAudio.pause();
+}
+function toggleSound(){
+  soundEnabled=!soundEnabled;el('soundToggle').classList.toggle('on',soundEnabled);
+  if(!soundEnabled)stopBGM();
+  else startBGM();
+}
+function setBrightness(v){
+  gameBrightness=v/100;el('brightnessVal').textContent=v+'%';
+  applyFilters();
+}
+function setContrast(v){
+  gameContrast=v/100;el('contrastVal').textContent=v+'%';
+  applyFilters();
+}
+function applyFilters(){
+  document.body.style.filter=`brightness(${gameBrightness}) contrast(${gameContrast})`;
+}
+let gameBrightness=1,gameContrast=1;
+
+// ═══ ЧАСТИЦЫ ═══
+const bgP=[],cv=el('particlesCanvas'),cx=cv.getContext('2d');
+function rc(){cv.width=innerWidth;cv.height=innerHeight}addEventListener('resize',rc);rc();
+function sbg(){return{x:Math.random()*cv.width,y:Math.random()*cv.height,sz:Math.random()*2+.5,sY:-(Math.random()*.2+.05),sX:(Math.random()-.5)*.1,op:Math.random()*.3+.1,life:Math.random()*400+200,age:0,clr:Math.random()<.5?`${100+Math.random()*40},${70+Math.random()*30},${30+Math.random()*20}`:`${80+Math.random()*30},${80+Math.random()*30},${90+Math.random()*30}`}}
+for(let i=0;i<60;i++){const p=sbg();p.age=Math.floor(Math.random()*p.life);p.y=Math.random()*cv.height;bgP.push(p)}
+(function rbg(){cx.clearRect(0,0,cv.width,cv.height);for(let i=0;i<bgP.length;i++){const p=bgP[i];p.age++;p.y+=p.sY;p.x+=p.sX+Math.sin(p.age*.015)*.05;if(p.age>=p.life||p.y<-10||p.x<-10||p.x>cv.width+10)bgP[i]=sbg();cx.beginPath();cx.arc(p.x,p.y,p.sz,0,Math.PI*2);cx.fillStyle=`rgba(${p.clr},${p.op*(1-p.age/p.life)})`;cx.fill()}requestAnimationFrame(rbg)})();
+
+// ═══ ЭФФЕКТЫ ═══
+function dmgNum(el,d,clr='#c04030'){const r=el.getBoundingClientRect(),e=document.createElement('div');e.className='damage-number';e.textContent=`-${d}`;e.style.color=clr;e.style.left=r.left+r.width/2-15+'px';e.style.top=r.top+r.height/3+'px';document.body.appendChild(e);e.addEventListener('animationend',()=>e.remove())}
+function critText(el){const r=el.getBoundingClientRect(),e=document.createElement('div');e.className='crit-text';e.textContent='КРИТ!';e.style.left=r.left+r.width/2-30+'px';e.style.top=r.top+r.height/3-10+'px';document.body.appendChild(e);e.addEventListener('animationend',()=>e.remove())}
+function aoeFx(rowEl){if(!rowEl)return;const cards=rowEl.querySelectorAll('.card:not(.dead)');cards.forEach(c=>{const r=c.getBoundingClientRect();for(let i=0;i<8;i++){const p=document.createElement('div');p.className='impact-particle';const a=Math.random()*Math.PI*2,d=20+Math.random()*30;p.style.cssText=`left:${r.left+r.width/2}px;top:${r.top+r.height/2}px;width:${3+Math.random()*4}px;height:${3+Math.random()*4}px;background:#8a4a1a;--dx:${Math.cos(a)*d}px;--dy:${Math.sin(a)*d}px;box-shadow:0 0 8px rgba(138,74,26,.6);`;document.body.appendChild(p);p.addEventListener('animationend',()=>p.remove())}})}
+function impact(el){const r=el.getBoundingClientRect(),cx2=r.left+r.width/2,cy=r.top+r.height/2,cl=['#d08070','#8a4a1a','#c04030','#5a5a65'];for(let i=0;i<12;i++){const p=document.createElement('div');p.className='impact-particle';const a=Math.random()*Math.PI*2,d=25+Math.random()*45;p.style.cssText=`left:${cx2}px;top:${cy}px;width:${3+Math.random()*4}px;height:${3+Math.random()*4}px;background:${cl[Math.floor(Math.random()*cl.length)]};--dx:${Math.cos(a)*d}px;--dy:${Math.sin(a)*d}px;box-shadow:0 0 6px ${cl[Math.floor(Math.random()*cl.length)]};`;document.body.appendChild(p);p.addEventListener('animationend',()=>p.remove())}}
+function deathFx(el){const r=el.getBoundingClientRect(),cx2=r.left+r.width/2,cy=r.top+r.height/2;for(let i=0;i<20;i++){const p=document.createElement('div');p.className='impact-particle';const a=Math.random()*Math.PI*2,d=40+Math.random()*60;p.style.cssText=`left:${cx2}px;top:${cy}px;width:${4+Math.random()*6}px;height:${4+Math.random()*6}px;background:#1a0505;--dx:${Math.cos(a)*d}px;--dy:${Math.sin(a)*d}px;box-shadow:0 0 8px rgba(100,0,0,.5);animation-duration:${.8+Math.random()*.5}s;`;document.body.appendChild(p);p.addEventListener('animationend',()=>p.remove())}}
+function flash(cl){const f=el('screenFlash');f.style.background=cl;f.classList.add('active');setTimeout(()=>f.classList.remove('active'),150)}
+function log(h){const e=document.createElement('div');e.className='log-entry';e.innerHTML=h;el('battleLog').appendChild(e);el('battleLog').scrollTop=el('battleLog').scrollHeight}
+
+// ═══ УТИЛИТЫ ═══
+function sh(a){const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]]}return r}
+function byId(id){return ALL_CARDS.find(c=>c.id===id)}
+function rollDamage(base,variance=.15){return Math.max(1,Math.round(base*(1-variance+Math.random()*variance*2)))}
+function getEffAtk(c){if(!c||c.hp<=0)return 0;let a=c.atk;if(c.atkDebuff)a=Math.max(0,a-c.atkDebuff);if(c.type==='tank'&&c.id==='tank_03'&&c.hp<=c.maxHp*.5)a+=2;return a}
+function getDefBonus(c){if(!c||c.hp<=0)return 0;let b=0;if(c.id==='mage_05'||c.id==='tank_04')b=1;if(c.id==='tank_01'&&c.tauntActive)b=1;return b}
+function tryTankCover(defCards,targetIdx){
+  for(let i=Math.max(0,targetIdx-1);i<=Math.min(defCards.length-1,targetIdx+1);i++){
+    if(i===targetIdx)continue;
+    const nb=defCards[i];
+    if(nb&&nb.hp>0&&nb.type==='tank'&&Math.random()<0.05)return nb;
+  }
+  return null;
+}
+function tryMageSplash(attacker,defCards,targetIdx){
+  if(attacker.type!=='mage'||Math.random()>=0.05)return null;
+  const results=[];
+  for(let i=Math.max(0,targetIdx-1);i<=Math.min(defCards.length-1,targetIdx+1);i++){
+    if(i===targetIdx)continue;
+    const nb=defCards[i];
+    if(nb&&nb.hp>0){
+      const dmg=1+Math.floor(Math.random()*3);
+      nb.hp=Math.max(0,nb.hp-dmg);
+      results.push({neighbor:nb,damage:dmg,index:i});
+    }
+  }
+  return results.length>0?results:null;
+}
+function tryAssaSplash(attacker,defCards,targetIdx,mainDmg){
+  if(attacker.type!=='assa'||Math.random()>=0.05)return null;
+  const neighbors=[];
+  for(let i=Math.max(0,targetIdx-1);i<=Math.min(defCards.length-1,targetIdx+1);i++){
+    if(i===targetIdx)continue;
+    const nb=defCards[i];
+    if(nb&&nb.hp>0)neighbors.push({neighbor:nb,index:i});
+  }
+  if(neighbors.length===0)return null;
+  const pick=neighbors[Math.floor(Math.random()*neighbors.length)];
+  const dmg=Math.max(1,Math.floor(mainDmg/2));
+  pick.neighbor.hp=Math.max(0,pick.neighbor.hp-dmg);
+  return {neighbor:pick.neighbor,damage:dmg,index:pick.index};
+}
+function applyDOT(c){if(!c||c.hp<=0||!c.dotTurns||c.dotTurns<=0)return;let dmg=1;c.hp=Math.max(0,c.hp-dmg);c.dotTurns--;return dmg}
+function getManaOrbs(mana,max){let h='';for(let i=0;i<Math.min(max,10);i++)h+=`<div class="mana-orb${i<mana?' filled':''}"></div>`;return h}
+
+// ═══ МЕНЮ / НАСТРОЙКИ ═══
+async function newCampaign(){
+  const data=await call('POST','/api/new-campaign');
+  sessionId=data.sessionId;
+  playerGold=data.playerGold;
+  playerCollection=data.playerCollection||['mage_01','tank_01','assa_01'];
+  selectedDeck=data.selectedDeck||[];
+  cardUpgrades=data.cardUpgrades||{};
+  showScreen('shop');
+  currentTab='shop';
+  el('tabShopBtn').classList.add('active');
+  el('tabInvBtn').classList.remove('active');
+  el('tabChaosBtn').classList.remove('active');
+  el('shopTabTitle').textContent='Склеп';
+  el('deckCount').style.visibility='hidden';
+  el('toBattleBtn').style.display='none';
+  await loadShop();
+  renderShop();
+}
+
+async function continueGame(){
+  if(!sessionId){await newCampaign();return}
+  const data=await api(`/api/state/${sessionId}`);
+  playerGold=data.playerGold;
+  playerCollection=data.playerCollection||['mage_01','tank_01','assa_01'];
+  selectedDeck=data.selectedDeck||[];
+  cardUpgrades=data.cardUpgrades||{};
+  showScreen('shop');
+  currentTab='shop';
+  el('tabShopBtn').classList.add('active');
+  el('tabInvBtn').classList.remove('active');
+  el('tabChaosBtn').classList.remove('active');
+  el('shopTabTitle').textContent='Склеп';
+  el('deckCount').style.visibility='hidden';
+  el('toBattleBtn').style.display='none';
+  await loadShop();
+  renderShop();
+}
+
+function openSettings(){el('settingsOverlay').classList.add('show')}
+function closeSettings(){el('settingsOverlay').classList.remove('show')}
+function backToMenu(){showScreen('menu')}
+
+// ═══ МАГАЗИН ═══
+async function loadShop(){
+  const data=await api(`/api/shop/${sessionId}`);
+  shopCards=(data||[]).map(c=>typeof c==='string'?byId(c):c).filter(Boolean);
+}
+
+async function showShopTab(tab){
+  currentTab=tab;
+  el('tabShopBtn').classList.toggle('active',tab==='shop');
+  el('tabInvBtn').classList.toggle('active',tab==='inv');
+  el('tabChaosBtn').classList.toggle('active',tab==='chaos');
+  el('shopTabTitle').textContent=tab==='shop'?'Склеп':tab==='inv'?'Варп':'Хаос';
+  el('deckCount').style.visibility=(tab==='inv')?'visible':'hidden';
+  el('toBattleBtn').style.display=(tab==='inv')?'inline-block':'none';
+  el('bgClep').style.opacity=tab==='shop'?'0.4':'0';
+  el('bgWarp').style.opacity=tab==='inv'?'0.4':'0';
+  el('bgHaus').style.opacity=tab==='chaos'?'0.4':'0';
+  el('shopScreen').querySelector('.shop-header').style.background=tab==='chaos'?'rgba(0,0,0,0.5)':'';
+  if(tab==='shop'){await loadShop();renderShopGrid();}
+  else if(tab==='inv')renderColGrid();
+  else renderChaosGrid();
+}
+
+function renderShop(){
+  el('shopGold').textContent=playerGold;
+  if(currentTab==='shop')renderShopGrid();
+  else if(currentTab==='inv')renderColGrid();
+  else renderChaosGrid();
+  upBBtn();
+}
+
+function renderShopGrid(){
+  el('shopGrid').innerHTML=shopCards.map(c=>{const rc=c.type==='mage'?'#b8a8c8':c.type==='tank'?'#8ab87a':'#d08070';const rt=c.type==='mage'?'Маг':c.type==='tank'?'Танк':'Убийца';const canBuy=playerGold>=c.price;return `<div class="shop-card" onclick="showCardDetail('${c.id}')"><img class="shop-card-img" src="${IMG_BASE}${c.id}.webp" alt="${c.name}"><span class="atk-badge">⚔ ${c.atk}</span><span class="card-role" style="color:${rc}">${rt}</span><div class="hp-bar-wrap"><div class="hp-bar healthy" style="width:100%"></div></div><span class="hp-text">${c.hp}/${c.hp}</span><span class="shop-card-name">${c.name}</span><span class="shop-card-passive">${c.passive||''}</span><div class="shop-card-price"><img src="img/game/Remains_icon.webp" alt="">${c.price}</div>${canBuy?`<button class="shop-card-buy" onclick="event.stopPropagation();buyCard('${c.id}')">Купить</button>`:`<button class="shop-card-buy" disabled>Купить</button>`}</div>`}).join('');
+}
+
+function renderColGrid(){
+  const g=el('shopGrid');
+  if(!playerCollection.length){g.innerHTML='<div class="deck-empty">Коллекция пуста. Посетите Склеп.</div>';return}
+  g.innerHTML=playerCollection.map(id=>{const c=byId(id);if(!c)return'';const rc=c.type==='mage'?'#b8a8c8':c.type==='tank'?'#8ab87a':'#d08070';const rt=c.type==='mage'?'Маг':c.type==='tank'?'Танк':'Убийца';return `<div class="deck-card ${selectedDeck.includes(id)?'selected-deck':''}" data-did="${id}" onclick="toggleDeckCard('${id}')"><img class="deck-card-img" src="${IMG_BASE}${c.id}.webp" alt="${c.name}"><span class="card-role" style="color:${rc}">${rt}</span><div class="hp-bar-wrap"><div class="hp-bar healthy" style="width:100%"></div></div><span class="hp-text">${c.hp}/${c.hp}</span><div class="card-overlay"><div class="card-name">${c.name}</div><div style="font-family:Inter,sans-serif;font-size:8px;color:#9a8aae;text-align:center;margin-top:2px;letter-spacing:.3px;text-shadow:0 1px 2px rgba(0,0,0,.9);">${c.passive||''}</div></div><button class="deck-info-btn" onclick="event.stopPropagation();showCardDetail('${id}')" title="Информация">ⓘ</button></div>`}).join('');
+}
+
+async function buyCard(id){
+  playSelect();
+  const data=await call('POST',`/api/buy/${sessionId}`,{cardId:id});
+  playerGold=data.playerGold;
+  playerCollection=data.playerCollection||[];
+  if(data.selectedDeck)selectedDeck=data.selectedDeck;
+  if(data.cardUpgrades)cardUpgrades=data.cardUpgrades;
+  sfx.buy();
+  el('shopGold').textContent=playerGold;
+  if(currentTab==='shop'){await loadShop();renderShopGrid();}
+  else{renderShop();}
+}
+
+async function toggleDeckCard(id){
+  playSelect();
+  const data=await call('POST',`/api/deck/select/${sessionId}`,{cardId:id});
+  playerGold=data.playerGold;
+  playerCollection=data.playerCollection||[];
+  selectedDeck=data.selectedDeck||[];
+  if(data.cardUpgrades)cardUpgrades=data.cardUpgrades;
+  renderColGrid();
+  upBBtn();
+}
+
+function upBBtn(){const ok=selectedDeck.length===CARDS_PER_SIDE;el('toBattleBtn').disabled=!ok;el('deckCount').textContent=`Выбрано: ${selectedDeck.length} / ${CARDS_PER_SIDE}`}
+
+function renderChaosGrid(){
+  const g=el('shopGrid');
+  if(!playerCollection.length){g.innerHTML='<div class="deck-empty">Коллекция пуста. Купите карты в Склепе.</div>';return}
+  g.innerHTML=playerCollection.map(id=>{
+    const c=byId(id);if(!c)return'';const up=getUp(id);
+    const rc=c.type==='mage'?'#b8a8c8':c.type==='tank'?'#8ab87a':'#d08070';
+    const rt=c.type==='mage'?'Маг':c.type==='tank'?'Танк':'Убийца';
+    const curAtk=c.atk+up.atk,curHp=c.hp+up.hp,curMana=2+up.mana;
+    const hpCost=upgradeCost('hp',up.hp),atkCost=upgradeCost('atk',up.atk),manaCost=upgradeCost('mana',up.mana);
+    const maxMana=up.mana>=4;
+    return `<div class="chaos-card" data-cid="${c.id}">
+      <div class="chaos-card-frame">
+        <img class="chaos-card-img" src="${IMG_BASE}${c.id}.webp" alt="${c.name}" onclick="showCardDetail('${c.id}')">
+        <span class="atk-badge chaos-atk">⚔ ${curAtk}</span>
+        <div class="hp-bar-wrap"><div class="hp-bar healthy" style="width:100%"></div></div>
+        <span class="hp-text chaos-hp">${curHp}/${curHp}</span>
+        <span class="chaos-card-name">${c.name}</span>
+        <span class="chaos-card-class" style="color:${rc}">${rt}</span>
+        <span class="chaos-card-passive">${c.passive||''}</span>
+        <div class="chaos-upgrades">
+          <button class="chaos-upg-btn${playerGold<hpCost?' locked':''}" data-stat="hp" data-tip="${hpCost}R" onclick="event.stopPropagation();doUpgrade('${c.id}','hp')"><img src="img/game/upg_hp.webp" class="chaos-upg-icon"><span class="chaos-upg-label">${hpCost}R</span></button>
+          <button class="chaos-upg-btn${playerGold<atkCost?' locked':''}" data-stat="atk" data-tip="${atkCost}R" onclick="event.stopPropagation();doUpgrade('${c.id}','atk')"><img src="img/game/upg_atk.webp" class="chaos-upg-icon"><span class="chaos-upg-label">${atkCost}R</span></button>
+          <button class="chaos-upg-btn${(playerGold<manaCost||maxMana)?' locked':''}" data-stat="mana" data-tip="${maxMana?'MAX':(manaCost+'R')}" onclick="event.stopPropagation();doUpgrade('${c.id}','mana')"><img src="img/game/upg_mana.webp" class="chaos-upg-icon"><span class="chaos-upg-label">${maxMana?'MAX':(manaCost+'R')}</span></button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showToast(msg,needed){
+  const t=el('shopToast');
+  t.innerHTML=`<img src="img/game/Remains_icon.webp"> ${msg}${needed?' • нужно ещё '+needed+' R':''}`;
+  t.classList.add('show');
+  clearTimeout(t._timeout);
+  t._timeout=setTimeout(()=>t.classList.remove('show'),2000);
+}
+
+async function doUpgrade(cardId,stat){
+  playSelect();
+  const up=getUp(cardId);const lvl=up[stat];
+  const cost=upgradeCost(stat,lvl);
+  if(playerGold<cost){showToast('Не хватает Remains',cost-playerGold);return}
+  if(stat==='mana'&&lvl>=4){showToast('Мана на максимуме');return}
+  const data=await call('POST',`/api/upgrade/${sessionId}`,{cardId,stat});
+  playerGold=data.playerGold;
+  if(data.cardUpgrades)cardUpgrades=data.cardUpgrades;
+  sfx.buy();
+  el('shopGold').textContent=playerGold;
+  renderChaosGrid();
+}
+
+// ═══ ДЕТАЛИ КАРТЫ ═══
+function showCardDetail(id){
+  playSelect();
+  const c=byId(id);if(!c)return;
+  const up=getUp(id);
+  const roleClr=c.type==='mage'?'#b8a8c8':c.type==='tank'?'#8ab87a':'#d08070';
+  const roleTxt=c.type==='mage'?'Маг':c.type==='tank'?'Танк':'Убийца';
+  el('cdImg').src=`${IMG_BASE}${c.id}.webp`;
+  el('cdName').textContent=c.name;
+  el('cdRole').innerHTML=`<span style="color:${roleClr}">${roleTxt}</span> &bull; Разброс урона ±${Math.round(c.variance*100)}%`;
+  el('cdAtk').innerHTML=up.atk>0?`${c.atk} <span style="color:#6a3a7a;font-size:14px;">+${up.atk} = ${c.atk+up.atk}</span>`:c.atk;
+  el('cdHp').innerHTML=up.hp>0?`${c.hp} <span style="color:#6a3a7a;font-size:14px;">+${up.hp} = ${c.hp+up.hp}</span>`:c.hp;
+  if(c.price){el('cdPrice').textContent=c.price;el('cdPriceRow').style.display=''}else el('cdPriceRow').style.display='none';
+  el('cdPassive').textContent=c.passive||'—';
+  el('cdPassiveDesc').textContent=c.passiveDesc||'';
+  if(up.mana>0){el('cdLore').textContent=(c.lore||'')+` | 💠 +${up.mana} маны (всего ${2+up.mana})`}else{el('cdLore').textContent=c.lore||''}
+  el('cardDetailOverlay').classList.add('show');
+}
+function closeCardDetail(e){
+  if(e&&e.target!==el('cardDetailOverlay'))return;
+  el('cardDetailOverlay').classList.remove('show');
+}
+
+// ═══════════════ БОЙ ═══════════════
+let battleCardsReady=false;
+let lastAbilityHTML='',lastHintHTML='';
+let turnLocked=false,critActivated=false,fireballActive=false,firstTurn=false;
+let roundTimer=null,roundSeconds=0,ROUND_TIME=20;
+
+function applyBattleState(data){
+  playerGold=data.playerGold;
+  playerCollection=data.playerCollection;
+  selectedDeck=data.selectedDeck;
+  cardUpgrades=data.cardUpgrades||{};
+  playerCards=enrichCards(data.playerCards);
+  enemyCards=enrichCards(data.enemyCards);
+  activeIdx=data.activeIdx;
+  isPlayerTurn=data.isPlayerTurn;
+  gameOver=data.gameOver;
+  turnLocked=data.turnLocked||false;
+  critActivated=data.critActivated||false;
+  fireballActive=data.fireballActive||false;
+  firstTurn=data.firstTurn!==undefined?data.firstTurn:true;
+  abilitiesUsedThisTurn=new Set(data.abilitiesUsedThisTurn||[]);
+}
+
+function processBattleResponse(data){
+  applyBattleState(data);
+  if(data.log)data.log.forEach(msg=>log(msg));
+  if(data.aiAction)animateAiAction(data.aiAction);
+  updUI();
+  updateRowStates();
+  if(data.gameEnd||gameOver){
+    gameOver=true;stopRoundTimer();updateRowStates();
+    isPlayerTurn=false;activeIdx=-1;
+    el('turnIndicator').textContent='Бой окончен';
+    el('endTurnBtn').style.display='none';
+    updUI();
+    setTimeout(()=>showGameEnd(data.gameEnd),700);
+    return true;
+  }
+  if(isPlayerTurn){
+    el('turnIndicator').textContent='Ваш ход';
+    el('turnIndicator').classList.remove('enemy-turn');
+    el('endTurnBtn').style.display='block';
+    startRoundTimer();
+  }else{
+    el('turnIndicator').textContent='Ход врага';
+    el('turnIndicator').classList.add('enemy-turn');
+    el('endTurnBtn').style.display='none';
+  }
+  return false;
+}
+
+function showGameEnd(gameEnd){
+  el('resultOverlay').classList.add('show');
+  if(gameEnd&&gameEnd.victory){
+    el('resultText').textContent='Победа!';
+    el('resultText').className='result-text win';
+    el('resultGold').innerHTML=`<span class="gold-display"><img src="img/game/Remains_icon.webp" alt=""> +${gameEnd.reward}</span>`;
+    sfx.victory();
+  }else{
+    el('resultText').textContent='Поражение';
+    el('resultText').className='result-text lose';
+    const r=gameEnd?gameEnd.reward:0;
+    el('resultGold').innerHTML=`<span class="gold-display"><img src="img/game/Remains_icon.webp" alt=""> +${r}</span>`;
+    sfx.defeat();
+  }
+}
+
+function animateAiAction(action){
+  if(!action)return;
+  setTimeout(()=>{
+    const aE=el('enemyRow').querySelector(`[data-idx="${action.actorIdx}"]`);
+    const dE=el('playerRow').querySelector(`[data-idx="${action.targetIdx}"]`);
+    if(action.type==='attack'||action.type==='crit'||action.type==='fireball'){
+      if(aE)aE.classList.add('attacking');
+      if(dE){dE.classList.add('taking-damage');if(action.damage>0){dmgNum(dE,action.damage,action.type==='crit'?'#c08030':(action.type==='fireball'?'#e07830':'#c04030'));impact(dE);if(action.isCrit)critText(dE);if(action.isDead){dE.classList.add('dying');deathFx(dE);sfx.death()}}}
+      if(action.type==='crit')sfx.crit();
+      else if(action.type==='fireball'){sfx.fireball();flash('radial-gradient(rgba(138,74,26,.15),transparent)');}
+      else sfx.attack();
+    }else if(action.type==='taunt'){
+      sfx.taunt();
+      flash('radial-gradient(rgba(138,74,26,.15),transparent)');
+    }
+    setTimeout(()=>{if(aE)aE.classList.remove('attacking');if(dE)dE.classList.remove('taking-damage')},450);
+  },200);
+}
+
+async function startBattle(){
+  playSample(sndBattleStart);
+  const data=await call('POST',`/api/battle/start/${sessionId}`);
+  applyBattleState(data);
+  showScreen('battle');
+  battleCardsReady=false;
+  el('battleLog').innerHTML='';
+  if(data.log)data.log.forEach(msg=>log(msg));
+  else log('Бой начался. Тьма сгущается...');
+  el('turnIndicator').textContent=isPlayerTurn?'Ваш ход':'Ход врага';
+  if(!isPlayerTurn)el('turnIndicator').classList.add('enemy-turn');
+  else el('turnIndicator').classList.remove('enemy-turn');
+  el('endTurnBtn').style.display=isPlayerTurn?'block':'none';
+  updUI();
+  updateRowStates();
+  startRoundTimer();
+}
+
+function backToShop(){gameOver=true;stopRoundTimer();showScreen('shop');renderShop()}
+function backToShopFromResult(){el('resultOverlay').classList.remove('show');showScreen('shop');renderShop()}
+
+function rCard(c,idx,isP){
+  const hpP=c.hp>0?(c.hp/c.maxHp)*100:0;let hc='';if(hpP<=25)hc='danger';else if(hpP<=50)hc='warning';
+  const roleClr=c.type==='mage'?'#b8a8c8':c.type==='tank'?'#8ab87a':'#d08070';
+  const roleTxt=c.type==='mage'?'Маг':c.type==='tank'?'Танк':'Убийца';
+  const effAtk=getEffAtk(c);
+  let atkHTML=`⚔ ${c.atk}`;
+  if(effAtk!==c.atk)atkHTML=`⚔ <span style="color:#c08030">${effAtk}</span>`;
+  if(c.atkDebuff)atkHTML+=` <span style="color:#8a4a4a;font-size:9px;">-${c.atkDebuff}</span>`;
+  let tauntCls=isP&&c.tauntActive?' taunting':'';
+  let activeCls=isP&&idx===activeIdx?' selected':'';
+  let targetable='';
+  if(!isP&&activeIdx>=0&&c.hp>0&&!gameOver){
+    const taunter=enemyCards.find(e=>e.tauntActive&&e.hp>0);
+    if(taunter){
+      const assa=playerCards[activeIdx];
+      const ignoreTaunt=assa&&assa.type==='assa'&&assa.id==='assa_03'&&assa.critReady;
+      targetable=(c.id===taunter.id||ignoreTaunt)?' enemy-targetable':'';
+    }
+    else{targetable=' enemy-targetable';}
+  }
+  return `<div class="card${activeCls}${tauntCls}${c.hp<=0?' dead':''}${targetable}" data-idx="${idx}" data-p="${isP?1:0}" onclick="onCard(${isP?1:0},${idx})">
+    <img class="card-image" src="${IMG_BASE}${c.id}.webp" alt="${c.name}" draggable="false">
+    <span class="atk-badge">${atkHTML}</span>
+    <span class="card-role" style="color:${roleClr}">${roleTxt}</span>
+    <div class="hp-bar-wrap"><div class="hp-bar ${hc}" style="width:${hpP}%"></div></div>
+    <span class="hp-text">${c.hp}/${c.maxHp}</span>
+    ${c.dotTurns>0?`<span style="position:absolute;top:28px;left:8px;font-size:9px;color:#5a8a1a;z-index:5;text-shadow:0 0 4px rgba(90,138,26,.6);font-family:Cinzel,serif;">☠ Чума ${c.dotTurns}х</span>`:''}
+    <div class="mana-orbs">${getManaOrbs(c.mana,MAX_MANA)}</div>
+    <div class="card-overlay">
+      <div class="card-name">${c.name}</div>
+      <div style="font-family:Inter,sans-serif;font-size:8px;color:#9a8aae;text-align:center;margin-top:2px;letter-spacing:.3px;text-shadow:0 1px 2px rgba(0,0,0,.9);">${c.passive||''}</div>
+    </div></div>`;
+}
+
+function refreshBattleCards(){
+  const pRow=el('playerRow'),eRow=el('enemyRow');
+  const pCards=pRow.querySelectorAll('.card'),eCards=eRow.querySelectorAll('.card');
+  playerCards.forEach((c,i)=>{
+    const ce=pCards[i];if(!ce)return;
+    const hpP=c.hp>0?(c.hp/c.maxHp)*100:0;
+    const hpBar=ce.querySelector('.hp-bar');
+    hpBar.style.width=hpP+'%';hpBar.className='hp-bar'+(hpP<=25?' danger':hpP<=50?' warning':' healthy');
+    ce.querySelector('.hp-text').textContent=c.hp+'/'+c.maxHp;
+    ce.querySelectorAll('.mana-orb').forEach((o,j)=>o.classList.toggle('filled',j<c.mana));
+    ce.classList.toggle('dead',c.hp<=0);ce.classList.toggle('taunting',c.tauntActive);ce.classList.toggle('selected',i===activeIdx);
+    const effAtk=getEffAtk(c);
+    const ab=ce.querySelector('.atk-badge');
+    if(ab){let h=`⚔ ${c.atk}`;if(effAtk!==c.atk)h=`⚔ <span style="color:#c08030">${effAtk}</span>`;if(c.atkDebuff)h+=` <span style="color:#8a4a4a;font-size:9px;">-${c.atkDebuff}</span>`;ab.innerHTML=h}
+    let ds=ce.querySelector('.dot-status');
+    if(c.dotTurns>0){if(!ds){ds=document.createElement('span');ds.className='dot-status';ds.style.cssText='position:absolute;top:28px;left:8px;font-size:9px;color:#5a8a1a;z-index:5;text-shadow:0 0 4px rgba(90,138,26,.6);font-family:Cinzel,serif;';ce.appendChild(ds)}ds.textContent='☠ Чума '+c.dotTurns+'х'}else if(ds)ds.remove();
+  });
+  enemyCards.forEach((c,i)=>{
+    const ce=eCards[i];if(!ce)return;
+    const hpP=c.hp>0?(c.hp/c.maxHp)*100:0;
+    const hpBar=ce.querySelector('.hp-bar');
+    hpBar.style.width=hpP+'%';hpBar.className='hp-bar'+(hpP<=25?' danger':hpP<=50?' warning':' healthy');
+    ce.querySelector('.hp-text').textContent=c.hp+'/'+c.maxHp;
+    ce.querySelectorAll('.mana-orb').forEach((o,j)=>o.classList.toggle('filled',j<c.mana));
+    ce.classList.toggle('dead',c.hp<=0);
+    if(activeIdx>=0&&c.hp>0&&!gameOver){
+      const t=enemyCards.find(e=>e.tauntActive&&e.hp>0);
+      const ignoreTaunt=playerCards[activeIdx]&&playerCards[activeIdx].type==='assa'&&playerCards[activeIdx].id==='assa_03'&&playerCards[activeIdx].critReady;
+      ce.classList.toggle('enemy-targetable',!t||c.id===t.id||ignoreTaunt);
+    }
+    else ce.classList.remove('enemy-targetable');
+    const effAtk=getEffAtk(c);
+    const ab=ce.querySelector('.atk-badge');
+    if(ab){let h=`⚔ ${c.atk}`;if(effAtk!==c.atk)h=`⚔ <span style="color:#c08030">${effAtk}</span>`;if(c.atkDebuff)h+=` <span style="color:#8a4a4a;font-size:9px;">-${c.atkDebuff}</span>`;ab.innerHTML=h}
+    let ds=ce.querySelector('.dot-status');
+    if(c.dotTurns>0){if(!ds){ds=document.createElement('span');ds.className='dot-status';ds.style.cssText='position:absolute;top:28px;left:8px;font-size:9px;color:#5a8a1a;z-index:5;text-shadow:0 0 4px rgba(90,138,26,.6);font-family:Cinzel,serif;';ce.appendChild(ds)}ds.textContent='☠ Чума '+c.dotTurns+'х'}else if(ds)ds.remove();
+  });
+}
+
+function updUI(){
+  if(battleCardsReady){
+    refreshBattleCards();
+  }else{
+    el('playerRow').innerHTML=playerCards.map((c,i)=>rCard(c,i,true)).join('');
+    el('enemyRow').innerHTML=enemyCards.map((c,i)=>rCard(c,i,false)).join('');
+    battleCardsReady=true;lastAbilityHTML='';lastHintHTML='';
+  }
+  let abHTML='',hintHTML='';
+  if(activeIdx>=0&&isPlayerTurn&&!gameOver&&!turnLocked){
+    const c=playerCards[activeIdx];
+    if(critActivated){
+      abHTML='<span style="font-size:12px;color:#c08030;animation:pulse-enemy 1s infinite; font-family:Cinzel, serif; letter-spacing:1px;">⚡ КРИТ ГОТОВ — выберите врага!</span>';
+    }else if(fireballActive){
+      abHTML='<span style="font-size:12px;color:#e07830;animation:pulse-enemy 1s infinite; font-family:Cinzel, serif; letter-spacing:1px;">🔥 ОГНЕННЫЙ ШАР — выберите врага!</span>';
+    }else{
+      let btns='';
+      if(firstTurn&&isPlayerTurn){
+        btns+='<span style="font-size:11px;color:#8a6a3a; font-style:italic;">Первый ход: только базовая атака</span>';
+      }else{
+        if(c.type==='tank'&&c.mana>=2&&!abilitiesUsedThisTurn.has(activeIdx)){
+          btns+=`<button class="btn ability-btn" onclick="useTaunt()">🛡 Провокация (2 маны)</button>`;
+        }
+        if(c.type==='assa'&&c.mana>=2&&!abilitiesUsedThisTurn.has(activeIdx)){
+          btns+=`<button class="btn ability-btn" onclick="useCrit()">⚔ Крит-удар (2 маны)</button>`;
+        }
+        if(c.type==='mage'&&c.mana>=3&&!abilitiesUsedThisTurn.has(activeIdx)){
+          btns+=`<button class="btn ability-btn" onclick="useFireball()">🔮 Огненный шар (3 маны)</button>`;
+        }else if(c.type==='mage'&&c.id==='mage_01'&&c.mana>=2&&!abilitiesUsedThisTurn.has(activeIdx)){
+          btns+=`<button class="btn ability-btn" onclick="useFireball()">🔮 Огненный шар <span style="color:#8ab860">(2 маны)</span></button>`;
+        }
+        if(c.mana===0||abilitiesUsedThisTurn.has(activeIdx))btns+='<span style="font-size:11px;color:#6a5a70; font-style:italic;">Сила иссякла на этот ход</span>';
+      }
+      if(c.type==='assa'&&c.critReady&&!critActivated)btns+='<span style="font-size:11px;color:#c08030; font-weight:600;">⚡ Крит готов!</span>';
+      if(c.type==='tank'&&c.tauntActive)btns+='<span style="font-size:11px;color:#8a4a1a; font-weight:600;">🛡 Агр активен</span>';
+      abHTML=btns;
+    }
+  }else if(isPlayerTurn&&!gameOver){
+    abHTML='<span style="font-size:11px;color:#6a5a70; font-style:italic;">Выберите юнита для действий</span>';
+  }
+  if(!isPlayerTurn||gameOver)hintHTML='Противник обдумывает свой ход...';
+  else if(turnLocked)hintHTML='Ход завершается...';
+  else if(activeIdx<0&&firstTurn&&isPlayerTurn)hintHTML='<span class="key">Выберите юнита</span> — первый ход: только базовая атака';
+  else if(activeIdx<0)hintHTML='<span class="key">Выберите юнита</span> — 1 действие за ход';
+  else if(firstTurn&&isPlayerTurn)hintHTML='<span class="key">Атакуйте врага</span> — способности недоступны в первом ходу';
+  else hintHTML='<span class="key">Атакуйте врага</span> или <span class="key">используйте способность</span>';
+  if(abHTML!==lastAbilityHTML){el('abilityPanel').innerHTML=abHTML;lastAbilityHTML=abHTML;}
+  if(hintHTML!==lastHintHTML){el('actionHint').innerHTML=hintHTML;lastHintHTML=hintHTML;}
+}
+
+function onCard(isP,idx){
+  if(gameOver||!isPlayerTurn||turnLocked)return;
+  if(isP){
+    if(playerCards[idx].hp<=0)return;
+    if((critActivated||fireballActive)&&activeIdx!==idx)return;
+    activeIdx=activeIdx===idx?-1:idx;
+    if(activeIdx>=0)sfx.select();
+    updUI();
+  }else{
+    if(activeIdx<0||enemyCards[idx].hp<=0)return;
+    if(fireballActive){
+      doFireball(activeIdx,idx);
+      return;
+    }
+    doAttack(activeIdx,idx);
+  }
+}
+
+async function doAttack(aIdx,dIdx){
+  const data=await call('POST',`/api/battle/attack/${sessionId}`,{attackerIdx:aIdx,defenderIdx:dIdx});
+  const aE=el('playerRow').querySelector(`[data-idx="${aIdx}"]`);
+  const dE=el('enemyRow').querySelector(`[data-idx="${dIdx}"]`);
+  if(aE)aE.classList.add('attacking');if(dE)dE.classList.add('taking-damage');
+  sfx.attack();
+  processBattleResponse(data);
+  setTimeout(()=>{if(aE)aE.classList.remove('attacking');if(dE)dE.classList.remove('taking-damage')},450);
+}
+
+async function doFireball(aIdx,dIdx){
+  const data=await call('POST',`/api/battle/fireball/${sessionId}`,{defenderIdx:dIdx});
+  const aE=el('playerRow').querySelector(`[data-idx="${aIdx}"]`);
+  const dE=el('enemyRow').querySelector(`[data-idx="${dIdx}"]`);
+  if(aE)aE.classList.add('attacking');if(dE)dE.classList.add('taking-damage');
+  sfx.fireball();flash('radial-gradient(rgba(138,74,26,.15),transparent)');
+  fireballActive=false;
+  processBattleResponse(data);
+  setTimeout(()=>{if(aE)aE.classList.remove('attacking');if(dE)dE.classList.remove('taking-damage')},450);
+}
+
+async function useTaunt(){
+  if(activeIdx<0||!isPlayerTurn||gameOver||turnLocked||firstTurn)return;
+  const data=await call('POST',`/api/battle/taunt/${sessionId}`);
+  sfx.taunt();flash('radial-gradient(rgba(138,74,26,.15),transparent)');
+  processBattleResponse(data);
+  if(!gameOver&&isPlayerTurn){
+    turnLocked=true;updUI();
+    el('actionHint').innerHTML='<span class="key">Провокация!</span> Ход завершается...';
+    setTimeout(()=>{if(isPlayerTurn&&!gameOver)endPlayerTurn();},800);
+  }
+}
+
+async function useCrit(){
+  if(activeIdx<0||!isPlayerTurn||gameOver||turnLocked||firstTurn)return;
+  const data=await call('POST',`/api/battle/crit/${sessionId}`);
+  flash('radial-gradient(rgba(192,128,48,.1),transparent)');
+  processBattleResponse(data);
+}
+
+function useFireball(){
+  if(activeIdx<0||!isPlayerTurn||gameOver||firstTurn||turnLocked)return;
+  const c=playerCards[activeIdx];
+  if(c.type!=='mage'||abilitiesUsedThisTurn.has(activeIdx))return;
+  fireballActive=true;
+  flash('radial-gradient(rgba(138,74,26,.1),transparent)');
+  log(`<span class="log-ability">${c.name} готовит ОГНЕННЫЙ ШАР! Выберите цель.</span>`);
+  updUI();
+}
+
+async function endPlayerTurn(){
+  if(gameOver||!isPlayerTurn)return;
+  stopRoundTimer();
+  turnLocked=true;updUI();
+  const data=await call('POST',`/api/battle/end-turn/${sessionId}`);
+  processBattleResponse(data);
+}
+
+// ═══ ТАЙМЕР ═══
+function startRoundTimer(){
+  stopRoundTimer();
+  roundSeconds=ROUND_TIME;
+  updateRoundTimerUI();
+  roundTimer=setInterval(()=>{
+    roundSeconds--;
+    updateRoundTimerUI();
+    if(roundSeconds<=0){
+      stopRoundTimer();
+      if(isPlayerTurn&&!gameOver&&!turnLocked){
+        log('<span class="log-ability">⏰ Время вышло! Ход переходит противнику.</span>');
+        endPlayerTurn();
+      }
+    }
+  },1000);
+}
+function stopRoundTimer(){
+  if(roundTimer){clearInterval(roundTimer);roundTimer=null;}
+}
+function updateRoundTimerUI(){
+  const txt=el('roundTimerText');
+  txt.textContent=roundSeconds;
+  txt.classList.remove('warning','danger');
+  if(roundSeconds<=5)txt.classList.add('danger');
+  else if(roundSeconds<=10)txt.classList.add('warning');
+}
+function updateRowStates(){
+  const pRow=el('playerRow'),eRow=el('enemyRow');
+  if(gameOver){pRow.classList.remove('waiting','active');eRow.classList.remove('waiting','active');return;}
+  if(isPlayerTurn){pRow.classList.add('active');pRow.classList.remove('waiting');eRow.classList.add('waiting');eRow.classList.remove('active');}
+  else{eRow.classList.add('active');eRow.classList.remove('waiting');pRow.classList.add('waiting');pRow.classList.remove('active');}
+}
+
+showScreen('menu');
+
+// Запуск BGM при первом взаимодействии (для мобильных)
+document.addEventListener('click',startBGM,{once:true});
+document.addEventListener('touchstart',startBGM,{once:true});
+</script>
+
+</body>
+</html>
