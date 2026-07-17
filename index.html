@@ -976,7 +976,9 @@ async function continueGame(){
     renderShop();
   } catch(e) {
     hideLoading();
-    showToast('Не удалось загрузить. Сервер может спать — попробуй через 30 сек.');
+    showToast('Сессия потеряна, создаём новую...');
+    sessionId=null;
+    await newCampaign();
   }
   hideLoading();
 }
@@ -1012,8 +1014,12 @@ function backToMenu(){showScreen('menu')}
 
 // ═══ МАГАЗИН ═══
 async function loadShop(){
-  const data=await api(`/api/shop/${sessionId}`);
-  shopCards=(data||[]).map(c=>typeof c==='string'?byId(c):c).filter(Boolean);
+  try {
+    const data=await api(`/api/shop/${sessionId}`);
+    shopCards=(data||[]).map(c=>typeof c==='string'?byId(c):c).filter(Boolean);
+  } catch(e) {
+    shopCards=[];
+  }
 }
 
 async function showShopTab(tab){
@@ -1047,32 +1053,42 @@ function renderShopGrid(){
 
 function renderColGrid(){
   const g=el('shopGrid');
-  if(!playerCollection.length){g.innerHTML='<div class="deck-empty">Коллекция пуста. Посетите Склеп.</div>';return}
+  if(!playerCollection||!playerCollection.length){g.innerHTML='<div class="deck-empty">Коллекция пуста. Посетите Склеп.</div>';return}
   g.innerHTML=playerCollection.map(id=>{const c=byId(id);if(!c)return'';const rc=c.type==='mage'?'#b8a8c8':c.type==='tank'?'#8ab87a':'#d08070';const rt=c.type==='mage'?'Маг':c.type==='tank'?'Танк':'Убийца';return `<div class="deck-card ${selectedDeck.includes(id)?'selected-deck':''}" data-did="${id}" onclick="toggleDeckCard('${id}')"><img class="deck-card-img" src="${IMG_BASE}${c.id}.webp" alt="${c.name}"><span class="card-role" style="color:${rc}">${rt}</span><div class="hp-bar-wrap"><div class="hp-bar healthy" style="width:100%"></div></div><span class="hp-text">${c.hp}/${c.hp}</span><div class="card-overlay"><div class="card-name">${c.name}</div><div style="font-family:Inter,sans-serif;font-size:8px;color:#9a8aae;text-align:center;margin-top:2px;letter-spacing:.3px;text-shadow:0 1px 2px rgba(0,0,0,.9);">${c.passive||''}</div></div><button class="deck-info-btn" onclick="event.stopPropagation();showCardDetail('${id}')" title="Информация">ⓘ</button></div>`}).join('');
 }
 
 async function buyCard(id){
+  if(!sessionId)return showToast('Нет сессии. Начни новую кампанию.');
   playSelect();
-  const data=await call('POST',`/api/buy/${sessionId}`,{cardId:id});
-  playerGold=data.playerGold;
-  playerCollection=data.playerCollection||[];
-  if(data.selectedDeck)selectedDeck=data.selectedDeck;
-  if(data.cardUpgrades)cardUpgrades=data.cardUpgrades;
-  sfx.buy();
-  el('shopGold').textContent=playerGold;
-  if(currentTab==='shop'){await loadShop();renderShopGrid();}
-  else{renderShop();}
+  try {
+    const data=await call('POST',`/api/buy/${sessionId}`,{cardId:id});
+    playerGold=data.playerGold;
+    playerCollection=data.playerCollection||[];
+    if(data.selectedDeck)selectedDeck=data.selectedDeck;
+    if(data.cardUpgrades)cardUpgrades=data.cardUpgrades;
+    sfx.buy();
+    el('shopGold').textContent=playerGold;
+    if(currentTab==='shop'){await loadShop();renderShopGrid();}
+    else{renderShop();}
+  } catch(e) {
+    showToast('Сервер просыпается, подожди...');
+  }
 }
 
 async function toggleDeckCard(id){
+  if(!sessionId)return showToast('Нет сессии. Начни новую кампанию.');
   playSelect();
-  const data=await call('POST',`/api/deck/select/${sessionId}`,{cardId:id});
-  playerGold=data.playerGold;
-  playerCollection=data.playerCollection||[];
-  selectedDeck=data.selectedDeck||[];
-  if(data.cardUpgrades)cardUpgrades=data.cardUpgrades;
-  renderColGrid();
-  upBBtn();
+  try {
+    const data=await call('POST',`/api/deck/select/${sessionId}`,{cardId:id});
+    playerGold=data.playerGold;
+    playerCollection=data.playerCollection||[];
+    selectedDeck=data.selectedDeck||[];
+    if(data.cardUpgrades)cardUpgrades=data.cardUpgrades;
+    renderColGrid();
+    upBBtn();
+  } catch(e) {
+    showToast('Сервер просыпается, подожди...');
+  }
 }
 
 function upBBtn(){const ok=selectedDeck.length===CARDS_PER_SIDE;el('toBattleBtn').disabled=!ok;el('deckCount').textContent=`Выбрано: ${selectedDeck.length} / ${CARDS_PER_SIDE}`}
@@ -1159,8 +1175,8 @@ let roundTimer=null,roundSeconds=0,ROUND_TIME=20;
 
 function applyBattleState(data){
   playerGold=data.playerGold;
-  playerCollection=data.playerCollection;
-  selectedDeck=data.selectedDeck;
+  playerCollection=data.playerCollection||[];
+  selectedDeck=data.selectedDeck||[];
   cardUpgrades=data.cardUpgrades||{};
   playerCards=enrichCards(data.playerCards);
   enemyCards=enrichCards(data.enemyCards);
