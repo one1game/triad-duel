@@ -358,7 +358,7 @@ app.post('/api/deck/select/:sessionId', (req, res) => {
   const { cardId } = req.body; if (!s.playerCollection.includes(cardId)) return res.status(400).json({ error: 'Card not in collection' });
   if (s.selectedDeck.includes(cardId)) s.selectedDeck = s.selectedDeck.filter(x => x !== cardId);
   else { if (s.selectedDeck.length >= CARDS_PER_SIDE) return res.status(400).json({ error: 'Deck full (max 3)' }); s.selectedDeck.push(cardId); }
-  res.json({ selectedDeck: s.selectedDeck, deckReady: s.selectedDeck.length === CARDS_PER_SIDE });
+  res.json({ playerGold: s.playerGold, playerCollection: s.playerCollection, selectedDeck: s.selectedDeck, cardUpgrades: s.cardUpgrades, deckReady: s.selectedDeck.length === CARDS_PER_SIDE });
 });
 
 // ═══════════════ API: BATTLE START ═══════════════
