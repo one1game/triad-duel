@@ -10,4 +10,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ping Render server
-        run: curl -s -o /dev/null -w "Status: %{http_code}" https://triad-duel-server.onrender.com/api/new-campaign -X POST
+        run: |
+          curl -s -o /dev/null -w "Status: %{http_code}" -X POST https://triad-duel-server.onrender.com/api/new-campaign
