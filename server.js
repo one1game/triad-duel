@@ -260,9 +260,13 @@ function executeAiAction(session) {
     logEntries.push(am + (isCrit ? ' [КРИТ!]' : '') + (isDead ? ' [УБИТ]' : ''));
     const ta = session.playerCards.find(e => e.tauntActive && e.hp > 0 && e.id === 'tank_02');
     if (ta && target.id === ta.id && actor.hp > 0) { actor.hp = Math.max(0, actor.hp - 1); logEntries.push(`${ta.passive}: отражает 1 урон в ${actor.name}!`); }
-    if (actor.type === 'mage') { const sp = tryMageSplash(actor, session.playerCards, tgtIdx); if (sp) sp.forEach(s => logEntries.push(`Враг: ${actor.passive}: ${s.damage} урона по ${s.neighbor.name}!`)); }
-    const as = tryAssaSplash(actor, session.playerCards, tgtIdx, damage); if (as) logEntries.push(`Враг: ${actor.passive}: ${as.damage} урона по ${as.neighbor.name}!`);
-    const r = doAiEndTurn(session); return { log: logEntries, gameEnd: r, action: { type: 'attack', actor: actor.name, actorIdx: actIdx, target: target.name, targetIdx: tgtIdx, damage, isCrit, isDead } };
+    const aiMageSplashes = actor.type === 'mage' ? tryMageSplash(actor, session.playerCards, tgtIdx) : null;
+    if (aiMageSplashes) aiMageSplashes.forEach(s => logEntries.push(`Враг: ${actor.passive}: ${s.damage} урона по ${s.neighbor.name}!`));
+    const aiAssaSplash = tryAssaSplash(actor, session.playerCards, tgtIdx, damage); if (aiAssaSplash) logEntries.push(`Враг: ${actor.passive}: ${aiAssaSplash.damage} урона по ${aiAssaSplash.neighbor.name}!`);
+    const aiAction = { type: 'attack', actor: actor.name, actorIdx: actIdx, target: target.name, targetIdx: tgtIdx, damage, isCrit, isDead };
+    if (aiMageSplashes) aiAction.mageSplashes = aiMageSplashes.map(s => ({ neighborIdx: s.index, damage: s.damage }));
+    if (aiAssaSplash) aiAction.assaSplash = { neighborIdx: aiAssaSplash.index, damage: aiAssaSplash.damage };
+    const r = doAiEndTurn(session); return { log: logEntries, gameEnd: r, action: aiAction };
   }
   if (best.type === 'taunt') {
     const { actor } = best; actor.mana -= 2; actor.tauntActive = true;
@@ -298,8 +302,10 @@ function executeAiAction(session) {
     logEntries.push(`Враг: ${actor.name} — ОГНЕННЫЙ ШАР в ${target.name}! ${damage} урона.${d ? ' [УБИТ]' : ''}`);
     const tgtIdx = session.playerCards.indexOf(target);
     const actIdx = session.enemyCards.indexOf(actor);
-    const sp = tryMageSplash(actor, session.playerCards, tgtIdx); if (sp) sp.forEach(s => logEntries.push(`Враг: ${actor.passive}: ${s.damage} урона по ${s.neighbor.name}!`));
-    const r = doAiEndTurn(session); return { log: logEntries, gameEnd: r, action: { type: 'fireball', actor: actor.name, actorIdx: actIdx, target: target.name, targetIdx: tgtIdx, damage, isDead: d } };
+    const aiFbSplash = tryMageSplash(actor, session.playerCards, tgtIdx); if (aiFbSplash) aiFbSplash.forEach(s => logEntries.push(`Враг: ${actor.passive}: ${s.damage} урона по ${s.neighbor.name}!`));
+    const aiAction = { type: 'fireball', actor: actor.name, actorIdx: actIdx, target: target.name, targetIdx: tgtIdx, damage, isDead: d };
+    if (aiFbSplash) aiAction.mageSplashes = aiFbSplash.map(s => ({ neighborIdx: s.index, damage: s.damage }));
+    const r = doAiEndTurn(session); return { log: logEntries, gameEnd: r, action: aiAction };
   }
   const r = doAiEndTurn(session); return { log: logEntries, gameEnd: r };
 }
@@ -400,8 +406,12 @@ app.post('/api/battle/attack/:sessionId', (req, res) => {
   let lg = `${att.name} атакует ${def.name} — ${dmg} урона`; if (defBonus > 0) lg += ` [${def.passive} -${defBonus}]`;
   logEntries.push(lg + (wasCrit ? ' [КРИТ!]' : '') + (isDead ? ' [УБИТ]' : ''));
   if (def.id === 'tank_02' && def.tauntActive && att.hp > 0) { att.hp = Math.max(0, att.hp - 1); logEntries.push(`${def.passive}: отражает 1 урон в ${att.name}!`); }
-  if (att.type === 'mage') { const spl = tryMageSplash(att, s.enemyCards, defenderIdx); if (spl) spl.forEach(s => logEntries.push(`⚡ ${att.passive}: ${s.damage} урона по ${s.neighbor.name}!`)); }
+  const mageSplashes = att.type === 'mage' ? tryMageSplash(att, s.enemyCards, defenderIdx) : null;
+  if (mageSplashes) mageSplashes.forEach(s => logEntries.push(`⚡ ${att.passive}: ${s.damage} урона по ${s.neighbor.name}!`));
   const asSpl = tryAssaSplash(att, s.enemyCards, defenderIdx, dmg); if (asSpl) logEntries.push(`🗡 ${att.passive}: ${asSpl.damage} урона по ${asSpl.neighbor.name}!`);
+  const playerAction = { type: 'attack', attackerIdx, defenderIdx, damage: dmg, isCrit: wasCrit, isDead };
+  if (mageSplashes) playerAction.mageSplashes = mageSplashes.map(s => ({ neighborIdx: s.index, damage: s.damage }));
+  if (asSpl) playerAction.assaSplash = { neighborIdx: asSpl.index, damage: asSpl.damage };
   s.activeIdx = -1; s.turnLocked = true;
   // End player turn
   s.enemyCards.forEach(c => { const d = applyDOT(c); if (d) logEntries.push(`☠ Чума наносит ${d} урона ${c.name}!`); });
@@ -409,7 +419,7 @@ app.post('/api/battle/attack/:sessionId', (req, res) => {
   s.enemyCards.forEach(c => { if (c.tauntActive) c.tauntActive = false; c.atkDebuff = 0; });
   const er = checkEnd(s); if (er) return res.json({ ...buildBattleState(s), log: logEntries, gameEnd: er });
   s.isPlayerTurn = false; const ai = executeAiAction(s);
-  res.json({ ...buildBattleState(s), log: [...logEntries, ...(ai.log || [])], gameEnd: ai.gameEnd || null, aiAction: ai.action || null });
+  res.json({ ...buildBattleState(s), log: [...logEntries, ...(ai.log || [])], gameEnd: ai.gameEnd || null, aiAction: ai.action || null, playerAction });
 });
 
 // ═══════════════ API: USE TAUNT ═══════════════
@@ -431,7 +441,7 @@ app.post('/api/battle/taunt/:sessionId', (req, res) => {
   s.enemyCards.forEach(c => { if (c.tauntActive) c.tauntActive = false; c.atkDebuff = 0; });
   const er = checkEnd(s); if (er) return res.json({ ...buildBattleState(s), log: logEntries, gameEnd: er });
   s.isPlayerTurn = false; const ai = executeAiAction(s);
-  res.json({ ...buildBattleState(s), log: [...logEntries, ...(ai.log || [])], gameEnd: ai.gameEnd || null, aiAction: ai.action || null });
+  res.json({ ...buildBattleState(s), log: [...logEntries, ...(ai.log || [])], gameEnd: ai.gameEnd || null, aiAction: ai.action || null, playerAction });
 });
 
 // ═══════════════ API: USE CRIT ═══════════════
@@ -471,6 +481,8 @@ app.post('/api/battle/fireball/:sessionId', (req, res) => {
   if (att.id === 'mage_09' && isDead) { att.hp = Math.min(att.maxHp, att.hp + 2); att.mana = Math.min(MAX_MANA, att.mana + 1); logEntries.push(`${att.passive}: +2 HP, +1 маны!`); }
   let lg = `${att.name} — ОГНЕННЫЙ ШАР в ${def.name} — ${dmg} урона`; logEntries.push(lg + (defBonus > 0 ? ` [${def.passive} -${defBonus}]` : '') + (isDead ? ' [УБИТ]' : ''));
   const spl = tryMageSplash(att, s.enemyCards, defenderIdx); if (spl) spl.forEach(s => logEntries.push(`⚡ ${att.passive}: ${s.damage} урона по ${s.neighbor.name}!`));
+  const playerAction = { type: 'fireball', attackerIdx: s.activeIdx, defenderIdx, damage: dmg, isDead };
+  if (spl) playerAction.mageSplashes = spl.map(s => ({ neighborIdx: s.index, damage: s.damage }));
   s.activeIdx = -1; s.turnLocked = true;
   s.enemyCards.forEach(c => { const d = applyDOT(c); if (d) logEntries.push(`☠ Чума наносит ${d} урона ${c.name}!`); });
   s.abilitiesUsedThisTurn = []; s.turnLocked = false; s.critActivated = false; s.fireballActive = false; s.firstTurn = false;

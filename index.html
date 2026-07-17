@@ -1242,6 +1242,8 @@ function animateAiAction(action){
     if(action.type==='attack'||action.type==='crit'||action.type==='fireball'){
       if(aE)aE.classList.add('attacking');
       if(dE){dE.classList.add('taking-damage');if(action.damage>0){dmgNum(dE,action.damage,action.type==='crit'?'#c08030':(action.type==='fireball'?'#e07830':'#c04030'));impact(dE);if(action.isCrit)critText(dE);if(action.isDead){dE.classList.add('dying');deathFx(dE);sfx.death()}}}
+      if(action.mageSplashes)action.mageSplashes.forEach(s=>{const sE=el('playerRow').querySelector(`[data-idx="${s.neighborIdx}"]`);if(sE){dmgNum(sE,s.damage,'#8050c0');impact(sE);if(playerCards[s.neighborIdx]&&playerCards[s.neighborIdx].hp<=0){sE.classList.add('dying');deathFx(sE);sfx.death()}}});
+      if(action.assaSplash){const sE=el('playerRow').querySelector(`[data-idx="${action.assaSplash.neighborIdx}"]`);if(sE){dmgNum(sE,action.assaSplash.damage,'#c04030');impact(sE);}}
       if(action.type==='crit')sfx.crit();
       else if(action.type==='fireball'){sfx.fireball();flash('radial-gradient(rgba(138,74,26,.15),transparent)');}
       else sfx.attack();
@@ -1419,49 +1421,78 @@ function onCard(isP,idx){
 }
 
 async function doAttack(aIdx,dIdx){
-  const data=await call('POST',`/api/battle/attack/${sessionId}`,{attackerIdx:aIdx,defenderIdx:dIdx});
+  if(!isPlayerTurn||gameOver||turnLocked)return;
   const aE=el('playerRow').querySelector(`[data-idx="${aIdx}"]`);
   const dE=el('enemyRow').querySelector(`[data-idx="${dIdx}"]`);
-  if(aE)aE.classList.add('attacking');if(dE)dE.classList.add('taking-damage');
-  sfx.attack();
-  processBattleResponse(data);
-  setTimeout(()=>{if(aE)aE.classList.remove('attacking');if(dE)dE.classList.remove('taking-damage')},450);
+  try {
+    const data=await call('POST',`/api/battle/attack/${sessionId}`,{attackerIdx:aIdx,defenderIdx:dIdx});
+    const pa=data.playerAction;
+    if(aE)aE.classList.add('attacking');
+    if(dE && pa){
+      dE.classList.add('taking-damage');
+      dmgNum(dE,pa.damage,pa.isCrit?'#c08030':'#c04030');
+      impact(dE);
+      if(pa.isCrit)critText(dE);
+      if(pa.isDead){dE.classList.add('dying');deathFx(dE);sfx.death();}
+      if(pa.mageSplashes)pa.mageSplashes.forEach(s=>{const sE=el('enemyRow').querySelector(`[data-idx="${s.neighborIdx}"]`);if(sE){dmgNum(sE,s.damage,'#8050c0');impact(sE);}});
+      if(pa.assaSplash){const sE=el('enemyRow').querySelector(`[data-idx="${pa.assaSplash.neighborIdx}"]`);if(sE){dmgNum(sE,pa.assaSplash.damage,'#c04030');impact(sE);}}
+    }
+    if(pa&&pa.isCrit)sfx.crit();else sfx.attack();
+    processBattleResponse(data);
+    setTimeout(()=>{if(aE)aE.classList.remove('attacking');if(dE)dE.classList.remove('taking-damage')},450);
+  }catch(e){showToast('Сервер не отвечает...');}
 }
 
 async function doFireball(aIdx,dIdx){
-  const data=await call('POST',`/api/battle/fireball/${sessionId}`,{defenderIdx:dIdx});
+  if(!isPlayerTurn||gameOver||turnLocked||!fireballActive)return;
   const aE=el('playerRow').querySelector(`[data-idx="${aIdx}"]`);
   const dE=el('enemyRow').querySelector(`[data-idx="${dIdx}"]`);
-  if(aE)aE.classList.add('attacking');if(dE)dE.classList.add('taking-damage');
-  sfx.fireball();flash('radial-gradient(rgba(138,74,26,.15),transparent)');
-  fireballActive=false;
-  processBattleResponse(data);
-  setTimeout(()=>{if(aE)aE.classList.remove('attacking');if(dE)dE.classList.remove('taking-damage')},450);
+  try {
+    const data=await call('POST',`/api/battle/fireball/${sessionId}`,{defenderIdx:dIdx});
+    const pa=data.playerAction;
+    if(aE)aE.classList.add('attacking');
+    if(dE && pa){
+      dE.classList.add('taking-damage');
+      dmgNum(dE,pa.damage,'#e07830');
+      impact(dE);
+      if(pa.isDead){dE.classList.add('dying');deathFx(dE);sfx.death();}
+      if(pa.mageSplashes)pa.mageSplashes.forEach(s=>{const sE=el('enemyRow').querySelector(`[data-idx="${s.neighborIdx}"]`);if(sE){dmgNum(sE,s.damage,'#8050c0');impact(sE);}});
+    }
+    sfx.fireball();flash('radial-gradient(rgba(138,74,26,.15),transparent)');
+    fireballActive=false;
+    processBattleResponse(data);
+    setTimeout(()=>{if(aE)aE.classList.remove('attacking');if(dE)dE.classList.remove('taking-damage')},450);
+  }catch(e){showToast('Сервер не отвечает...');}
 }
 
 async function useTaunt(){
   if(activeIdx<0||!isPlayerTurn||gameOver||turnLocked||firstTurn)return;
-  const data=await call('POST',`/api/battle/taunt/${sessionId}`);
-  sfx.taunt();flash('radial-gradient(rgba(138,74,26,.15),transparent)');
-  processBattleResponse(data);
-  if(!gameOver&&isPlayerTurn){
-    turnLocked=true;updUI();
-    el('actionHint').innerHTML='<span class="key">Провокация!</span> Ход завершается...';
-    setTimeout(()=>{if(isPlayerTurn&&!gameOver)endPlayerTurn();},800);
-  }
+  try {
+    const data=await call('POST',`/api/battle/taunt/${sessionId}`);
+    sfx.taunt();flash('radial-gradient(rgba(138,74,26,.15),transparent)');
+    processBattleResponse(data);
+    if(!gameOver&&isPlayerTurn){
+      turnLocked=true;updUI();
+      el('actionHint').innerHTML='<span class="key">Провокация!</span> Ход завершается...';
+      setTimeout(()=>{if(isPlayerTurn&&!gameOver)endPlayerTurn();},800);
+    }
+  }catch(e){showToast('Сервер не отвечает...');}
 }
 
 async function useCrit(){
   if(activeIdx<0||!isPlayerTurn||gameOver||turnLocked||firstTurn)return;
-  const data=await call('POST',`/api/battle/crit/${sessionId}`);
-  flash('radial-gradient(rgba(192,128,48,.1),transparent)');
-  processBattleResponse(data);
+  try {
+    const data=await call('POST',`/api/battle/crit/${sessionId}`);
+    flash('radial-gradient(rgba(192,128,48,.1),transparent)');
+    processBattleResponse(data);
+  }catch(e){showToast('Сервер не отвечает...');}
 }
 
 function useFireball(){
   if(activeIdx<0||!isPlayerTurn||gameOver||firstTurn||turnLocked)return;
   const c=playerCards[activeIdx];
-  if(c.type!=='mage'||abilitiesUsedThisTurn.has(activeIdx))return;
+  const cost=c.id==='mage_01'?2:3;
+  if(c.type!=='mage'||c.mana<cost||abilitiesUsedThisTurn.has(activeIdx))return;
   fireballActive=true;
   flash('radial-gradient(rgba(138,74,26,.1),transparent)');
   log(`<span class="log-ability">${c.name} готовит ОГНЕННЫЙ ШАР! Выберите цель.</span>`);
@@ -1472,8 +1503,10 @@ async function endPlayerTurn(){
   if(gameOver||!isPlayerTurn)return;
   stopRoundTimer();
   turnLocked=true;updUI();
-  const data=await call('POST',`/api/battle/end-turn/${sessionId}`);
-  processBattleResponse(data);
+  try {
+    const data=await call('POST',`/api/battle/end-turn/${sessionId}`);
+    processBattleResponse(data);
+  }catch(e){showToast('Сервер не отвечает...');}
 }
 
 // ═══ ТАЙМЕР ═══
