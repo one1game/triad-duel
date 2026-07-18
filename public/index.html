@@ -263,12 +263,9 @@
   <button class="btn gold-btn" onclick="backToShopFromResult()">Продолжить</button>
 </div>
 <div class="footer">Triad Duel &copy; 2025 &bull; Warhammer-inspired card battler</div>
+<script src="/socket.io.min.js"></script>
 <script>
-var isLocal=location.hostname==='localhost'||location.hostname==='127.0.0.1';
-document.write('<script src="'+(isLocal?'/socket.io/socket.io.js':'https://triad-duel-server.onrender.com/socket.io/socket.io.js')+'"><\/script>');
-</script>
-<script>
-window.SERVER_URL=isLocal?undefined:'https://triad-duel-server.onrender.com';
+window.SERVER_URL=location.hostname==='localhost'||location.hostname==='127.0.0.1'?undefined:'https://triad-duel-server.onrender.com';
 </script>
 <script>
 // @ts-nocheck
