@@ -562,7 +562,7 @@ function byId(id){return ALL_CARDS.find(c=>c.id===id)||{}}
 function getEffAtk(c){return Math.max(0,(c.atk||0)-(c.atkDebuff||0))}
 
 // ═══ MENU ═══
-function newCampaign(){showLoading('Создаём кампанию...');saveGameState({playerGold,playerCollection,selectedDeck,cardUpgrades,shopCards,battle:null},'shop');socket.emit('newCampaign');if(!socket.connected){setTimeout(()=>{if(!socket.connected)location.reload()},3000)}}
+function newCampaign(){showLoading('Создаём кампанию...');saveGameState({playerGold,playerCollection,selectedDeck,cardUpgrades,shopCards,battle:null},'shop');socket.emit('newCampaign')}
 function backToMenu(){Object.values(scr).forEach(s=>s.classList.remove('active'));scr.menu.classList.add('active')}
 
 // ═══ SHOP ═══
