@@ -997,6 +997,7 @@ function backToShop(){stopRoundTimer();showScreen('shop');currentTab='shop';
 function backToShopFromResult(){el('resultOverlay').classList.remove('show');backToShop()}
 
 // ═══ AUTH ═══
+const AUTH_BASE='https://traekart1cdn.vercel.app';
 let accessToken=localStorage.getItem('td_access_token')||null;
 let pollTimer=null;
 
@@ -1006,7 +1007,7 @@ async function startBotAuth(){
   el('tgLoginBtn').textContent='Соединение...';
   el('authStatus').textContent='Генерирую код...';
   try{
-    const res=await fetch('/auth/bot/start');
+    const res=await fetch(`${AUTH_BASE}/api/auth/start`);
     const data=await res.json();
     if(data.error){el('authError').textContent=data.error;resetAuthBtn();return}
     el('authStatus').textContent='Открой бота и нажми START';
@@ -1028,7 +1029,7 @@ function pollForAuth(code){
     attempts++;
     if(attempts>60){clearInterval(pollTimer);el('authError').textContent='Время истекло. Попробуй снова.';resetAuthBtn();return}
     try{
-      const res=await fetch(`/auth/bot/poll?code=${code}`);
+      const res=await fetch(`${AUTH_BASE}/api/auth/poll?code=${code}`);
       const data=await res.json();
       if(data.ready){
         clearInterval(pollTimer);
