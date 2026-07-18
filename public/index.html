@@ -347,7 +347,6 @@ socket.on('error',(msg)=>{
   el('authError').textContent=msg||'';
   if(msg==='Токен недействителен'){
     localStorage.removeItem('td_access_token');
-    localStorage.removeItem('td_game_state');
     accessToken=null;
     el('authOverlay').classList.add('show');
     resetAuthBtn();
@@ -563,7 +562,7 @@ function getEffAtk(c){return Math.max(0,(c.atk||0)-(c.atkDebuff||0))}
 
 // ═══ MENU ═══
 function newCampaign(){showLoading('Создаём кампанию...');saveGameState({playerGold,playerCollection,selectedDeck,cardUpgrades,shopCards,battle:null},'shop');socket.emit('newCampaign')}
-function backToMenu(){Object.values(scr).forEach(s=>s.classList.remove('active'));scr.menu.classList.add('active')}
+function backToMenu(){Object.values(scr).forEach(s=>s.classList.remove('active'));scr.menu.classList.add('active');saveGameState({playerGold,playerCollection,selectedDeck,cardUpgrades,shopCards,battle:null},'menu')}
 
 // ═══ SHOP ═══
 function showShopTab(tab){
@@ -1068,7 +1067,19 @@ function pollForAuth(code){
           el('authOverlay').classList.remove('show');
           hideLoading();
           applyFullState(gameState);
-          showScreen('menu');
+          const saved=loadSavedState();
+          if(saved&&saved.screen==='shop'){
+            showScreen('shop');currentTab='shop';
+            el('tabShopBtn').classList.add('active');el('tabInvBtn').classList.remove('active');el('tabChaosBtn').classList.remove('active');
+            el('shopTabTitle').textContent='Склеп';el('deckCount').style.visibility='hidden';el('toBattleBtn').style.display='none';
+            renderShop();socket.emit('getShop');
+          }else if(saved&&saved.screen==='battle'){
+            showScreen('battle');el('battleLog').innerHTML='';battleCardsReady=false;battleGen++;
+            socket.emit('startBattle');
+          }else{
+            showScreen('menu');
+          }
+          saveGameState(gameState,saved?saved.screen:'menu');
         }
       }else{
         const dots='.'.repeat((attempts%3)+1);

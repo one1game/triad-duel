@@ -16,6 +16,9 @@ const supabase = createClient(
 
 // ═══ TELEGRAM + JWT ═══
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
+if (!process.env.JWT_SECRET) {
+  console.error('[FATAL] JWT_SECRET не задан в env! Токены будут умирать при каждом рестарте.');
+}
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
 
 function signJWT(payload) {
