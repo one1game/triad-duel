@@ -10,6 +10,7 @@ app.use(express.static('public'));
 
 // ═══════════════ CONSTANTS ═══════════════
 const CARDS_PER_SIDE = 3;
+const SHOP_SIZE = 12;
 const MAX_MANA = 10;
 
 // ═══════════════ ALL CARDS (21 total: 11 mages, 5 tanks, 5 assassins) ═══════════════
@@ -376,7 +377,7 @@ io.on('connection', (socket) => {
     // держат hasBattle=true и клиент считает, что бой всё ещё идёт.
     session.playerCards = []; session.enemyCards = []; session.gameOver = false;
     session.activeIdx = -1; session.isPlayerTurn = true; session.turnLocked = false;
-    session.shopCards = ALL_CARDS.filter(c => !session.playerCollection.includes(c.id));
+    if (!session.shopCards) session.shopCards = sh(ALL_CARDS.filter(c => !session.playerCollection.includes(c.id))).slice(0, SHOP_SIZE);
     socket.emit('stateUpdate', buildFullState(session));
   });
 

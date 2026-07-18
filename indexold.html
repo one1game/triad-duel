@@ -294,7 +294,6 @@
   .chaos-upg-btn[data-stat="mana"]::after { left: auto; right: 0; transform: none; }
   .chaos-upg-btn:hover::after { opacity: 1; }
   .chaos-upg-icon { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
-  .chaos-upg-label { display: none; }
   .chaos-card:nth-child(1) { animation-delay: 0.02s; } .chaos-card:nth-child(2) { animation-delay: 0.05s; } .chaos-card:nth-child(3) { animation-delay: 0.08s; } .chaos-card:nth-child(4) { animation-delay: 0.11s; }
   .chaos-card:nth-child(5) { animation-delay: 0.14s; } .chaos-card:nth-child(6) { animation-delay: 0.17s; } .chaos-card:nth-child(7) { animation-delay: 0.20s; } .chaos-card:nth-child(8) { animation-delay: 0.23s; }
   .chaos-card:nth-child(9) { animation-delay: 0.26s; } .chaos-card:nth-child(10) { animation-delay: 0.29s; } .chaos-card:nth-child(11) { animation-delay: 0.32s; } .chaos-card:nth-child(12) { animation-delay: 0.35s; }
@@ -589,45 +588,156 @@
     .card:hover { transform: translateY(-6px) scale(1.02); }
     .card.enemy-targetable:hover { transform: translateY(-4px) scale(1.01); }
     .damage-number { font-size: 20px; }
-    /* Хаос — компакт */
-    .chaos-card { width: 130px; }
-    .chaos-card-frame { width: 130px; }
-    .chaos-card-name { font-size: 9px; bottom: 80px; }
-    .chaos-card-class { font-size: 7px; bottom: 68px; }
-    .chaos-card-passive { font-size: 6px; bottom: 56px; max-width: 100px; }
-    .chaos-upgrades { padding: 6px 0 0; }
-    .chaos-upg-btn { font-size: 8px; min-height: 42px; }
-    .chaos-upg-icon { width: 100%; height: 100%; }
-    .chaos-upg-label { font-size: 7px; }
-    .shop-card-name { font-size: 9px; bottom: 42px; }
-    .shop-card-price { font-size: 11px; bottom: 8px; }
-    .shop-card-passive { font-size: 6px; bottom: 30px; }
-    .shop-card-buy { font-size: 8px; padding: 3px 9px; bottom: 6px; }
-    .deck-card-name { font-size: 9px; }
-    .result-text { font-size: 40px; }
-    .result-gold { font-size: 14px; }
-    .round-timer-text { font-size: 18px; }
-    .round-timer { padding: 4px 0; }
-    .settings-title { font-size: 16px; }
-    .setting-row { font-size: 12px; }
+    .chaos-upg-btn::after { opacity: 1 !important; bottom: auto; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 9px; }
   }
 
-  #cardDetailOverlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(3, 3, 4, 0.95); backdrop-filter: blur(15px); z-index: 3000; justify-content: center; align-items: center; }
-  #cardDetailOverlay.show { display: flex; animation: fadeIn 0.3s ease-out; }
-  .card-detail { display: flex; gap: 28px; background: var(--bg-panel); border: 1px solid var(--border-glow); padding: 32px; border-radius: 4px; max-width: 600px; position: relative; box-shadow: 0 25px 60px rgba(0,0,0,0.8); }
-  .card-detail-close { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,.5); border: 1px solid var(--border-dim); color: var(--text-dim); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .3s; font-family: Inter, sans-serif; }
-  .card-detail-close:hover { border-color: var(--accent-gold); color: var(--accent-gold-bright); }
-  .card-detail-info { display: flex; flex-direction: column; gap: 10px; flex: 1; min-width: 0; }
-  .card-detail-name { font-family: Cinzel, serif; font-size: 20px; font-weight: 700; color: var(--accent-gold-bright); letter-spacing: 2px; text-transform: uppercase; }
-  .card-detail-role { font-size: 12px; color: var(--text-dim); letter-spacing: 1px; }
-  .card-detail-stat-row { display: flex; gap: 24px; margin-top: 6px; font-family: Cinzel, serif; }
-  .card-detail-stat { font-size: 14px; color: var(--text-primary); }
-  .card-detail-passive { margin-top: 10px; padding: 12px; background: rgba(0,0,0,.3); border: 1px solid var(--border-dim); border-radius: 2px; }
-  .card-detail-passive .passive-name { font-family: Cinzel, serif; font-size: 13px; font-weight: 700; color: #b8a8c8; letter-spacing: 1px; text-transform: uppercase; }
-  .card-detail-passive .passive-desc { font-family: Inter, sans-serif; font-size: 11px; color: var(--text-dim); margin-top: 4px; line-height: 1.5; }
-  .card-detail-lore { font-family: Inter, sans-serif; font-size: 11px; color: var(--text-dim); font-style: italic; margin-top: 6px; line-height: 1.6; border-top: 1px solid var(--border-dim); padding-top: 10px; }
-  #cdImg { width: 180px; height: 270px; border-radius: 2px; object-fit: cover; border: 1px solid var(--border-dim); }
+  /* --- ТЕЛЕФОН (< 480px) --- */
+  @media (max-width: 480px) {
+    body { padding-top: 4px; }
+    .screen { padding: 6px; gap: 10px; }
+    .screen.active { gap: 10px; animation: fadeIn 0.4s ease-out; }
 
+    /* Меню */
+    .menu-title { font-size: 26px; letter-spacing: 2px; }
+    .menu-subtitle { font-size: 8px; letter-spacing: 3px; margin-bottom: 24px; }
+    .menu-buttons { max-width: 220px; gap: 8px; }
+    .menu-buttons .btn { padding: 12px; font-size: 11px; }
+
+    /* Карточки — ещё меньше */
+    .card { width: 100px; height: 150px; }
+    .card-image { width: 100px; height: 150px; }
+    .atk-badge { font-size: 10px; padding: 1px 4px; top: 3px; left: 3px; }
+    .hp-text { font-size: 8px; padding: 1px 3px; top: 3px; right: 3px; }
+    .card-name { font-size: 7px; padding: 2px 3px; }
+    .card-role { font-size: 5px; bottom: 3px; right: 4px; }
+    .card-overlay { height: 60%; padding: 20px 4px 6px; }
+    .mana-orbs { bottom: 3px; left: 3px; gap: 2px; }
+    .mana-orb { width: 4px; height: 4px; }
+    .dot-status { font-size: 6px !important; top: 16px !important; left: 3px !important; }
+    .hp-bar-wrap { height: 2px; }
+
+    /* Сетка магазина — 3 колонки */
+    .card-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; justify-content: center; max-width: 340px; margin: 0 auto; }
+    .shop-card { width: 100%; aspect-ratio: 2/3; height: auto; animation: none; }
+    .shop-card-img { width: 100%; height: 100%; }
+    .deck-card { width: 100%; aspect-ratio: 2/3; height: auto; animation: none; }
+    .deck-card-img { width: 100%; height: 100%; }
+    .shop-card-name { font-size: 7px; bottom: 30px; padding: 2px 4px; max-width: 85px; }
+    .shop-card-price { font-size: 9px; bottom: 5px; left: 5px; }
+    .shop-card-passive { font-size: 5px; bottom: 20px; max-width: 80px; }
+    .shop-card-price img { width: 12px; height: 12px; }
+    .shop-card-buy { font-size: 8px; padding: 3px 8px; bottom: 4px; right: 4px; }
+    .deck-info-btn { width: 16px; height: 16px; font-size: 9px; top: 3px; right: 3px; }
+
+    /* Вкладки */
+    .shop-tab { font-size: 10px; padding: 6px 12px; letter-spacing: 1px; }
+    .shop-tabs { padding: 8px 6px 0; }
+    .section-title { font-size: 12px; letter-spacing: 1.5px; }
+
+    /* Заголовок магазина */
+    .shop-header { flex-direction: column; align-items: flex-start; gap: 6px; padding: 8px 6px; }
+    #shopGrid { padding: 8px 6px; }
+    .shop-footer { padding: 4px 6px 8px; }
+    #shopScreen.active { height: 100dvh; }
+    .gold-display { font-size: 12px; }
+
+    /* Бой */
+    .battle-header { padding: 6px 8px; }
+    .battle-header .title { font-size: 13px; }
+    .card-row { gap: 6px; }
+    .battlefield { gap: 16px; padding: 4px 0; }
+
+    /* Кнопки */
+    .btn { padding: 8px 14px; font-size: 9px; min-height: 36px; letter-spacing: 1px; }
+    .btn.small { padding: 5px 10px; font-size: 8px; }
+    .btn.ability-btn { padding: 6px 10px; font-size: 9px; min-height: 36px; }
+    #endTurnBtn { padding: 10px 20px; font-size: 10px; }
+
+    .ability-panel { gap: 6px; padding: 4px; }
+    .action-hint { font-size: 9px; }
+
+    /* Лог */
+    .battle-log { max-height: 60px; font-size: 9px; padding: 8px; }
+    .turn-indicator { font-size: 10px; }
+
+    /* Настройки */
+    .settings-title { font-size: 15px; }
+    .setting-row { font-size: 11px; }
+    .setting-slider { width: 90px; }
+    .toggle { width: 44px; height: 24px; }
+    .toggle::after { width: 18px; height: 18px; top: 2px; left: 2px; }
+    .toggle.on::after { left: 22px; }
+
+    /* Результат */
+    .result-large-title { font-size: 28px; }
+    .result-text { font-size: 15px; }
+    .result-gold { font-size: 13px; }
+    #resultOverlay .btn { font-size: 10px; padding: 10px 20px; }
+
+    /* Детали карты */
+    .card-detail { padding: 14px; gap: 10px; max-width: 280px; }
+    .card-detail-img { width: 90px; height: 135px; }
+    .card-detail-name { font-size: 13px; }
+    .card-detail-role { font-size: 9px; }
+    .card-detail-stats { gap: 10px; }
+    .card-detail-stat { font-size: 10px; }
+    .card-detail-passive .passive-title { font-size: 8px; }
+    .card-detail-passive .passive-name { font-size: 10px; }
+    .card-detail-passive .passive-desc { font-size: 9px; }
+    .card-detail-lore { font-size: 9px; padding-left: 10px; }
+    .card-detail-close { width: 24px; height: 24px; font-size: 12px; top: 6px; right: 6px; }
+
+    /* damage numbers */
+    .damage-number { font-size: 16px; }
+
+    /* Ховеры на мобиле — без поднятия */
+    .card:hover { transform: none; }
+    .card.selected { transform: translateY(-3px) scale(1.02) !important; }
+    .card.enemy-targetable:hover { transform: none; }
+    .shop-card:hover { transform: none; }
+    .deck-card:hover { transform: none; }
+  }
+
+  /* КАРТОЧКА ДЕТАЛЬНО */
+  #cardDetailOverlay {
+    display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(3,3,4,0.92); backdrop-filter: blur(12px);
+    z-index: 3000; justify-content: center; align-items: center;
+  }
+  #cardDetailOverlay.show { display: flex; animation: fadeIn 0.35s ease-out; }
+  .card-detail {
+    background: var(--bg-panel); border: 1px solid var(--border-glow);
+    border-radius: 4px; padding: 32px; display: flex; gap: 28px;
+    max-width: 620px; width: 90%; position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(138,115,85,0.08);
+    animation: cardDetailIn 0.4s cubic-bezier(0.2,0.8,0.2,1);
+  }
+  @keyframes cardDetailIn { from { opacity: 0; transform: scale(0.9) translateY(16px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+  .card-detail-img {
+    width: 160px; height: 240px; border-radius: 3px; object-fit: cover;
+    border: 1px solid var(--border-dim); flex-shrink: 0;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6); image-rendering: auto;
+  }
+  .card-detail-info { display: flex; flex-direction: column; gap: 12px; flex: 1; }
+  .card-detail-name { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700; color: #e0d8c8; letter-spacing: 1px; }
+  .card-detail-role { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+  .card-detail-stats { display: flex; gap: 20px; }
+  .card-detail-stat { font-family: 'Cinzel', serif; font-size: 13px; color: var(--text-primary); }
+  .card-detail-stat span { color: var(--accent-gold-bright); font-weight: 700; }
+  .card-detail-divider { height: 1px; background: linear-gradient(90deg, var(--border-glow), transparent); opacity: 0.4; }
+  .card-detail-passive { font-family: 'Inter', sans-serif; }
+  .card-detail-passive .passive-title { font-size: 10px; color: #9a8aae; text-transform: uppercase; letter-spacing: 1.5px; }
+  .card-detail-passive .passive-name { font-size: 13px; color: var(--accent-gold-bright); font-weight: 600; }
+  .card-detail-passive .passive-desc { font-size: 11px; color: var(--text-primary); font-style: italic; }
+  .card-detail-lore { font-family: 'Inter', sans-serif; font-size: 11px; color: var(--text-dim); line-height: 1.7; font-style: italic; letter-spacing: 0.3px; border-left: 2px solid var(--border-glow); padding-left: 14px; }
+  .card-detail-close {
+    position: absolute; top: 12px; right: 12px; width: 32px; height: 32px;
+    background: none; border: 1px solid var(--border-dim); color: var(--text-dim);
+    font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    border-radius: 2px; transition: all 0.3s ease; font-family: 'Cinzel', serif;
+  }
+  .card-detail-close:hover { border-color: var(--accent-blood); color: #c06060; box-shadow: 0 0 10px rgba(138,42,42,0.2); }
+  .card-detail-price { font-family: 'Cinzel', serif; font-size: 14px; color: var(--accent-gold-bright); letter-spacing: 1px; }
 </style>
 </head>
 <body>
@@ -635,122 +745,119 @@
 <canvas id="particlesCanvas"></canvas>
 <div class="screen-flash" id="screenFlash"></div>
 
+<!-- ═══ МЕНЮ ═══ -->
 <div class="screen active" id="menuScreen">
-  <h1 class="menu-title">Triad Duel</h1>
-  <p class="menu-subtitle">Триада Дуэли</p>
+  <div class="menu-title">Triad Duel</div>
+  <div class="menu-subtitle">Триада Дуэли &bull; 3 VS 3 &bull; Мана &bull; Тактика</div>
   <div class="menu-buttons">
-    <button class="btn gold-btn" onclick="newCampaign()">Новая кампания</button>
-    <button class="btn gold-btn" onclick="continueGame()">Продолжить</button>
+    <button class="btn gold-btn" onclick="continueGame()">Продолжить путь</button>
+    <button class="btn" onclick="newCampaign()">Новая кампания</button>
     <button class="btn" onclick="openSettings()">Настройки</button>
   </div>
+  <div class="footer">Минимализм, рождающий бездну</div>
 </div>
 
+<!-- ═══ НАСТРОЙКИ ═══ -->
 <div id="settingsOverlay">
-  <h2 class="settings-title">Настройки</h2>
-  <div class="setting-row">
-    <span>Звук</span>
-    <div class="toggle on" id="soundToggle" onclick="toggleSound()"></div>
-  </div>
-  <div class="setting-row">
-    <span>Яркость</span>
-    <input type="range" class="setting-slider" min="50" max="150" value="100" oninput="setBrightness(this.value)">
-    <span class="setting-val" id="brightnessVal">100%</span>
-  </div>
-  <div class="setting-row">
-    <span>Контраст</span>
-    <input type="range" class="setting-slider" min="50" max="150" value="100" oninput="setContrast(this.value)">
-    <span class="setting-val" id="contrastVal">100%</span>
-  </div>
-  <button class="btn gold-btn" onclick="closeSettings()">Назад</button>
+  <div class="settings-title">Настройки</div>
+  <div class="setting-row"><span>Звуковое сопровождение</span><div class="toggle on" id="soundToggle" onclick="toggleSound()"></div></div>
+  <div class="setting-row"><span>Яркость</span><input type="range" class="setting-slider" id="brightnessSlider" min="50" max="150" value="100" oninput="setBrightness(this.value)"><span class="setting-val" id="brightnessVal">100%</span></div>
+  <div class="setting-row"><span>Контрастность</span><input type="range" class="setting-slider" id="contrastSlider" min="50" max="150" value="100" oninput="setContrast(this.value)"><span class="setting-val" id="contrastVal">100%</span></div>
+  <button class="btn gold-btn" onclick="closeSettings()">Вернуться</button>
 </div>
 
-<div class="screen" id="shopScreen">
-  <video id="bgClep" class="shop-bg-video" autoplay muted loop playsinline>
+<!-- ═══ МАГАЗИН ═══ -->
+<div class="screen" id="shopScreen" style="position:relative;">
+  <video class="shop-bg-video" id="bgClep" autoplay muted loop playsinline>
     <source src="img/game/fonsclep.mp4" type="video/mp4">
   </video>
-  <video id="bgWarp" class="shop-bg-video" autoplay muted loop playsinline style="opacity:0">
+  <video class="shop-bg-video" id="bgWarp" autoplay muted loop playsinline style="opacity:0">
     <source src="img/game/warp.mp4" type="video/mp4">
   </video>
-  <video id="bgHaus" class="shop-bg-video" autoplay muted loop playsinline style="opacity:0">
+  <video class="shop-bg-video" id="bgHaus" autoplay muted loop playsinline style="opacity:0; filter:grayscale(70%) brightness(0.45);">
     <source src="img/game/haus.mp4" type="video/mp4">
   </video>
-  <div class="shop-header">
-    <button class="btn small" onclick="backToMenu()">◂ Меню</button>
-    <span class="section-title" id="shopTabTitle">Склеп</span>
-    <span class="gold-display" id="shopGold">
-      <img src="img/game/Remains_icon.webp" alt=""> <span id="shopGoldAmt">100</span>
-    </span>
-  </div>
   <div class="shop-tabs">
     <button class="shop-tab active" id="tabShopBtn" onclick="showShopTab('shop')">Склеп</button>
     <button class="shop-tab" id="tabInvBtn" onclick="showShopTab('inv')">Варп</button>
     <button class="shop-tab" id="tabChaosBtn" onclick="showShopTab('chaos')">Хаос</button>
   </div>
+  <div class="shop-header">
+    <div class="section-title" id="shopTabTitle">Склеп</div>
+    <div class="gold-display"><img src="img/game/Remains_icon.png" alt=""> <span id="shopGold">100</span></div>
+  </div>
   <div id="shopGrid" class="card-grid"></div>
   <div class="shop-footer">
-    <div id="deckCount" class="deck-select-count" style="visibility:hidden">Выбрано: 0 / 3</div>
-    <button id="toBattleBtn" class="btn gold-btn" onclick="startBattle()" style="display:none" disabled>В бой!</button>
+    <div class="deck-select-count" id="deckCount" style="visibility:hidden">Выбрано: 0 / 3</div>
+    <div style="display:flex; gap:16px;">
+      <button class="btn gold-btn" id="toBattleBtn" disabled onclick="startBattle()">В бой</button>
+      <button class="btn" onclick="backToMenu()">В меню</button>
+    </div>
   </div>
   <div id="shopToast" class="shop-toast"></div>
 </div>
 
+<!-- ═══ БОЙ ═══ -->
+<div class="screen" id="battleScreen">
+  <div class="battle-header">
+    <button class="btn small" onclick="backToShop()">← Отступить</button>
+    <div class="title">Triad Duel</div>
+    <div class="turn-indicator" id="turnIndicator">Ваш ход</div>
+  </div>
+  
+  <div class="battlefield">
+    <div class="card-row" id="enemyRow"></div>
+    
+    <div class="ability-panel" id="abilityPanel"></div>
+    <div class="round-timer" id="roundTimer">
+      <div class="round-timer-text" id="roundTimerText">20</div>
+    </div>
+    <div class="action-hint" id="actionHint">Выберите юнита — атакуйте или используйте способность</div>
+    
+    <div class="card-row" id="playerRow"></div>
+  </div>
+  
+  <button class="btn small" id="endTurnBtn" onclick="endPlayerTurn()" style="display:none; align-self: center;">Завершить ход</button>
+  
+  <div class="battle-log" id="battleLog">
+    <div class="log-entry">Бой начался. Тьма сгущается...</div>
+  </div>
+</div>
+
+<!-- ═══ РЕЗУЛЬТАТ ═══ -->
+<div id="resultOverlay">
+  <div class="result-text" id="resultText"></div>
+  <div class="result-gold" id="resultGold"></div>
+  <button class="btn gold-btn" onclick="backToShopFromResult()">Вернуться в убежище</button>
+</div>
+
+<!-- ═══ ДЕТАЛИ КАРТЫ ═══ -->
 <div id="cardDetailOverlay" onclick="closeCardDetail(event)">
-  <div class="card-detail" onclick="event.stopPropagation()">
+  <div class="card-detail" id="cardDetailBox" onclick="event.stopPropagation()">
     <button class="card-detail-close" onclick="closeCardDetail()">✕</button>
-    <img id="cdImg" src="" alt="">
+    <img class="card-detail-img" id="cdImg" src="" alt="">
     <div class="card-detail-info">
       <div class="card-detail-name" id="cdName"></div>
       <div class="card-detail-role" id="cdRole"></div>
-      <div class="card-detail-stat-row">
-        <div class="card-detail-stat">⚔ Атака: <span id="cdAtk">—</span></div>
-        <div class="card-detail-stat">❤ HP: <span id="cdHp">—</span></div>
-        <div class="card-detail-stat" id="cdPriceRow" style="display:none">
-          <img src="img/game/Remains_icon.webp" alt="" style="width:14px;height:14px;vertical-align:middle">
-          <span id="cdPrice" style="color:#c4a265;font-weight:700;"></span>
-        </div>
+      <div class="card-detail-stats">
+        <div class="card-detail-stat">⚔ Атака: <span id="cdAtk"></span></div>
+        <div class="card-detail-stat">❤ HP: <span id="cdHp"></span></div>
+        <div class="card-detail-stat" id="cdPriceRow">💰 <span id="cdPrice"></span></div>
       </div>
+      <div class="card-detail-divider"></div>
       <div class="card-detail-passive">
-        <div class="passive-name" id="cdPassive">—</div>
-        <div class="passive-desc" id="cdPassiveDesc">—</div>
+        <div class="passive-title">Уникальная способность</div>
+        <div class="passive-name" id="cdPassive"></div>
+        <div class="passive-desc" id="cdPassiveDesc"></div>
       </div>
-      <div class="card-detail-lore" id="cdLore">—</div>
+      <div class="card-detail-lore" id="cdLore"></div>
     </div>
   </div>
 </div>
 
-<div class="screen" id="battleScreen">
-  <div class="battle-header">
-    <button class="btn small" onclick="backToShop()">◂ Сдаться</button>
-    <span class="title" style="font-family:'UnifrakturCook',cursive;font-size:24px;color:#c4a265;text-shadow:0 0 20px rgba(138,115,85,0.2);">Битва</span>
-    <span class="turn-indicator" id="turnIndicator">Ваш ход</span>
-  </div>
-  <div class="battlefield">
-    <div class="card-row" id="enemyRow"></div>
-    <div class="card-row" id="playerRow"></div>
-  </div>
-  <div class="ability-panel" id="abilityPanel" style="min-height:44px;">
-    <span style="font-size:11px;color:#6a5a70;font-style:italic;">Выберите юнита для действий</span>
-  </div>
-  <div class="action-hint" id="actionHint">
-    <span class="key">Выберите юнита</span> — 1 действие за ход
-  </div>
-  <div class="round-timer"><span class="round-timer-text" id="roundTimerText">20</span></div>
-  <button id="endTurnBtn" class="btn" onclick="endPlayerTurn()" style="display:block;">Завершить ход</button>
-  <div class="battle-log" id="battleLog"></div>
-</div>
-
-<div id="resultOverlay">
-  <div class="result-text" id="resultText"></div>
-  <div class="result-gold" id="resultGold"></div>
-  <button class="btn gold-btn" onclick="backToShopFromResult()">Продолжить</button>
-</div>
-
-<div class="footer">Triad Duel &copy; 2025 &bull; Warhammer-inspired card battler</div>
-
 <script>
-// @ts-nocheck
-// ═══ КОНСТАНТЫ ═══
-const API_BASE = "https://triad-duel-server.onrender.com";
+// ═══ КАРТЫ: 5 магов, 5 танков, 5 убийц = 15 ═══
+// variance — разброс урона (±%), passive — уникальная механика
 const ALL_CARDS=[
   // МАГИ (фаербол 3 маны = ATK урон)
   {id:'mage_01',name:'Библиарий Кассиан',atk:6,hp:11,price:650,type:'mage',variance:0.10,passive:'Эрудит',passiveDesc:'Фаербол стоит 2 маны. Раскол: 5% шанс 1-3 урона соседним',lore:'Хранитель запретных знаний из библиотек Некрона. Веками изучал тёмные рукописи, но рассудок его давно покинул эти стены.'},
@@ -780,47 +887,23 @@ const ALL_CARDS=[
 ];
 const IMG_BASE='img/cards/',CARDS_PER_SIDE=3,SHOP_SIZE=12,MAX_MANA=10;
 
-// ═══ ГЛОБАЛЬНОЕ СОСТОЯНИЕ ═══
-let sessionId=null;
+// Состояние
 let playerGold=100,playerCollection=['mage_01','tank_01','assa_01'],selectedDeck=[],soundEnabled=true;
 let playerCards=[],enemyCards=[],activeIdx=-1,isPlayerTurn=true,gameOver=false;
 let abilitiesUsedThisTurn=new Set();
-let cardUpgrades={};
-let shopCards=[];
-let currentTab='shop';
-
+let cardUpgrades={}; // {cardId: {hp:0, atk:0, mana:0}}
 function upgradeCost(stat,level){return 150*Math.pow(2,level)}
 function getUp(cardId){if(!cardUpgrades[cardId])cardUpgrades[cardId]={hp:0,atk:0,mana:0};return cardUpgrades[cardId]}
 
-// ═══ API ═══
-async function api(path,opts={}){
-  const res=await fetch(API_BASE+path,{
-    headers:{'Content-Type':'application/json'},
-    ...opts
-  });
-  return res.json();
-}
-async function call(method,path,body){
-  return api(path,{method,body:body?JSON.stringify(body):undefined});
-}
-
-// Вспомогательная: обогатить карты сервера данными из ALL_CARDS
-function enrichCard(c){
-  const base=byId(c.id);
-  return base?{...base,...c}:c;
-}
-function enrichCards(arr){
-  return (arr||[]).map(enrichCard);
-}
-
-// ═══ DOM ═══
+// DOM
 const scr={menu:el('menuScreen'),shop:el('shopScreen'),battle:el('battleScreen')};
 function el(id){return document.getElementById(id)}
 function showScreen(n){Object.values(scr).forEach(s=>s.classList.remove('active'));scr[n].classList.add('active');el('resultOverlay').classList.remove('show');startBGM()}
 
-// ═══ ЗВУК ═══
+// ЗВУК
 const sfx={select(){playSelect()},attack(){playAttack()},crit(){},fireball(){},taunt(){},death(){},victory(){},defeat(){},buy(){}};
 
+// ЗВУКИ ИЗ ФАЙЛОВ
 let sndSelect=null,sndAttack=null,sndBattleStart=null;
 function preloadSamples(){
   sndSelect=new Audio('audio/select.wav');sndSelect.preload='auto';
@@ -832,7 +915,7 @@ function playSelect(){playSample(sndSelect)}
 function playAttack(){playSample(sndAttack)}
 preloadSamples();
 
-// ═══ BGM ═══
+// BGM — фоновая музыка везде
 let bgmAudio=null,bgmPlaying=false;
 function initBGM(){
   if(bgmAudio)return;
@@ -869,14 +952,14 @@ function applyFilters(){
 }
 let gameBrightness=1,gameContrast=1;
 
-// ═══ ЧАСТИЦЫ ═══
+// ЧАСТИЦЫ
 const bgP=[],cv=el('particlesCanvas'),cx=cv.getContext('2d');
 function rc(){cv.width=innerWidth;cv.height=innerHeight}addEventListener('resize',rc);rc();
 function sbg(){return{x:Math.random()*cv.width,y:Math.random()*cv.height,sz:Math.random()*2+.5,sY:-(Math.random()*.2+.05),sX:(Math.random()-.5)*.1,op:Math.random()*.3+.1,life:Math.random()*400+200,age:0,clr:Math.random()<.5?`${100+Math.random()*40},${70+Math.random()*30},${30+Math.random()*20}`:`${80+Math.random()*30},${80+Math.random()*30},${90+Math.random()*30}`}}
 for(let i=0;i<60;i++){const p=sbg();p.age=Math.floor(Math.random()*p.life);p.y=Math.random()*cv.height;bgP.push(p)}
 (function rbg(){cx.clearRect(0,0,cv.width,cv.height);for(let i=0;i<bgP.length;i++){const p=bgP[i];p.age++;p.y+=p.sY;p.x+=p.sX+Math.sin(p.age*.015)*.05;if(p.age>=p.life||p.y<-10||p.x<-10||p.x>cv.width+10)bgP[i]=sbg();cx.beginPath();cx.arc(p.x,p.y,p.sz,0,Math.PI*2);cx.fillStyle=`rgba(${p.clr},${p.op*(1-p.age/p.life)})`;cx.fill()}requestAnimationFrame(rbg)})();
 
-// ═══ ЭФФЕКТЫ ═══
+// ЭФФЕКТЫ
 function dmgNum(el,d,clr='#c04030'){const r=el.getBoundingClientRect(),e=document.createElement('div');e.className='damage-number';e.textContent=`-${d}`;e.style.color=clr;e.style.left=r.left+r.width/2-15+'px';e.style.top=r.top+r.height/3+'px';document.body.appendChild(e);e.addEventListener('animationend',()=>e.remove())}
 function critText(el){const r=el.getBoundingClientRect(),e=document.createElement('div');e.className='crit-text';e.textContent='КРИТ!';e.style.left=r.left+r.width/2-30+'px';e.style.top=r.top+r.height/3-10+'px';document.body.appendChild(e);e.addEventListener('animationend',()=>e.remove())}
 function aoeFx(rowEl){if(!rowEl)return;const cards=rowEl.querySelectorAll('.card:not(.dead)');cards.forEach(c=>{const r=c.getBoundingClientRect();for(let i=0;i<8;i++){const p=document.createElement('div');p.className='impact-particle';const a=Math.random()*Math.PI*2,d=20+Math.random()*30;p.style.cssText=`left:${r.left+r.width/2}px;top:${r.top+r.height/2}px;width:${3+Math.random()*4}px;height:${3+Math.random()*4}px;background:#8a4a1a;--dx:${Math.cos(a)*d}px;--dy:${Math.sin(a)*d}px;box-shadow:0 0 8px rgba(138,74,26,.6);`;document.body.appendChild(p);p.addEventListener('animationend',()=>p.remove())}})}
@@ -885,13 +968,14 @@ function deathFx(el){const r=el.getBoundingClientRect(),cx2=r.left+r.width/2,cy=
 function flash(cl){const f=el('screenFlash');f.style.background=cl;f.classList.add('active');setTimeout(()=>f.classList.remove('active'),150)}
 function log(h){const e=document.createElement('div');e.className='log-entry';e.innerHTML=h;el('battleLog').appendChild(e);el('battleLog').scrollTop=el('battleLog').scrollHeight}
 
-// ═══ УТИЛИТЫ ═══
+// УТИЛИТЫ
 function sh(a){const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]]}return r}
 function byId(id){return ALL_CARDS.find(c=>c.id===id)}
 function rollDamage(base,variance=.15){return Math.max(1,Math.round(base*(1-variance+Math.random()*variance*2)))}
 function getEffAtk(c){if(!c||c.hp<=0)return 0;let a=c.atk;if(c.atkDebuff)a=Math.max(0,a-c.atkDebuff);if(c.type==='tank'&&c.id==='tank_03'&&c.hp<=c.maxHp*.5)a+=2;return a}
 function getDefBonus(c){if(!c||c.hp<=0)return 0;let b=0;if(c.id==='mage_05'||c.id==='tank_04')b=1;if(c.id==='tank_01'&&c.tauntActive)b=1;return b}
 function tryTankCover(defCards,targetIdx){
+  // Прикрытие: соседний танк с 5% шансом забирает атаку на себя без урона
   for(let i=Math.max(0,targetIdx-1);i<=Math.min(defCards.length-1,targetIdx+1);i++){
     if(i===targetIdx)continue;
     const nb=defCards[i];
@@ -928,102 +1012,19 @@ function tryAssaSplash(attacker,defCards,targetIdx,mainDmg){
   return {neighbor:pick.neighbor,damage:dmg,index:pick.index};
 }
 function applyDOT(c){if(!c||c.hp<=0||!c.dotTurns||c.dotTurns<=0)return;let dmg=1;c.hp=Math.max(0,c.hp-dmg);c.dotTurns--;return dmg}
-function getManaOrbs(mana,max){let h='';for(let i=0;i<Math.min(max,10);i++)h+=`<div class="mana-orb${i<mana?' filled':''}"></div>`;return h}
+function getManaOrbs(mana, max){let h='';for(let i=0;i<Math.min(max,10);i++)h+=`<div class="mana-orb${i<mana?' filled':''}"></div>`;return h}
 
-// ═══ МЕНЮ / НАСТРОЙКИ ═══
-async function newCampaign(){
-  showLoading('Создаём кампанию...');
-  try {
-    const data=await call('POST','/api/new-campaign');
-    sessionId=data.sessionId;
-    playerGold=data.playerGold;
-    playerCollection=data.playerCollection||['mage_01','tank_01','assa_01'];
-    selectedDeck=data.selectedDeck||[];
-    cardUpgrades=data.cardUpgrades||{};
-    showScreen('shop');
-    currentTab='shop';
-    el('tabShopBtn').classList.add('active');
-    el('tabInvBtn').classList.remove('active');
-    el('tabChaosBtn').classList.remove('active');
-    el('shopTabTitle').textContent='Склеп';
-    el('deckCount').style.visibility='hidden';
-    el('toBattleBtn').style.display='none';
-    await loadShop();
-    renderShop();
-  } catch(e) {
-    hideLoading();
-    showToast('Сервер просыпается, подожди... Попробуй ещё раз через 30 сек.');
-  }
-  hideLoading();
-}
-
-async function continueGame(){
-  if(!sessionId){await newCampaign();return}
-  showLoading('Загружаем...');
-  try {
-    const data=await call('GET',`/api/state/${sessionId}`);
-    sessionId=data.sessionId||sessionId;
-    playerGold=data.playerGold;
-    playerCollection=data.playerCollection||[];
-    selectedDeck=data.selectedDeck||[];
-    cardUpgrades=data.cardUpgrades||{};
-    showScreen('shop');
-    currentTab='shop';
-    el('tabShopBtn').classList.add('active');
-    el('tabInvBtn').classList.remove('active');
-    el('tabChaosBtn').classList.remove('active');
-    el('shopTabTitle').textContent='Склеп';
-    await loadShop();
-    renderShop();
-  } catch(e) {
-    hideLoading();
-    showToast('Сессия потеряна, создаём новую...');
-    sessionId=null;
-    await newCampaign();
-  }
-  hideLoading();
-}
-
-function showLoading(msg){
-  let l=el('loadingOverlay');
-  if(!l){
-    l=document.createElement('div'); l.id='loadingOverlay';
-    l.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;';
-    l.innerHTML=`
-      <div style="width:40px;height:40px;border:3px solid #333;border-top-color:#c4a265;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
-      <div id="loadingMsg" style="font-family:cinzel,serif;font-size:14px;color:#c4a265;letter-spacing:2px;text-align:center;"></div>
-    `;
-    document.body.appendChild(l);
-    // add spin keyframe if not exists
-    if(!document.getElementById('spinKeyframe')){
-      const s=document.createElement('style'); s.id='spinKeyframe';
-      s.textContent='@keyframes spin{to{transform:rotate(360deg)}}';
-      document.head.appendChild(s);
-    }
-  }
-  el('loadingMsg').textContent=msg;
-  l.style.display='flex';
-}
-function hideLoading(){
-  const l=el('loadingOverlay');
-  if(l)l.style.display='none';
-}
-
+// МЕНЮ/НАСТРОЙКИ
+function newCampaign(){playerGold=100;playerCollection=['mage_01','tank_01','assa_01'];selectedDeck=[];showScreen('shop');renderShop()}
+function continueGame(){showScreen('shop');renderShop()}
 function openSettings(){el('settingsOverlay').classList.add('show')}
 function closeSettings(){el('settingsOverlay').classList.remove('show')}
 function backToMenu(){showScreen('menu')}
 
-// ═══ МАГАЗИН ═══
-async function loadShop(){
-  try {
-    const data=await api(`/api/shop/${sessionId}`);
-    shopCards=(data||[]).map(c=>typeof c==='string'?byId(c):c).filter(Boolean);
-  } catch(e) {
-    shopCards=[];
-  }
-}
-
-async function showShopTab(tab){
+// МАГАЗИН
+let shopCards=[];
+let currentTab='shop';
+function showShopTab(tab){
   currentTab=tab;
   el('tabShopBtn').classList.toggle('active',tab==='shop');
   el('tabInvBtn').classList.toggle('active',tab==='inv');
@@ -1035,70 +1036,46 @@ async function showShopTab(tab){
   el('bgWarp').style.opacity=tab==='inv'?'0.4':'0';
   el('bgHaus').style.opacity=tab==='chaos'?'0.4':'0';
   el('shopScreen').querySelector('.shop-header').style.background=tab==='chaos'?'rgba(0,0,0,0.5)':'';
-  if(tab==='shop'){await loadShop();renderShopGrid();}
-  else if(tab==='inv')renderColGrid();
-  else renderChaosGrid();
+  if(tab==='shop') renderShopGrid(); else if(tab==='inv') renderColGrid(); else renderChaosGrid();
 }
-
 function renderShop(){
+  shopCards=sh(ALL_CARDS.filter(c=>!playerCollection.includes(c.id))).slice(0,SHOP_SIZE);
   el('shopGold').textContent=playerGold;
-  if(currentTab==='shop')renderShopGrid();
-  else if(currentTab==='inv')renderColGrid();
-  else renderChaosGrid();
+  if(currentTab==='shop') renderShopGrid(); else if(currentTab==='inv') renderColGrid(); else renderChaosGrid();
   upBBtn();
 }
-
 function renderShopGrid(){
-  el('shopGrid').innerHTML=shopCards.map(c=>{const rc=c.type==='mage'?'#b8a8c8':c.type==='tank'?'#8ab87a':'#d08070';const rt=c.type==='mage'?'Маг':c.type==='tank'?'Танк':'Убийца';const canBuy=playerGold>=c.price;return `<div class="shop-card" onclick="showCardDetail('${c.id}')"><img class="shop-card-img" src="${IMG_BASE}${c.id}.webp" alt="${c.name}"><span class="atk-badge">⚔ ${c.atk}</span><span class="card-role" style="color:${rc}">${rt}</span><div class="hp-bar-wrap"><div class="hp-bar healthy" style="width:100%"></div></div><span class="hp-text">${c.hp}/${c.hp}</span><span class="shop-card-name">${c.name}</span><span class="shop-card-passive">${c.passive||''}</span><div class="shop-card-price"><img src="img/game/Remains_icon.webp" alt="">${c.price}</div>${canBuy?`<button class="shop-card-buy" onclick="event.stopPropagation();buyCard('${c.id}')">Купить</button>`:`<button class="shop-card-buy" disabled>Купить</button>`}</div>`}).join('');
+  el('shopGrid').innerHTML=shopCards.map(c=>{const rc=c.type==='mage'?'#b8a8c8':c.type==='tank'?'#8ab87a':'#d08070';const rt=c.type==='mage'?'Маг':c.type==='tank'?'Танк':'Убийца';const canBuy=playerGold>=c.price;return `<div class="shop-card" onclick="showCardDetail('${c.id}')"><img class="shop-card-img" src="${IMG_BASE}${c.id}.png" alt="${c.name}"><span class="atk-badge">⚔ ${c.atk}</span><span class="card-role" style="color:${rc}">${rt}</span><div class="hp-bar-wrap"><div class="hp-bar healthy" style="width:100%"></div></div><span class="hp-text">${c.hp}/${c.hp}</span><span class="shop-card-name">${c.name}</span><span class="shop-card-passive">${c.passive||''}</span><div class="shop-card-price"><img src="img/game/Remains_icon.png" alt="">${c.price}</div>${canBuy?`<button class="shop-card-buy" onclick="event.stopPropagation();buyCard('${c.id}')">Купить</button>`:`<button class="shop-card-buy" disabled>Купить</button>`}</div>`}).join('');
 }
-
 function renderColGrid(){
   const g=el('shopGrid');
-  if(!playerCollection||!playerCollection.length){g.innerHTML='<div class="deck-empty">Коллекция пуста. Посетите Склеп.</div>';return}
-  g.innerHTML=playerCollection.map(id=>{const c=byId(id);if(!c)return'';const rc=c.type==='mage'?'#b8a8c8':c.type==='tank'?'#8ab87a':'#d08070';const rt=c.type==='mage'?'Маг':c.type==='tank'?'Танк':'Убийца';return `<div class="deck-card ${selectedDeck.includes(id)?'selected-deck':''}" data-did="${id}" onclick="toggleDeckCard('${id}')"><img class="deck-card-img" src="${IMG_BASE}${c.id}.webp" alt="${c.name}"><span class="card-role" style="color:${rc}">${rt}</span><div class="hp-bar-wrap"><div class="hp-bar healthy" style="width:100%"></div></div><span class="hp-text">${c.hp}/${c.hp}</span><div class="card-overlay"><div class="card-name">${c.name}</div><div style="font-family:Inter,sans-serif;font-size:8px;color:#9a8aae;text-align:center;margin-top:2px;letter-spacing:.3px;text-shadow:0 1px 2px rgba(0,0,0,.9);">${c.passive||''}</div></div><button class="deck-info-btn" onclick="event.stopPropagation();showCardDetail('${id}')" title="Информация">ⓘ</button></div>`}).join('');
+  if(!playerCollection.length){g.innerHTML='<div class="deck-empty">Коллекция пуста. Посетите Склеп.</div>';return}
+  g.innerHTML=playerCollection.map(id=>{const c=byId(id);const rc=c.type==='mage'?'#b8a8c8':c.type==='tank'?'#8ab87a':'#d08070';const rt=c.type==='mage'?'Маг':c.type==='tank'?'Танк':'Убийца';return `<div class="deck-card ${selectedDeck.includes(id)?'selected-deck':''}" data-did="${id}" onclick="toggleDeckCard('${id}')"><img class="deck-card-img" src="${IMG_BASE}${c.id}.png" alt="${c.name}"><span class="atk-badge">⚔ ${c.atk}</span><span class="card-role" style="color:${rc}">${rt}</span><div class="hp-bar-wrap"><div class="hp-bar healthy" style="width:100%"></div></div><span class="hp-text">${c.hp}/${c.hp}</span><div class="card-overlay"><div class="card-name">${c.name}</div><div style="font-family:Inter,sans-serif;font-size:8px;color:#9a8aae;text-align:center;margin-top:2px;letter-spacing:.3px;text-shadow:0 1px 2px rgba(0,0,0,.9);">${c.passive||''}</div></div><button class="deck-info-btn" onclick="event.stopPropagation();showCardDetail('${id}')" title="Информация">ⓘ</button></div>`}).join('');
 }
-
-async function buyCard(id){
-  if(!sessionId)return showToast('Нет сессии. Начни новую кампанию.');
+function buyCard(id){
   playSelect();
-  try {
-    const data=await call('POST',`/api/buy/${sessionId}`,{cardId:id});
-    playerGold=data.playerGold;
-    playerCollection=data.playerCollection||[];
-    if(data.selectedDeck)selectedDeck=data.selectedDeck;
-    if(data.cardUpgrades)cardUpgrades=data.cardUpgrades;
-    sfx.buy();
-    el('shopGold').textContent=playerGold;
-    if(currentTab==='shop'){await loadShop();renderShopGrid();}
-    else{renderShop();}
-  } catch(e) {
-    showToast('Сервер просыпается, подожди...');
-  }
+  const c=byId(id);if(playerGold<c.price||playerCollection.includes(id))return;
+  playerGold-=c.price;playerCollection.push(id);sfx.buy();
+  el('shopGold').textContent=playerGold;
+  const sE=el('shopGrid').querySelector(`.shop-card:has(button[onclick*="${id}"])`);
+  if(sE){sE.style.transition='all 0.3s ease';sE.style.opacity='0';sE.style.transform='scale(0.8)';setTimeout(()=>sE.remove(),300)}
+  if(currentTab==='shop'){shopCards=shopCards.filter(c=>c.id!==id)}
+  upBBtn();
 }
-
-async function toggleDeckCard(id){
-  if(!sessionId)return showToast('Нет сессии. Начни новую кампанию.');
+function toggleDeckCard(id){
   playSelect();
-  try {
-    const data=await call('POST',`/api/deck/select/${sessionId}`,{cardId:id});
-    playerGold=data.playerGold;
-    playerCollection=data.playerCollection||[];
-    selectedDeck=data.selectedDeck||[];
-    if(data.cardUpgrades)cardUpgrades=data.cardUpgrades;
-    renderColGrid();
-    upBBtn();
-  } catch(e) {
-    showToast('Сервер просыпается, подожди...');
-  }
+  if(selectedDeck.includes(id)){selectedDeck=selectedDeck.filter(x=>x!==id)}else{if(selectedDeck.length>=CARDS_PER_SIDE)return;selectedDeck.push(id)}
+  const dE=el('shopGrid').querySelector(`[data-did="${id}"]`);
+  if(dE)dE.classList.toggle('selected-deck',selectedDeck.includes(id));
+  upBBtn();
 }
-
 function upBBtn(){const ok=selectedDeck.length===CARDS_PER_SIDE;el('toBattleBtn').disabled=!ok;el('deckCount').textContent=`Выбрано: ${selectedDeck.length} / ${CARDS_PER_SIDE}`}
 
 function renderChaosGrid(){
   const g=el('shopGrid');
   if(!playerCollection.length){g.innerHTML='<div class="deck-empty">Коллекция пуста. Купите карты в Склепе.</div>';return}
   g.innerHTML=playerCollection.map(id=>{
-    const c=byId(id);if(!c)return'';const up=getUp(id);
+    const c=byId(id);const up=getUp(id);
     const rc=c.type==='mage'?'#b8a8c8':c.type==='tank'?'#8ab87a':'#d08070';
     const rt=c.type==='mage'?'Маг':c.type==='tank'?'Танк':'Убийца';
     const curAtk=c.atk+up.atk,curHp=c.hp+up.hp,curMana=2+up.mana;
@@ -1106,7 +1083,7 @@ function renderChaosGrid(){
     const maxMana=up.mana>=4;
     return `<div class="chaos-card" data-cid="${c.id}">
       <div class="chaos-card-frame">
-        <img class="chaos-card-img" src="${IMG_BASE}${c.id}.webp" alt="${c.name}" onclick="showCardDetail('${c.id}')">
+        <img class="chaos-card-img" src="${IMG_BASE}${c.id}.png" alt="${c.name}" onclick="showCardDetail('${c.id}')">
         <span class="atk-badge chaos-atk">⚔ ${curAtk}</span>
         <div class="hp-bar-wrap"><div class="hp-bar healthy" style="width:100%"></div></div>
         <span class="hp-text chaos-hp">${curHp}/${curHp}</span>
@@ -1114,45 +1091,61 @@ function renderChaosGrid(){
         <span class="chaos-card-class" style="color:${rc}">${rt}</span>
         <span class="chaos-card-passive">${c.passive||''}</span>
         <div class="chaos-upgrades">
-          <button class="chaos-upg-btn${playerGold<hpCost?' locked':''}" data-stat="hp" data-tip="${hpCost}R" onclick="event.stopPropagation();doUpgrade('${c.id}','hp')"><img src="img/game/upg_hp.webp" class="chaos-upg-icon"><span class="chaos-upg-label">${hpCost}R</span></button>
-          <button class="chaos-upg-btn${playerGold<atkCost?' locked':''}" data-stat="atk" data-tip="${atkCost}R" onclick="event.stopPropagation();doUpgrade('${c.id}','atk')"><img src="img/game/upg_atk.webp" class="chaos-upg-icon"><span class="chaos-upg-label">${atkCost}R</span></button>
-          <button class="chaos-upg-btn${(playerGold<manaCost||maxMana)?' locked':''}" data-stat="mana" data-tip="${maxMana?'MAX':(manaCost+'R')}" onclick="event.stopPropagation();doUpgrade('${c.id}','mana')"><img src="img/game/upg_mana.webp" class="chaos-upg-icon"><span class="chaos-upg-label">${maxMana?'MAX':(manaCost+'R')}</span></button>
+          <button class="chaos-upg-btn${playerGold<hpCost?' locked':''}" data-stat="hp" data-tip="❤ +1 HP • ${hpCost} R" onclick="event.stopPropagation();doUpgrade('${c.id}','hp')"><img src="img/game/upg_hp.png" class="chaos-upg-icon"></button>
+          <button class="chaos-upg-btn${playerGold<atkCost?' locked':''}" data-stat="atk" data-tip="⚔ +1 ATK • ${atkCost} R" onclick="event.stopPropagation();doUpgrade('${c.id}','atk')"><img src="img/game/upg_atk.png" class="chaos-upg-icon"></button>
+          <button class="chaos-upg-btn${(playerGold<manaCost||maxMana)?' locked':''}" data-stat="mana" data-tip="💠 +1 Мана • ${manaCost} R" onclick="event.stopPropagation();doUpgrade('${c.id}','mana')"><img src="img/game/upg_mana.png" class="chaos-upg-icon"></button>
         </div>
       </div>
     </div>`;
   }).join('');
 }
-
 function showToast(msg,needed){
   const t=el('shopToast');
-  t.innerHTML=`<img src="img/game/Remains_icon.webp"> ${msg}${needed?' • нужно ещё '+needed+' R':''}`;
+  t.innerHTML=`<img src="img/game/Remains_icon.png"> ${msg}${needed?' • нужно ещё '+needed+' R':''}`;
   t.classList.add('show');
   clearTimeout(t._timeout);
   t._timeout=setTimeout(()=>t.classList.remove('show'),2000);
 }
-
-async function doUpgrade(cardId,stat){
+function doUpgrade(cardId,stat){
   playSelect();
   const up=getUp(cardId);const lvl=up[stat];
   const cost=upgradeCost(stat,lvl);
   if(playerGold<cost){showToast('Не хватает Remains',cost-playerGold);return}
   if(stat==='mana'&&lvl>=4){showToast('Мана на максимуме');return}
-  const data=await call('POST',`/api/upgrade/${sessionId}`,{cardId,stat});
-  playerGold=data.playerGold;
-  if(data.cardUpgrades)cardUpgrades=data.cardUpgrades;
-  sfx.buy();
+  playerGold-=cost;up[stat]++;sfx.buy();
   el('shopGold').textContent=playerGold;
-  renderChaosGrid();
+  const card=el('shopGrid').querySelector(`[data-cid="${cardId}"]`);
+  if(!card)return;
+  const c=byId(cardId);const nu=getUp(cardId);
+  const newAtk=c.atk+nu.atk,newHp=c.hp+nu.hp;
+  card.querySelector('.chaos-atk').textContent=`⚔ ${newAtk}`;
+  card.querySelector('.chaos-hp').textContent=`${newHp}/${newHp}`;
+  card.querySelectorAll('.chaos-upg-btn').forEach(btn=>{
+    const s=btn.dataset.stat;const l=nu[s];
+    const cst=upgradeCost(s,l);const mx=s==='mana'&&l>=4;
+    btn.classList.toggle('locked',playerGold<cst||mx);
+    const tips={hp:'❤ +1 HP',atk:'⚔ +1 ATK',mana:'💠 +1 Мана'};
+    btn.dataset.tip=`${tips[s]} • ${mx?'MAX':cst} R`;
+  });
+  // Обновить locked у всех карт (золото изменилось)
+  el('shopGrid').querySelectorAll('.chaos-card').forEach(cd=>{
+    const cid=cd.dataset.cid;const u=getUp(cid);
+    cd.querySelectorAll('.chaos-upg-btn').forEach(btn=>{
+      const s=btn.dataset.stat;const l=u[s];
+      const cst=upgradeCost(s,l);const mx=s==='mana'&&l>=4;
+      btn.classList.toggle('locked',playerGold<cst||mx);
+    });
+  });
 }
 
-// ═══ ДЕТАЛИ КАРТЫ ═══
+// ДЕТАЛИ КАРТЫ
 function showCardDetail(id){
   playSelect();
   const c=byId(id);if(!c)return;
   const up=getUp(id);
   const roleClr=c.type==='mage'?'#b8a8c8':c.type==='tank'?'#8ab87a':'#d08070';
   const roleTxt=c.type==='mage'?'Маг':c.type==='tank'?'Танк':'Убийца';
-  el('cdImg').src=`${IMG_BASE}${c.id}.webp`;
+  el('cdImg').src=`${IMG_BASE}${c.id}.png`;
   el('cdName').textContent=c.name;
   el('cdRole').innerHTML=`<span style="color:${roleClr}">${roleTxt}</span> &bull; Разброс урона ±${Math.round(c.variance*100)}%`;
   el('cdAtk').innerHTML=up.atk>0?`${c.atk} <span style="color:#6a3a7a;font-size:14px;">+${up.atk} = ${c.atk+up.atk}</span>`:c.atk;
@@ -1169,115 +1162,24 @@ function closeCardDetail(e){
 }
 
 // ═══════════════ БОЙ ═══════════════
-let battleCardsReady=false;
-let lastAbilityHTML='',lastHintHTML='';
-let turnLocked=false,critActivated=false,fireballActive=false,firstTurn=false;
-let roundTimer=null,roundSeconds=0,ROUND_TIME=20;
 
-function applyBattleState(data){
-  playerGold=data.playerGold;
-  playerCollection=data.playerCollection||[];
-  selectedDeck=data.selectedDeck||[];
-  cardUpgrades=data.cardUpgrades||{};
-  playerCards=enrichCards(data.playerCards);
-  enemyCards=enrichCards(data.enemyCards);
-  activeIdx=data.activeIdx;
-  isPlayerTurn=data.isPlayerTurn;
-  gameOver=data.gameOver;
-  turnLocked=data.turnLocked||false;
-  critActivated=data.critActivated||false;
-  fireballActive=data.fireballActive||false;
-  firstTurn=data.firstTurn!==undefined?data.firstTurn:true;
-  abilitiesUsedThisTurn=new Set(data.abilitiesUsedThisTurn||[]);
-}
-
-function processBattleResponse(data){
-  applyBattleState(data);
-  if(data.log)data.log.forEach(msg=>log(msg));
-  if(data.aiAction)animateAiAction(data.aiAction);
-  updUI();
-  updateRowStates();
-  if(data.gameEnd||gameOver){
-    gameOver=true;stopRoundTimer();updateRowStates();
-    isPlayerTurn=false;activeIdx=-1;
-    el('turnIndicator').textContent='Бой окончен';
-    el('endTurnBtn').style.display='none';
-    updUI();
-    setTimeout(()=>showGameEnd(data.gameEnd),700);
-    return true;
-  }
-  if(isPlayerTurn){
-    el('turnIndicator').textContent='Ваш ход';
-    el('turnIndicator').classList.remove('enemy-turn');
-    el('endTurnBtn').style.display='block';
-    startRoundTimer();
-  }else{
-    el('turnIndicator').textContent='Ход врага';
-    el('turnIndicator').classList.add('enemy-turn');
-    el('endTurnBtn').style.display='none';
-  }
-  return false;
-}
-
-function showGameEnd(gameEnd){
-  el('resultOverlay').classList.add('show');
-  if(gameEnd&&gameEnd.victory){
-    el('resultText').textContent='Победа!';
-    el('resultText').className='result-text win';
-    el('resultGold').innerHTML=`<span class="gold-display"><img src="img/game/Remains_icon.webp" alt=""> +${gameEnd.reward}</span>`;
-    sfx.victory();
-  }else{
-    el('resultText').textContent='Поражение';
-    el('resultText').className='result-text lose';
-    const r=gameEnd?gameEnd.reward:0;
-    el('resultGold').innerHTML=`<span class="gold-display"><img src="img/game/Remains_icon.webp" alt=""> +${r}</span>`;
-    sfx.defeat();
-  }
-}
-
-function animateAiAction(action){
-  if(!action)return;
-  setTimeout(()=>{
-    const aE=el('enemyRow').querySelector(`[data-idx="${action.actorIdx}"]`);
-    const dE=action.targetIdx!=null?el('playerRow').querySelector(`[data-idx="${action.targetIdx}"]`):null;
-    if(action.type==='attack'||action.type==='crit'||action.type==='fireball'){
-      if(aE)aE.classList.add('attacking');
-      if(dE){dE.classList.add('taking-damage');if(action.damage>0){dmgNum(dE,action.damage,action.type==='crit'?'#c08030':(action.type==='fireball'?'#e07830':'#c04030'));impact(dE);if(action.isCrit)critText(dE);if(action.isDead){dE.classList.add('dying');deathFx(dE);sfx.death()}}}
-      if(action.mageSplashes)action.mageSplashes.forEach(s=>{const sE=el('playerRow').querySelector(`[data-idx="${s.neighborIdx}"]`);if(sE){dmgNum(sE,s.damage,'#8050c0');impact(sE);if(playerCards[s.neighborIdx]&&playerCards[s.neighborIdx].hp<=0){sE.classList.add('dying');deathFx(sE);sfx.death()}}});
-      if(action.assaSplash){const sE=el('playerRow').querySelector(`[data-idx="${action.assaSplash.neighborIdx}"]`);if(sE){dmgNum(sE,action.assaSplash.damage,'#c04030');impact(sE);}}
-      if(action.type==='crit')sfx.crit();
-      else if(action.type==='fireball'){sfx.fireball();flash('radial-gradient(rgba(138,74,26,.15),transparent)');}
-      else sfx.attack();
-    }else if(action.type==='taunt'){
-      sfx.taunt();
-      flash('radial-gradient(rgba(138,74,26,.15),transparent)');
-    }else if(action.type==='attack_blocked'||action.type==='crit_blocked'){
-      if(aE)aE.classList.add('attacking');
-      sfx.attack();
-    }
-    setTimeout(()=>{if(aE)aE.classList.remove('attacking');if(dE)dE.classList.remove('taking-damage')},450);
-  },200);
-}
-
-async function startBattle(){
+function startBattle(){
   playSample(sndBattleStart);
-  const data=await call('POST',`/api/battle/start/${sessionId}`);
-  applyBattleState(data);
-  showScreen('battle');
-  battleCardsReady=false;
-  el('battleLog').innerHTML='';
-  if(data.log)data.log.forEach(msg=>log(msg));
-  else log('Бой начался. Тьма сгущается...');
+  showScreen('battle');gameOver=false;isPlayerTurn=Math.random()<0.5;activeIdx=-1;abilitiesUsedThisTurn=new Set();turnLocked=false;critActivated=false;fireballActive=false;firstTurn=true;battleCardsReady=false;
+  playerCards=selectedDeck.map(id=>{const c=byId(id);const up=getUp(id);return{...c,atk:c.atk+up.atk,hp:c.hp+up.hp,maxHp:c.hp+up.hp,mana:2+up.mana,critReady:false,tauntActive:false,dotTurns:0,atkDebuff:0}});
+  const ep=sh(ALL_CARDS.filter(c=>!selectedDeck.includes(c.id)));
+  enemyCards=ep.slice(0,CARDS_PER_SIDE).map(c=>({...c,maxHp:c.hp,mana:2,critReady:false,tauntActive:false,dotTurns:0,atkDebuff:0}));
   el('turnIndicator').textContent=isPlayerTurn?'Ваш ход':'Ход врага';
-  if(!isPlayerTurn)el('turnIndicator').classList.add('enemy-turn');
-  else el('turnIndicator').classList.remove('enemy-turn');
+  if(!isPlayerTurn)el('turnIndicator').classList.add('enemy-turn');else el('turnIndicator').classList.remove('enemy-turn');
+  el('battleLog').innerHTML=`<div class="log-entry">Бой начался. ${isPlayerTurn?'Вы':'Противник'} ходит первым.</div><div class="log-entry" style="color:#8a6a3a;font-size:10px;">Первый ход: только базовые атаки, способности недоступны.</div>`;
   el('endTurnBtn').style.display=isPlayerTurn?'block':'none';
   updUI();
   updateRowStates();
   startRoundTimer();
+  if(!isPlayerTurn)setTimeout(aiTurn,600);
 }
 
-function backToShop(){gameOver=true;stopRoundTimer();showScreen('shop');renderShop()}
+function backToShop(){gameOver=true;showScreen('shop');renderShop()}
 function backToShopFromResult(){el('resultOverlay').classList.remove('show');showScreen('shop');renderShop()}
 
 function rCard(c,idx,isP){
@@ -1301,7 +1203,7 @@ function rCard(c,idx,isP){
     else{targetable=' enemy-targetable';}
   }
   return `<div class="card${activeCls}${tauntCls}${c.hp<=0?' dead':''}${targetable}" data-idx="${idx}" data-p="${isP?1:0}" onclick="onCard(${isP?1:0},${idx})">
-    <img class="card-image" src="${IMG_BASE}${c.id}.webp" alt="${c.name}" draggable="false">
+    <img class="card-image" src="${IMG_BASE}${c.id}.png" alt="${c.name}" draggable="false">
     <span class="atk-badge">${atkHTML}</span>
     <span class="card-role" style="color:${roleClr}">${roleTxt}</span>
     <div class="hp-bar-wrap"><div class="hp-bar ${hc}" style="width:${hpP}%"></div></div>
@@ -1352,7 +1254,8 @@ function refreshBattleCards(){
     if(c.dotTurns>0){if(!ds){ds=document.createElement('span');ds.className='dot-status';ds.style.cssText='position:absolute;top:28px;left:8px;font-size:9px;color:#5a8a1a;z-index:5;text-shadow:0 0 4px rgba(90,138,26,.6);font-family:Cinzel,serif;';ce.appendChild(ds)}ds.textContent='☠ Чума '+c.dotTurns+'х'}else if(ds)ds.remove();
   });
 }
-
+let battleCardsReady=false;
+let lastAbilityHTML='',lastHintHTML='';
 function updUI(){
   if(battleCardsReady){
     refreshBattleCards();
@@ -1361,18 +1264,19 @@ function updUI(){
     el('enemyRow').innerHTML=enemyCards.map((c,i)=>rCard(c,i,false)).join('');
     battleCardsReady=true;lastAbilityHTML='';lastHintHTML='';
   }
+
   let abHTML='',hintHTML='';
   if(activeIdx>=0&&isPlayerTurn&&!gameOver&&!turnLocked){
     const c=playerCards[activeIdx];
     if(critActivated){
       abHTML='<span style="font-size:12px;color:#c08030;animation:pulse-enemy 1s infinite; font-family:Cinzel, serif; letter-spacing:1px;">⚡ КРИТ ГОТОВ — выберите врага!</span>';
-    }else if(fireballActive){
+    } else if(fireballActive){
       abHTML='<span style="font-size:12px;color:#e07830;animation:pulse-enemy 1s infinite; font-family:Cinzel, serif; letter-spacing:1px;">🔥 ОГНЕННЫЙ ШАР — выберите врага!</span>';
-    }else{
+    } else {
       let btns='';
       if(firstTurn&&isPlayerTurn){
         btns+='<span style="font-size:11px;color:#8a6a3a; font-style:italic;">Первый ход: только базовая атака</span>';
-      }else{
+      } else {
         if(c.type==='tank'&&c.mana>=2&&!abilitiesUsedThisTurn.has(activeIdx)){
           btns+=`<button class="btn ability-btn" onclick="useTaunt()">🛡 Провокация (2 маны)</button>`;
         }
@@ -1381,24 +1285,26 @@ function updUI(){
         }
         if(c.type==='mage'&&c.mana>=3&&!abilitiesUsedThisTurn.has(activeIdx)){
           btns+=`<button class="btn ability-btn" onclick="useFireball()">🔮 Огненный шар (3 маны)</button>`;
-        }else if(c.type==='mage'&&c.id==='mage_01'&&c.mana>=2&&!abilitiesUsedThisTurn.has(activeIdx)){
+        } else if(c.type==='mage'&&c.id==='mage_01'&&c.mana>=2&&!abilitiesUsedThisTurn.has(activeIdx)){
           btns+=`<button class="btn ability-btn" onclick="useFireball()">🔮 Огненный шар <span style="color:#8ab860">(2 маны)</span></button>`;
         }
-        if(c.mana===0||abilitiesUsedThisTurn.has(activeIdx))btns+='<span style="font-size:11px;color:#6a5a70; font-style:italic;">Сила иссякла на этот ход</span>';
+        if(c.mana===0||abilitiesUsedThisTurn.has(activeIdx)) btns+='<span style="font-size:11px;color:#6a5a70; font-style:italic;">Сила иссякла на этот ход</span>';
       }
       if(c.type==='assa'&&c.critReady&&!critActivated)btns+='<span style="font-size:11px;color:#c08030; font-weight:600;">⚡ Крит готов!</span>';
       if(c.type==='tank'&&c.tauntActive)btns+='<span style="font-size:11px;color:#8a4a1a; font-weight:600;">🛡 Агр активен</span>';
       abHTML=btns;
     }
-  }else if(isPlayerTurn&&!gameOver){
+  } else if(isPlayerTurn&&!gameOver){
     abHTML='<span style="font-size:11px;color:#6a5a70; font-style:italic;">Выберите юнита для действий</span>';
   }
+
   if(!isPlayerTurn||gameOver)hintHTML='Противник обдумывает свой ход...';
   else if(turnLocked)hintHTML='Ход завершается...';
   else if(activeIdx<0&&firstTurn&&isPlayerTurn)hintHTML='<span class="key">Выберите юнита</span> — первый ход: только базовая атака';
   else if(activeIdx<0)hintHTML='<span class="key">Выберите юнита</span> — 1 действие за ход';
   else if(firstTurn&&isPlayerTurn)hintHTML='<span class="key">Атакуйте врага</span> — способности недоступны в первом ходу';
   else hintHTML='<span class="key">Атакуйте врага</span> или <span class="key">используйте способность</span>';
+
   if(abHTML!==lastAbilityHTML){el('abilityPanel').innerHTML=abHTML;lastAbilityHTML=abHTML;}
   if(hintHTML!==lastHintHTML){el('actionHint').innerHTML=hintHTML;lastHintHTML=hintHTML;}
 }
@@ -1417,100 +1323,162 @@ function onCard(isP,idx){
       doFireball(activeIdx,idx);
       return;
     }
+    const taunter=enemyCards.find(e=>e.tauntActive&&e.hp>0);
+    const assa=playerCards[activeIdx];
+    const ignoreTaunt=assa&&assa.type==='assa'&&assa.id==='assa_03'&&assa.critReady;
+    if(taunter&&!ignoreTaunt&&enemyCards[idx].id!==taunter.id)return;
     doAttack(activeIdx,idx);
   }
 }
 
-async function doAttack(aIdx,dIdx){
-  if(!isPlayerTurn||gameOver||turnLocked)return;
-  const aE=el('playerRow').querySelector(`[data-idx="${aIdx}"]`);
-  const dE=el('enemyRow').querySelector(`[data-idx="${dIdx}"]`);
-  try {
-    const data=await call('POST',`/api/battle/attack/${sessionId}`,{attackerIdx:aIdx,defenderIdx:dIdx});
-    const pa=data.playerAction;
-    if(aE)aE.classList.add('attacking');
-    if(dE && pa){
-      dE.classList.add('taking-damage');
-      dmgNum(dE,pa.damage,pa.isCrit?'#c08030':'#c04030');
-      impact(dE);
-      if(pa.isCrit)critText(dE);
-      if(pa.isDead){dE.classList.add('dying');deathFx(dE);sfx.death();}
-      if(pa.mageSplashes)pa.mageSplashes.forEach(s=>{const sE=el('enemyRow').querySelector(`[data-idx="${s.neighborIdx}"]`);if(sE){dmgNum(sE,s.damage,'#8050c0');impact(sE);}});
-      if(pa.assaSplash){const sE=el('enemyRow').querySelector(`[data-idx="${pa.assaSplash.neighborIdx}"]`);if(sE){dmgNum(sE,pa.assaSplash.damage,'#c04030');impact(sE);}}
-    }
-    if(pa&&pa.isCrit)sfx.crit();else sfx.attack();
-    processBattleResponse(data);
-    setTimeout(()=>{if(aE)aE.classList.remove('attacking');if(dE)dE.classList.remove('taking-damage')},450);
-  }catch(e){showToast('Сервер не отвечает...');}
+function doAttack(aIdx,dIdx){
+  const att=playerCards[aIdx],def=enemyCards[dIdx];
+  let baseDmg;let wasCrit=false;
+  if(att.type==='assa'&&att.critReady){
+    const mul=att.id==='assa_05'?2.5:2; // Жнец Снов x2.5
+    baseDmg=att.atk*mul;
+    wasCrit=true;att.critReady=false;critActivated=false;
+    // assa_01: 30% шанс возврата 1 маны
+    if(att.id==='assa_01'&&Math.random()<.3){att.mana=Math.min(MAX_MANA,att.mana+1);log(`<span class="log-ability">${att.passive}: мана возвращена!</span>`)}
+  }else{
+    baseDmg=att.atk;
+    // assa_02 Добивание: +2 урона если HP<50%
+    if(att.type==='assa'&&att.id==='assa_02'&&def.hp<=def.maxHp*.5)baseDmg+=2;
+  }
+  const defBonus=getDefBonus(def);
+  const dmg=Math.max(1,rollDamage(baseDmg,att.variance||.15)-defBonus);
+  // Прикрытие: соседний танк забирает атаку без урона
+  const coverTank=tryTankCover(enemyCards,dIdx);
+  if(coverTank){
+    log(`<span class="log-ability">🛡 ${coverTank.name} прикрыл ${def.name}!</span>`);
+    flash('radial-gradient(rgba(100,140,180,.1),transparent)');
+    sfx.attack(); // звук блокированной атаки
+    const aE=el('playerRow').querySelector(`[data-idx="${aIdx}"]`);
+    if(aE)aE.classList.add('attacking');setTimeout(()=>{if(aE)aE.classList.remove('attacking')},300);
+    activeIdx=-1;turnLocked=true;
+    setTimeout(()=>{updUI();if(!checkEnd())setTimeout(()=>{if(isPlayerTurn&&!gameOver)endPlayerTurn();},800)},400);
+    return;
+  }
+  const wa=def.hp>0;def.hp=Math.max(0,def.hp-dmg);const isDead=def.hp<=0&&wa;
+  // assa_04: убийство +2 маны (при обычной атаке)
+  if(att.type==='assa'&&att.id==='assa_04'&&isDead){att.mana=Math.min(MAX_MANA,att.mana+2);log(`<span class="log-ability">${att.passive}: +2 маны!</span>`)}
+  let lg=`<span class="log-player">${att.name}</span> атакует <span class="log-enemy">${def.name}</span> — <span class="log-dmg">${dmg} урона</span>${wasCrit?' <span class="log-crit">[КРИТ!]</span>':''}${defBonus>0?` <span class="log-ability">[${def.passive} -${defBonus}]</span>`:''}${isDead?' <span class="log-death">[УБИТ]</span>':''}`;
+   log(lg);
+   const aE=el('playerRow').querySelector(`[data-idx="${aIdx}"]`),dE=el('enemyRow').querySelector(`[data-idx="${dIdx}"]`);
+   if(aE)aE.classList.add('attacking');if(dE)dE.classList.add('taking-damage');
+   wasCrit?sfx.crit():sfx.attack();if(dE){dmgNum(dE,dmg,wasCrit?'#c08030':'#c04030');impact(dE);if(wasCrit)critText(dE)}
+  if(isDead&&dE){dE.classList.add('dying');deathFx(dE);sfx.death()}
+  // tank_02: отражение урона
+  if(def.id==='tank_02'&&def.tauntActive&&att.hp>0){att.hp=Math.max(0,att.hp-1);log(`<span class="log-ability">${def.passive}: отражает 1 урон в ${att.name}!</span>`)}
+  // Раскол: маг с 5% шансом наносит 1-3 урона соседним
+  if(att.type==='mage'){
+    const splash=tryMageSplash(att,enemyCards,dIdx);
+    if(splash)splash.forEach(s=>{
+      log(`<span class="log-ability">⚡ ${att.passive}: ${s.damage} урона по ${s.neighbor.name}!</span>`);
+      const sE=el('enemyRow').querySelector(`[data-idx="${s.index}"]`);
+      if(sE){dmgNum(sE,s.damage,'#8050c0');impact(sE);if(s.neighbor.hp<=0){sE.classList.add('dying');deathFx(sE);sfx.death()}}
+    });
+  }
+  // Кровопускание: убийца с 5% шансом наносит половину урона одному соседу
+  const assaSplash=tryAssaSplash(att,enemyCards,dIdx,dmg);
+  if(assaSplash){
+    log(`<span class="log-ability">🗡 ${att.passive}: ${assaSplash.damage} урона по ${assaSplash.neighbor.name}!</span>`);
+    const sE=el('enemyRow').querySelector(`[data-idx="${assaSplash.index}"]`);
+    if(sE){dmgNum(sE,assaSplash.damage,'#c04030');impact(sE);if(assaSplash.neighbor.hp<=0){sE.classList.add('dying');deathFx(sE);sfx.death()}}
+  }
+  activeIdx=-1;turnLocked=true;
+  setTimeout(()=>{
+    if(aE)aE.classList.remove('attacking');if(dE)dE.classList.remove('taking-damage');
+    updUI();
+    if(checkEnd())return;
+    el('actionHint').innerHTML='<span class="key">Атака!</span> Ход завершается...';
+    setTimeout(()=>{if(isPlayerTurn&&!gameOver)endPlayerTurn();},800);
+  },400);
 }
 
-async function doFireball(aIdx,dIdx){
-  if(!isPlayerTurn||gameOver||turnLocked||!fireballActive)return;
-  const aE=el('playerRow').querySelector(`[data-idx="${aIdx}"]`);
-  const dE=el('enemyRow').querySelector(`[data-idx="${dIdx}"]`);
-  try {
-    const data=await call('POST',`/api/battle/fireball/${sessionId}`,{defenderIdx:dIdx});
-    const pa=data.playerAction;
-    if(aE)aE.classList.add('attacking');
-    if(dE && pa){
-      dE.classList.add('taking-damage');
-      dmgNum(dE,pa.damage,'#e07830');
-      impact(dE);
-      if(pa.isDead){dE.classList.add('dying');deathFx(dE);sfx.death();}
-      if(pa.mageSplashes)pa.mageSplashes.forEach(s=>{const sE=el('enemyRow').querySelector(`[data-idx="${s.neighborIdx}"]`);if(sE){dmgNum(sE,s.damage,'#8050c0');impact(sE);}});
-    }
-    sfx.fireball();flash('radial-gradient(rgba(138,74,26,.15),transparent)');
-    fireballActive=false;
-    processBattleResponse(data);
-    setTimeout(()=>{if(aE)aE.classList.remove('attacking');if(dE)dE.classList.remove('taking-damage')},450);
-  }catch(e){showToast('Сервер не отвечает...');}
+function doFireball(aIdx,dIdx){
+  const att=playerCards[aIdx],def=enemyCards[dIdx];
+  const defBonus=getDefBonus(def);
+  let baseAtk=att.atk;
+  if(att.id==='mage_10'&&att.hp<=att.maxHp*.5)baseAtk+=2; // Псай-шторм
+  let dmg=Math.max(1,rollDamage(baseAtk,att.variance||.15)-defBonus);
+  if(att.id==='mage_07'&&def.type==='tank')dmg+=1; // Скверна: +1 танкам
+  fireballActive=false;
+  const wa=def.hp>0;def.hp=Math.max(0,def.hp-dmg);const isDead=def.hp<=0&&wa;
+  // mage_02: Проклятие -1 ATK
+  if(att.id==='mage_02'&&def.hp>0){def.atkDebuff=(def.atkDebuff||0)+1;log(`<span class="log-ability">${att.passive}: ATK ${def.name} -1!</span>`)}
+  // mage_03: Жертва — лечит мага на 2 HP
+  if(att.id==='mage_03'){const h=Math.min(att.maxHp,att.hp+2);att.hp=h;log(`<span class="log-ability">${att.passive}: +2 HP (${att.hp}/${att.maxHp})</span>`)}
+  // mage_04: Чума — 1 урон/ход на 2 хода
+  if(att.id==='mage_04'&&def.hp>0){def.dotTurns=2;log(`<span class="log-ability">${att.passive}: ${def.name} заражён!</span>`)}
+  // mage_06: Искажение — 30% шанс возврата маны
+  if(att.id==='mage_06'&&Math.random()<.3){att.mana=Math.min(MAX_MANA,att.mana+1);log(`<span class="log-ability">${att.passive}: мана возвращена!</span>`)}
+  // mage_08: Пожиратель — кража маны
+  if(att.id==='mage_08'&&def.hp>0&&def.mana>0){def.mana--;att.mana=Math.min(MAX_MANA,att.mana+1);log(`<span class="log-ability">${att.passive}: мана украдена!</span>`)}
+  // mage_09: Сбор душ — при убийстве +2 HP, +1 маны
+  if(att.id==='mage_09'&&isDead){att.hp=Math.min(att.maxHp,att.hp+2);att.mana=Math.min(MAX_MANA,att.mana+1);log(`<span class="log-ability">${att.passive}: +2 HP, +1 маны!</span>`)}
+  let lg=`<span class="log-player">${att.name}</span> — ОГНЕННЫЙ ШАР в <span class="log-enemy">${def.name}</span> — <span class="log-dmg">${dmg} урона</span>${defBonus>0?` <span class="log-ability">[${def.passive} -${defBonus}]</span>`:''}${isDead?' <span class="log-death">[УБИТ]</span>':''}`;
+  log(lg);
+  const aE=el('playerRow').querySelector(`[data-idx="${aIdx}"]`),dE=el('enemyRow').querySelector(`[data-idx="${dIdx}"]`);
+  if(aE)aE.classList.add('attacking');if(dE)dE.classList.add('taking-damage');
+  sfx.fireball();if(dE){dmgNum(dE,dmg,'#e07830');impact(dE)}
+  if(isDead&&dE){dE.classList.add('dying');deathFx(dE);sfx.death()}
+  // Раскол: маг с 5% шансом наносит 1-3 урона соседним
+  const splash=tryMageSplash(att,enemyCards,dIdx);
+  if(splash)splash.forEach(s=>{
+    log(`<span class="log-ability">⚡ ${att.passive}: ${s.damage} урона по ${s.neighbor.name}!</span>`);
+    const sE=el('enemyRow').querySelector(`[data-idx="${s.index}"]`);
+    if(sE){dmgNum(sE,s.damage,'#8050c0');impact(sE);if(s.neighbor.hp<=0){sE.classList.add('dying');deathFx(sE);sfx.death()}}
+  });
+  activeIdx=-1;turnLocked=true;
+  setTimeout(()=>{
+    if(aE)aE.classList.remove('attacking');if(dE)dE.classList.remove('taking-damage');
+    updUI();
+    if(checkEnd())return;
+    setTimeout(()=>{if(isPlayerTurn&&!gameOver)endPlayerTurn();},600);
+  },400);
 }
 
-async function useTaunt(){
+function useTaunt(){
+  if(activeIdx<0||!isPlayerTurn||gameOver||firstTurn)return;
+  const c=playerCards[activeIdx];
+  if(c.type!=='tank'||c.mana<2||abilitiesUsedThisTurn.has(activeIdx)||turnLocked)return;
+  c.mana-=2;c.tauntActive=true;abilitiesUsedThisTurn.add(activeIdx);
+  // tank_05 Шоггот: провокация лечит 2 HP
+  if(c.id==='tank_05'){c.hp=Math.min(c.maxHp,c.hp+2);log(`<span class="log-ability">${c.passive}: +2 HP (${c.hp}/${c.maxHp})</span>`)}
+  sfx.taunt();log(`<span class="log-ability">${c.name} активирует ПРОВОКАЦИЮ${c.id==='tank_01'?' [Броня -1 урон]':c.id==='tank_02'?' [Отражает 1]':''}! Враг вынужден бить танка.</span>`);
+  flash('radial-gradient(rgba(138,74,26,.15),transparent)');
+  activeIdx=-1;turnLocked=true;updUI();
+  el('actionHint').innerHTML='<span class="key">Провокация!</span> Ход завершается...';
+  setTimeout(()=>{if(isPlayerTurn&&!gameOver)endPlayerTurn();},800);
+}
+function useCrit(){
   if(activeIdx<0||!isPlayerTurn||gameOver||turnLocked||firstTurn)return;
-  try {
-    const data=await call('POST',`/api/battle/taunt/${sessionId}`);
-    sfx.taunt();flash('radial-gradient(rgba(138,74,26,.15),transparent)');
-    processBattleResponse(data);
-    if(!gameOver&&isPlayerTurn){
-      turnLocked=true;updUI();
-      el('actionHint').innerHTML='<span class="key">Провокация!</span> Ход завершается...';
-      setTimeout(()=>{if(isPlayerTurn&&!gameOver)endPlayerTurn();},800);
-    }
-  }catch(e){showToast('Сервер не отвечает...');}
+  const c=playerCards[activeIdx];
+  if(c.type!=='assa'||c.mana<2||abilitiesUsedThisTurn.has(activeIdx))return;
+  c.mana-=2;c.critReady=true;abilitiesUsedThisTurn.add(activeIdx);critActivated=true;
+  log(`<span class="log-ability">${c.name} готовит КРИТ x2! Выберите цель для удара.</span>`);
+  flash('radial-gradient(rgba(192,128,48,.1),transparent)');
+  updUI();
 }
-
-async function useCrit(){
-  if(activeIdx<0||!isPlayerTurn||gameOver||turnLocked||firstTurn)return;
-  try {
-    const data=await call('POST',`/api/battle/crit/${sessionId}`);
-    flash('radial-gradient(rgba(192,128,48,.1),transparent)');
-    processBattleResponse(data);
-  }catch(e){showToast('Сервер не отвечает...');}
-}
-
 function useFireball(){
-  if(activeIdx<0||!isPlayerTurn||gameOver||firstTurn||turnLocked)return;
+  if(activeIdx<0||!isPlayerTurn||gameOver||firstTurn)return;
   const c=playerCards[activeIdx];
   const cost=c.id==='mage_01'?2:3;
-  if(c.type!=='mage'||c.mana<cost||abilitiesUsedThisTurn.has(activeIdx))return;
-  fireballActive=true;
+  if(c.type!=='mage'||c.mana<cost||abilitiesUsedThisTurn.has(activeIdx)||turnLocked)return;
+  c.mana-=cost;abilitiesUsedThisTurn.add(activeIdx);fireballActive=true;
+  // mage_11: Оракул — 40% шанс возврата 2 маны (эффективная стоимость = 1)
+  if(c.id==='mage_11'&&Math.random()<.4){c.mana=Math.min(MAX_MANA,c.mana+2);log(`<span class="log-ability">${c.passive}: фаербол стоил 1 ману!</span>`)}
+  let costMsg=c.id==='mage_01'?' [Эрудит: 2 маны]':(c.id==='mage_11'?' [Оракул: 40% скидка]':'');
+  log(`<span class="log-ability">${c.name} готовит ОГНЕННЫЙ ШАР${costMsg}! Выберите цель.</span>`);
   flash('radial-gradient(rgba(138,74,26,.1),transparent)');
-  log(`<span class="log-ability">${c.name} готовит ОГНЕННЫЙ ШАР! Выберите цель.</span>`);
   updUI();
 }
 
-async function endPlayerTurn(){
-  if(gameOver||!isPlayerTurn)return;
-  stopRoundTimer();
-  turnLocked=true;updUI();
-  try {
-    const data=await call('POST',`/api/battle/end-turn/${sessionId}`);
-    processBattleResponse(data);
-  }catch(e){showToast('Сервер не отвечает...');}
-}
 
-// ═══ ТАЙМЕР ═══
+let turnLocked=false,critActivated=false,fireballActive=false,firstTurn=false;
+let roundTimer=null,roundSeconds=0,ROUND_TIME=20;
+
 function startRoundTimer(){
   stopRoundTimer();
   roundSeconds=ROUND_TIME;
@@ -1523,6 +1491,9 @@ function startRoundTimer(){
       if(isPlayerTurn&&!gameOver&&!turnLocked){
         log('<span class="log-ability">⏰ Время вышло! Ход переходит противнику.</span>');
         endPlayerTurn();
+      }else if(!isPlayerTurn&&!gameOver){
+        log('<span class="log-ability">⏰ Время вышло! Ход переходит вам.</span>');
+        endAiTurn();
       }
     }
   },1000);
@@ -1543,13 +1514,402 @@ function updateRowStates(){
   if(isPlayerTurn){pRow.classList.add('active');pRow.classList.remove('waiting');eRow.classList.add('waiting');eRow.classList.remove('active');}
   else{eRow.classList.add('active');eRow.classList.remove('waiting');pRow.classList.add('waiting');pRow.classList.remove('active');}
 }
+function endPlayerTurn(){
+  if(gameOver||!isPlayerTurn)return;
+  stopRoundTimer();
+  // DOT на врагах
+  enemyCards.forEach(c=>{const d=applyDOT(c);if(d)log(`<span class="log-ability">☠ Чума наносит ${d} урона ${c.name}!</span>`)});
+  activeIdx=-1;abilitiesUsedThisTurn=new Set();turnLocked=false;critActivated=false;fireballActive=false;firstTurn=false;
+  enemyCards.forEach(c=>{if(c.tauntActive){c.tauntActive=false};c.atkDebuff=0});
+  updUI();
+  if(checkEnd())return;
+  isPlayerTurn=false;el('turnIndicator').textContent='Ход врага';el('turnIndicator').classList.add('enemy-turn');
+  el('endTurnBtn').style.display='none';
+  updateRowStates();
+  startRoundTimer();
+  setTimeout(aiTurn,800);
+}
+
+function aiThreatScore(c){
+  if(c.hp<=0)return 0;
+  let s=c.atk*4;
+  if(c.type==='mage')s+=8;        // приоритетная цель — маги опасны
+  if(c.type==='assa')s+=5;        // ассасины бьют больно
+  if(c.type==='tank')s+=3;
+  if(c.mana>=2)s+=5;              // готова способность
+  if(c.mana>=3)s+=8;              // ультимейт на подходе
+  if(c.hp<=c.maxHp*0.3)s+=4;     // добить ослабленного
+  if(c.tauntActive)s+=6;
+  return s;
+}
+
+// Глобальная память AI: кого били в прошлый ход
+let aiLastTargetId=null;
+
+// Оценка позиции на доске с точки зрения AI (чем выше — тем лучше для AI)
+function aiEvalPosition(){
+  const aE=enemyCards.filter(c=>c.hp>0),aP=playerCards.filter(c=>c.hp>0);
+  if(!aP.length)return 99999;if(!aE.length)return -99999;
+  let sc=0;
+  // HP-преимущество
+  sc+=(aE.reduce((s,c)=>s+c.hp,0)-aP.reduce((s,c)=>s+c.hp,0))*2.5;
+  // Численное преимущество (каждый лишний живой юнит = +25)
+  sc+=(aE.length-aP.length)*25;
+  // Суммарная угроза
+  sc+=(aE.reduce((s,c)=>s+aiThreatScore(c),0)-aP.reduce((s,c)=>s+aiThreatScore(c),0))*1.2;
+  // Мана-преимущество
+  sc+=(aE.reduce((s,c)=>s+c.mana,0)-aP.reduce((s,c)=>s+c.mana,0))*4;
+  // Почти убитые враги — огромный плюс
+  aP.forEach(p=>{if(p.hp<=p.maxHp*0.25)sc+=30;else if(p.hp<=p.maxHp*0.5)sc+=12});
+  // Почти убитые союзники — огромный минус
+  aE.forEach(e=>{if(e.hp<=e.maxHp*0.25)sc-=25;else if(e.hp<=e.maxHp*0.5)sc-=10});
+  return sc;
+}
+
+// Предсказание ответного хода игрока: сколько урона/потерь AI понесёт
+function aiPredictPlayerResponse(){
+  const aE=enemyCards.filter(c=>c.hp>0),aP=playerCards.filter(c=>c.hp>0);
+  if(!aE.length||!aP.length)return{damage:0,killCount:0,threatLost:0};
+  let totalDmg=0,kills=0,threatGone=0;
+  // Симулируем ход игрока: каждый живой юнит атакует оптимальную цель
+  const eCopy=aE.map(c=>({...c,hp:c.hp})); // копия для симуляции
+  aP.forEach(p=>{
+    // Игрок атакует самую уязвимую или угрожающую цель
+    const liveE=eCopy.filter(e=>e.hp>0);
+    if(!liveE.length)return;
+    // Проверка таунта у AI
+    const taunted=liveE.find(e=>e.tauntActive);
+    let target;
+    if(taunted){
+      target=taunted;
+    }else{
+      // Игрок добивает или бьёт самого опасного
+      const kills=liveE.filter(e=>e.hp<=Math.max(1,p.atk-getDefBonus(e)));
+      if(kills.length>0){
+        target=kills.reduce((b,c)=>aiThreatScore(c)>aiThreatScore(b)?c:b,kills[0]);
+      }else{
+        target=liveE.reduce((b,c)=>{
+          const sB=(1-b.hp/b.maxHp)*7+aiThreatScore(b)*0.5;
+          const sC=(1-c.hp/c.maxHp)*7+aiThreatScore(c)*0.5;
+          return sC>sB?c:b;
+        },liveE[0]);
+      }
+    }
+    if(!target)return;
+    const defBonus=getDefBonus(target);
+    const dmg=Math.max(1,rollDamage(p.atk,p.variance||.15)-defBonus);
+    const wasAlive=target.hp>0;
+    target.hp=Math.max(0,target.hp-dmg);
+    if(target.hp<=0&&wasAlive){kills++;threatGone+=aiThreatScore(target)}
+    totalDmg+=Math.min(dmg,wasAlive?dmg:0);
+  });
+  return{damage:totalDmg,killCount:kills,threatLost:threatGone};
+}
+
+function aiPickTarget(attackerDmg,attackerType,ignoreTaunt=false){
+  const liveP=playerCards.filter(c=>c.hp>0);
+  if(!liveP.length)return null;
+  if(!ignoreTaunt){
+    const taunted=liveP.find(c=>c.tauntActive);
+    if(taunted)return taunted;
+  }
+  const kills=liveP.filter(p=>p.hp<=Math.max(1,attackerDmg-getDefBonus(p)));
+  if(kills.length>0)return kills.reduce((b,c)=>aiThreatScore(c)>aiThreatScore(b)?c:b,kills[0]);
+  return liveP.reduce((b,c)=>{
+    const sB=(1-b.hp/b.maxHp)*8+aiThreatScore(b)*0.7+(b.id===aiLastTargetId?15:0);
+    const sC=(1-c.hp/c.maxHp)*8+aiThreatScore(c)*0.7+(c.id===aiLastTargetId?15:0);
+    return sC>sB?c:b;
+  },liveP[0]);
+}
+
+function aiTurn(){
+  if(gameOver)return;
+  log('<span class="log-ability">⚡ Противник анализирует позицию...</span>');
+  enemyCards.forEach(c=>{if(c.tauntActive)c.tauntActive=false});
+  const aliveE=enemyCards.filter(c=>c.hp>0),aliveP=playerCards.filter(c=>c.hp>0);
+  if(!aliveE.length||!aliveP.length){log('Некого атаковать');endAiTurn();return}
+
+  const maxPlayerAtk=Math.max(...aliveP.map(c=>c.atk));
+  const basePosScore=aiEvalPosition();
+  const actions=[];
+
+  // --- БАЗОВЫЕ АТАКИ (с симуляцией позиции + контр-игра) ---
+  aliveE.forEach(e=>{
+    const critMul=(e.type==='assa'&&e.critReady)?(e.id==='assa_05'?2.5:2):1;
+    const avgDmg=rollDamage(e.atk*critMul,e.variance||.15);
+    const liveP=playerCards.filter(c=>c.hp>0);
+    liveP.forEach(p=>{
+      if(e.type!=='assa'||e.id!=='assa_03'||critMul===1){
+        const t=aliveP.find(x=>x.tauntActive&&x.hp>0);
+        if(t&&p!==t)return;
+      }
+      const defBonus=getDefBonus(p);
+      const finalDmg=Math.max(1,avgDmg-defBonus);
+      const kill=p.hp<=finalDmg;
+      const oldHp=p.hp;p.hp=Math.max(0,p.hp-finalDmg);
+      // Оценка позиции + предсказание ответа игрока
+      const posDelta=aiEvalPosition()-basePosScore;
+      const resp=aiPredictPlayerResponse();
+      p.hp=oldHp;
+      let score=posDelta*2.5+finalDmg*1.5;
+      score-=resp.damage*3.5+resp.killCount*55+resp.threatLost*5;    // контр-игра
+      if(kill)score+=85+aiThreatScore(p)*3.5;                          // убийство
+      if(p.id===aiLastTargetId)score+=30;                                // focus fire
+      if(p.hp<=p.maxHp*0.3)score+=22;                                    // добивание
+      if(p.mana>=2&&!kill)score+=18;                                     // сбить каст
+      if(e.type==='assa'&&critMul>1)score+=12;
+      if(e.mana>=5)score+=5;                                             // копить ману нет смысла
+      actions.push({type:'attack',actor:e,target:p,damage:finalDmg,kill,score,critMul});
+    });
+  });
+
+  // --- ПРОВОКАЦИЯ (с симуляцией + контр-игра) ---
+  if(!firstTurn){
+  aliveE.forEach(e=>{
+    if(e.type!=='tank'||e.mana<2||e.tauntActive)return;
+    const nonTanks=aliveE.filter(c=>c.type!=='tank'&&c.hp>0);
+    if(!nonTanks.length)return;
+    const critAlly=nonTanks.some(a=>a.hp<=a.maxHp*0.25);
+    const dangerAlly=nonTanks.some(a=>a.hp<=maxPlayerAtk);
+    const lowAlly=nonTanks.some(a=>a.hp<=a.maxHp*0.35);
+    if(!dangerAlly&&!lowAlly&&!critAlly)return;
+    e.tauntActive=true;
+    const posDelta=aiEvalPosition()-basePosScore;
+    const resp=aiPredictPlayerResponse();
+    e.tauntActive=false;
+    let score=posDelta*2+25;
+    score-=resp.damage*2.5+resp.killCount*40;            // контр-игра после таунта
+    if(critAlly)score+=50;                                 // спасение критического союзника
+    if(dangerAlly)score+=28;
+    if(lowAlly)score+=20;
+    if(aliveE.length>=3)score+=14;
+    if(e.hp>maxPlayerAtk*1.5)score+=12;
+    actions.push({type:'taunt',actor:e,score});
+  });
+
+  // --- КРИТ (с симуляцией + контр-игра) ---
+  aliveE.forEach(e=>{
+    if(e.type!=='assa'||e.mana<2||e.critReady)return;
+    const mul=e.id==='assa_05'?2.5:2;
+    const rawDmg=rollDamage(e.atk*mul,e.variance||.15);
+    const ignoreT=e.id==='assa_03';
+    const liveP=playerCards.filter(c=>c.hp>0);
+    liveP.forEach(p=>{
+      if(!ignoreT){const t=aliveP.find(x=>x.tauntActive&&x.hp>0);if(t&&p!==t)return;}
+      const defBonus=getDefBonus(p);
+      const dmg=Math.max(1,rawDmg-defBonus);
+      const kill=p.hp<=dmg;
+      const oldHp=p.hp;p.hp=Math.max(0,p.hp-dmg);
+      const posDelta=aiEvalPosition()-basePosScore;
+      const resp=aiPredictPlayerResponse();
+      p.hp=oldHp;
+      let score=posDelta*3+dmg*1.8;
+      score-=resp.damage*3.8+resp.killCount*60+resp.threatLost*5;
+      if(kill)score+=100+aiThreatScore(p)*4;                 // убийство критом = максимальный приоритет
+      if(p.id===aiLastTargetId)score+=35;
+      if(p.mana>=2&&!kill)score+=22;                          // сбить каст критом
+      if(p.hp<=p.maxHp*0.4)score+=20;
+      if(e.mana>=4)score+=8;                                  // много маны — трать
+      actions.push({type:'crit',actor:e,target:p,damage:dmg,kill,score,rawDmg,mul});
+    });
+  });
+
+  // --- ОГНЕННЫЙ ШАР (с симуляцией + контр-игра) ---
+  aliveE.forEach(e=>{
+    if(e.type!=='mage')return;
+    const cost=e.id==='mage_01'?2:3;
+    if(e.mana<cost)return;
+    let fireAtk=e.atk;
+    if(e.id==='mage_10'&&e.hp<=e.maxHp*.5)fireAtk+=2;
+    const rawDmg=rollDamage(fireAtk,e.variance||.15);
+    const liveP=playerCards.filter(c=>c.hp>0);
+    liveP.forEach(p=>{
+      const defBonus=getDefBonus(p);
+      let dmg=Math.max(1,rawDmg-defBonus);
+      if(e.id==='mage_07'&&p.type==='tank')dmg+=1;
+      const kill=p.hp<=dmg;
+      const oldHp=p.hp;p.hp=Math.max(0,p.hp-dmg);
+      const oldDebuff=p.atkDebuff||0;if(e.id==='mage_02'&&!kill)p.atkDebuff=(p.atkDebuff||0)+1;
+      const oldDot=p.dotTurns||0;if(e.id==='mage_04'&&!kill)p.dotTurns=2;
+      const oldMana=p.mana;if(e.id==='mage_08'&&!kill&&p.mana>0)p.mana--;
+      const posDelta=aiEvalPosition()-basePosScore;
+      const resp=aiPredictPlayerResponse();
+      p.hp=oldHp;p.atkDebuff=oldDebuff;p.dotTurns=oldDot;p.mana=oldMana;
+      let score=posDelta*2.8+dmg*1.5;
+      score-=resp.damage*3.5+resp.killCount*55+resp.threatLost*5;
+      if(kill)score+=95+aiThreatScore(p)*3.8;
+      if(p.id===aiLastTargetId)score+=32;
+      if(p.mana>=2&&!kill)score+=20;
+      if(e.id==='mage_04'&&!kill)score+=14;                    // DOT ценен
+      if(e.id==='mage_02'&&!kill)score+=12;                    // дебафф ценен
+      if(e.mana>=5)score+=7;                                    // много маны
+      if(e.id==='mage_08'&&!kill&&p.mana>0)score+=16;          // кража маны
+      if(e.id==='mage_09'&&kill)score+=22;                     // сбор душ
+      if(e.id==='mage_06')score+=5;                             // шанс возврата маны
+      actions.push({type:'fireball',actor:e,target:p,damage:dmg,kill,score,rawDmg,cost});
+    });
+  });
+  } // end if(!firstTurn)
+
+  if(!actions.length){updUI();setTimeout(()=>endAiTurn(),500);return}
+
+  actions.sort((a,b)=>b.score-a.score);
+  const best=actions[0];
+  aiLastTargetId=best.target?best.target.id:null;
+
+  // Имитация раздумий: 3-7 секунд
+  const thinkMs=3000+Math.floor(Math.random()*4000);
+  setTimeout(()=>{
+    if(gameOver)return;
+    executeAiAction(best);
+  },thinkMs);
+}
+
+function executeAiAction(best){
+  if(gameOver)return;
+  const aliveP=playerCards.filter(c=>c.hp>0);
+  if(best.type==='attack'){
+    const {actor,target,damage,kill,critMul}=best;
+    const isCrit=critMul>1;
+    if(isCrit)actor.critReady=false;
+    const wasAlive=target.hp>0;
+    // Прикрытие: соседний танк забирает атаку
+    const coverTank=tryTankCover(playerCards,playerCards.indexOf(target));
+    if(coverTank){
+      log(`<span class="log-ability">🛡 ${coverTank.name} прикрыл ${target.name}!</span>`);
+      flash('radial-gradient(rgba(100,140,180,.1),transparent)');
+      sfx.attack();
+      setTimeout(()=>{updUI();endAiTurn()},400);
+      return;
+    }
+    target.hp=Math.max(0,target.hp-damage);
+    const isDead=target.hp<=0&&wasAlive;
+    if(actor.id==='assa_04'&&isDead){actor.mana=Math.min(MAX_MANA,actor.mana+2);log(`<span class="log-ability">Враг: ${actor.passive}: +2 маны!</span>`)}
+    if(actor.type==='assa'&&actor.id==='assa_02'&&target.hp<=target.maxHp*0.5)log(`<span class="log-ability">Враг: ${actor.passive}: ДОБИВАНИЕ +2 урона!</span>`);
+    log(`<span class="log-enemy">${actor.name}</span> → <span class="log-player">${target.name}</span> <span class="log-dmg">-${damage} HP</span>${isCrit?' <span class="log-crit">[КРИТ!]</span>':''}${getDefBonus(target)>0?` <span class="log-ability">[${target.passive} -${getDefBonus(target)}]</span>`:''}${isDead?' <span class="log-death">[УБИТ]</span>':''}`);
+    const aE=el('enemyRow').querySelector(`[data-idx="${enemyCards.indexOf(actor)}"]`);
+    const dE=el('playerRow').querySelector(`[data-idx="${playerCards.indexOf(target)}"]`);
+    if(aE)aE.classList.add('attacking');if(dE)dE.classList.add('taking-damage');
+    if(dE){dmgNum(dE,damage,isCrit?'#c08030':'#c04030');impact(dE);if(isCrit)critText(dE)}
+    isCrit?sfx.crit():sfx.attack();
+    if(isDead&&dE){dE.classList.add('dying');deathFx(dE);sfx.death()}
+    const taunter=aliveP.find(e=>e.tauntActive&&e.hp>0&&e.id==='tank_02');
+    if(taunter&&target.id===taunter.id&&actor.hp>0){actor.hp=Math.max(0,actor.hp-1);log(`<span class="log-ability">${taunter.passive}: отражает 1 урон в ${actor.name}!</span>`)}
+    // Раскол
+    if(actor.type==='mage'){
+      const aiSplash=tryMageSplash(actor,playerCards,playerCards.indexOf(target));
+      if(aiSplash)aiSplash.forEach(s=>{
+        log(`<span class="log-ability">⚡ Враг: ${actor.passive}: ${s.damage} урона по ${s.neighbor.name}!</span>`);
+        const sE=el('playerRow').querySelector(`[data-idx="${playerCards.indexOf(s.neighbor)}"]`);
+        if(sE){dmgNum(sE,s.damage,'#8050c0');impact(sE);if(s.neighbor.hp<=0){sE.classList.add('dying');deathFx(sE);sfx.death()}}
+      });
+    }
+    // Кровопускание
+    const aiAssaSplash=tryAssaSplash(actor,playerCards,playerCards.indexOf(target),damage);
+    if(aiAssaSplash){
+      log(`<span class="log-ability">🗡 Враг: ${actor.passive}: ${aiAssaSplash.damage} урона по ${aiAssaSplash.neighbor.name}!</span>`);
+      const sE=el('playerRow').querySelector(`[data-idx="${playerCards.indexOf(aiAssaSplash.neighbor)}"]`);
+      if(sE){dmgNum(sE,aiAssaSplash.damage,'#c04030');impact(sE);if(aiAssaSplash.neighbor.hp<=0){sE.classList.add('dying');deathFx(sE);sfx.death()}}
+    }
+    setTimeout(()=>{if(aE)aE.classList.remove('attacking');if(dE)dE.classList.remove('taking-damage');updUI();endAiTurn()},450);
+  }else if(best.type==='taunt'){
+    const {actor}=best;
+    actor.mana-=2;actor.tauntActive=true;
+    if(actor.id==='tank_05'){actor.hp=Math.min(actor.maxHp,actor.hp+2);log(`<span class="log-ability">Враг: ${actor.name} — ${actor.passive}: +2 HP!</span>`)}
+    log(`<span class="log-ability">Враг: ${actor.name} применяет ПРОВОКАЦИЮ!</span>`);
+    sfx.taunt();
+    updUI();setTimeout(()=>endAiTurn(),500);
+  }else if(best.type==='crit'){
+    const {actor,target,damage,kill,rawDmg,mul}=best;
+    actor.mana-=2;
+    if(actor.id==='assa_01'&&Math.random()<.3){actor.mana=Math.min(MAX_MANA,actor.mana+1);log(`<span class="log-ability">Враг: ${actor.passive}: мана возвращена!</span>`)}
+    const wasAlive=target.hp>0;
+    // Прикрытие: соседний танк забирает атаку
+    const coverTank2=tryTankCover(playerCards,playerCards.indexOf(target));
+    if(coverTank2){
+      log(`<span class="log-ability">🛡 ${coverTank2.name} прикрыл ${target.name}!</span>`);
+      flash('radial-gradient(rgba(100,140,180,.1),transparent)');
+      sfx.crit();
+      setTimeout(()=>{updUI();endAiTurn()},400);
+      return;
+    }
+    target.hp=Math.max(0,target.hp-damage);
+    const isDead=target.hp<=0&&wasAlive;
+    if(actor.id==='assa_04'&&isDead){actor.mana=Math.min(MAX_MANA,actor.mana+2);log(`<span class="log-ability">Враг: ${actor.passive}: +2 маны!</span>`)}
+    log(`<span class="log-ability">Враг: ${actor.name} — КРИТ${mul===2.5?' x2.5':' x2'} в ${target.name}! ${damage} урона.</span>${getDefBonus(target)>0?` <span class="log-ability">[${target.passive} -${getDefBonus(target)}]</span>`:''}${isDead?' <span class="log-death">[УБИТ]</span>':''}`);
+    flash('radial-gradient(rgba(192,128,48,.15),transparent)');
+    const dE=el('playerRow').querySelector(`[data-idx="${playerCards.indexOf(target)}"]`);
+    if(dE){dE.classList.add('taking-damage');dmgNum(dE,damage,'#c08030');impact(dE);critText(dE);if(isDead){dE.classList.add('dying');deathFx(dE)}}
+    sfx.crit();if(isDead)sfx.death();
+    setTimeout(()=>{if(dE)dE.classList.remove('taking-damage')},400);
+    const taunter2=aliveP.find(e=>e.tauntActive&&e.hp>0&&e.id==='tank_02');
+    if(taunter2&&target.id===taunter2.id&&actor.hp>0){actor.hp=Math.max(0,actor.hp-1);log(`<span class="log-ability">${taunter2.passive}: отражает 1 урон в ${actor.name}!</span>`)}
+    updUI();setTimeout(()=>endAiTurn(),500);
+  }else if(best.type==='fireball'){
+    const {actor,target,damage,kill,cost}=best;
+    actor.mana-=cost;
+    if(actor.id==='mage_11'&&Math.random()<.4){actor.mana=Math.min(MAX_MANA,actor.mana+2);log(`<span class="log-ability">Враг: ${actor.passive}: фаербол стоил 1 ману!</span>`)}
+    const wasAlive=target.hp>0;
+    target.hp=Math.max(0,target.hp-damage);
+    const isDead=target.hp<=0&&wasAlive;
+    if(actor.id==='mage_02'&&target.hp>0)target.atkDebuff=(target.atkDebuff||0)+1;
+    if(actor.id==='mage_03'){actor.hp=Math.min(actor.maxHp,actor.hp+2);log(`<span class="log-ability">Враг: ${actor.passive}: +2 HP!</span>`)}
+    if(actor.id==='mage_04'&&target.hp>0)target.dotTurns=2;
+    if(actor.id==='mage_06'&&Math.random()<.3){actor.mana=Math.min(MAX_MANA,actor.mana+1);log(`<span class="log-ability">Враг: ${actor.passive}: мана возвращена!</span>`)}
+    if(actor.id==='mage_08'&&target.hp>0&&target.mana>0){target.mana--;actor.mana=Math.min(MAX_MANA,actor.mana+1);log(`<span class="log-ability">Враг: ${actor.passive}: мана украдена!</span>`)}
+    if(actor.id==='mage_09'&&isDead){actor.hp=Math.min(actor.maxHp,actor.hp+2);actor.mana=Math.min(MAX_MANA,actor.mana+1);log(`<span class="log-ability">Враг: ${actor.passive}: +2 HP, +1 маны!</span>`)}
+    log(`<span class="log-ability">Враг: ${actor.name} — ОГНЕННЫЙ ШАР в ${target.name}! ${damage} урона.</span>${getDefBonus(target)>0?` <span class="log-ability">[${target.passive} -${getDefBonus(target)}]</span>`:''}${isDead?' <span class="log-death">[УБИТ]</span>':''}`);
+    flash('radial-gradient(rgba(138,74,26,.15),transparent)');
+    const dE=el('playerRow').querySelector(`[data-idx="${playerCards.indexOf(target)}"]`);
+    if(dE){dE.classList.add('taking-damage');dmgNum(dE,damage,'#e07830');impact(dE);if(isDead){dE.classList.add('dying');deathFx(dE)}}
+    sfx.fireball();if(isDead)sfx.death();
+    setTimeout(()=>{if(dE)dE.classList.remove('taking-damage')},400);
+    // Раскол
+    const aiFbSplash=tryMageSplash(actor,playerCards,playerCards.indexOf(target));
+    if(aiFbSplash)aiFbSplash.forEach(s=>{
+      log(`<span class="log-ability">⚡ Враг: ${actor.passive}: ${s.damage} урона по ${s.neighbor.name}!</span>`);
+      const sE=el('playerRow').querySelector(`[data-idx="${playerCards.indexOf(s.neighbor)}"]`);
+      if(sE){dmgNum(sE,s.damage,'#8050c0');impact(sE);if(s.neighbor.hp<=0){sE.classList.add('dying');deathFx(sE);sfx.death()}}
+    });
+    updUI();setTimeout(()=>endAiTurn(),500);
+  }
+}
+
+function endAiTurn(){
+  if(gameOver)return;
+  stopRoundTimer();
+  // DOT на игроке
+  playerCards.forEach(c=>{const d=applyDOT(c);if(d)log(`<span class="log-ability">☠ Чума наносит ${d} урона ${c.name}!</span>`)});
+  playerCards.forEach(c=>{if(c.tauntActive)c.tauntActive=false;c.atkDebuff=0});
+  updUI();if(checkEnd())return;
+  isPlayerTurn=true;activeIdx=-1;abilitiesUsedThisTurn=new Set();firstTurn=false;
+  el('turnIndicator').textContent='Ваш ход';el('turnIndicator').classList.remove('enemy-turn');
+  el('endTurnBtn').style.display='block';
+  updUI();
+  updateRowStates();
+  startRoundTimer();
+}
+
+function checkEnd(){
+  const pAlive=playerCards.some(c=>c.hp>0),eAlive=enemyCards.some(c=>c.hp>0);
+  if(!pAlive||!eAlive){gameOver=true;stopRoundTimer();updateRowStates();isPlayerTurn=false;activeIdx=-1;el('turnIndicator').textContent='Бой окончен';el('endTurnBtn').style.display='none';updUI();
+    setTimeout(()=>{el('resultOverlay').classList.add('show');
+      if(!eAlive){
+        el('resultText').textContent='Победа!';el('resultText').className='result-text win';
+        const g=40+Math.floor(Math.random()*40);playerGold+=g;el('resultGold').innerHTML=`<span class="gold-display"><img src="img/game/Remains_icon.png" alt=""> +${g}</span>`;log(`<span class="log-victory">⚔ Все враги пали! +${g} золота</span>`);sfx.victory();
+      }else{
+        el('resultText').textContent='Поражение';el('resultText').className='result-text lose';
+        const g=10+Math.floor(Math.random()*10);playerGold+=g;el('resultGold').innerHTML=`<span class="gold-display"><img src="img/game/Remains_icon.png" alt=""> +${g}</span>`;log(`<span class="log-defeat">☠ Ваш отряд уничтожен... +${g} золота</span>`);sfx.defeat();
+      }
+    },700);return true}
+  return false;
+}
 
 showScreen('menu');
 
 // Запуск BGM при первом взаимодействии (для мобильных)
-document.addEventListener('click',startBGM,{once:true});
-document.addEventListener('touchstart',startBGM,{once:true});
+ document.addEventListener('click',startBGM,{once:true});
+ document.addEventListener('touchstart',startBGM,{once:true});
 </script>
-
 </body>
 </html>
