@@ -27,14 +27,12 @@
   .btn.ability-btn:hover{border-color:#9a8aae;color:#d0c0e0;box-shadow:0 0 15px rgba(154,138,174,.3);background:rgba(154,138,174,.1)}
   #endTurnBtn{font-size:13px;padding:14px 40px;border-color:var(--accent-blood);color:#a05050;margin-top:12px;animation:pulse-blood 2.5s ease-in-out infinite}
   @keyframes pulse-blood{0%,100%{box-shadow:0 0 8px rgba(90,26,26,.15);border-color:var(--accent-blood)}50%{box-shadow:0 0 25px rgba(138,42,42,.5);border-color:var(--accent-blood-bright);color:#c06060}}
-  /* МЕНЮ */
   #menuScreen{justify-content:center;min-height:100vh}
   .menu-title{font-family:'UnifrakturCook',cursive;font-size:72px;color:var(--accent-gold-bright);text-shadow:0 0 40px rgba(196,162,101,.5),0 0 80px rgba(0,0,0,.8);letter-spacing:6px;text-align:center;margin-bottom:8px;filter:drop-shadow(0 4px 6px rgba(0,0,0,.5));animation:titleIdle 4s ease-in-out infinite}
   @keyframes titleIdle{0%,100%{text-shadow:0 0 40px rgba(196,162,101,.45),0 0 80px rgba(0,0,0,.8)}50%{text-shadow:0 0 70px rgba(196,162,101,.7),0 0 100px rgba(0,0,0,.9)}}
   .menu-subtitle{font-family:'Cinzel',serif;font-size:13px;color:var(--text-dim);letter-spacing:6px;margin-bottom:48px;text-transform:uppercase;border-top:1px solid var(--border-dim);border-bottom:1px solid var(--border-dim);padding:12px 0;width:100%;max-width:400px;text-align:center}
   .menu-buttons{display:flex;flex-direction:column;gap:16px;align-items:center;width:100%;max-width:320px}.menu-buttons .btn{width:100%;text-align:center;padding:16px;font-size:14px}
   .footer{position:fixed;bottom:24px;width:100%;text-align:center;font-size:10px;color:var(--text-dim);letter-spacing:3px;text-transform:uppercase}
-  /* НАСТРОЙКИ */
   #settingsOverlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(3,3,4,.95);backdrop-filter:blur(10px);z-index:1000;justify-content:center;align-items:center;flex-direction:column;gap:32px}#settingsOverlay.show{display:flex;animation:fadeIn .3s ease-out}
   .settings-title{font-family:'Cinzel',serif;font-size:24px;color:var(--accent-gold-bright);letter-spacing:4px;text-transform:uppercase}.setting-row{display:flex;align-items:center;gap:20px;font-size:14px;color:var(--text-primary);letter-spacing:1px}
   .toggle{width:56px;height:28px;background:#1a1a1f;border-radius:14px;cursor:pointer;position:relative;transition:background .3s;border:1px solid var(--border-dim)}.toggle.on{background:#2a3a20;border-color:#4a6a30}
@@ -45,7 +43,6 @@
   .settings-nav{display:flex;flex-direction:column;align-items:center;gap:0;margin-bottom:8px}.settings-section{display:flex;flex-direction:column;align-items:center}.settings-tab{font-family:'Cinzel',serif;font-size:20px;font-weight:700;letter-spacing:4px;text-transform:uppercase;padding:8px 0;cursor:pointer;border:none;background:transparent;color:var(--text-dim);transition:color .2s}.settings-tab.active{color:var(--accent-gold-bright)}
   .settings-tab-content{display:none;flex-direction:column;align-items:center;gap:16px;padding:4px 0 12px}.settings-tab-content.active{display:flex}
   .settings-back{font-family:'Cinzel',serif;font-size:14px;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border:none;background:transparent;color:var(--text-dim);transition:color .2s;padding:6px 0}.settings-back:hover{color:var(--accent-gold-bright)}
-  /* МАГАЗИН И КОЛЛЕКЦИЯ */
   #shopScreen.active{align-self:stretch;margin-top:0;height:100vh;overflow:hidden;padding:0}
   .shop-header{width:100%;display:flex;justify-content:space-between;align-items:center;padding:12px 24px;border-bottom:1px solid var(--border-dim);flex-shrink:0;background:var(--bg-deep)}
   .shop-tabs{display:flex;gap:0;margin-bottom:0;flex-shrink:0;background:var(--bg-deep);padding:16px 24px 0}
@@ -151,6 +148,16 @@
   .card-detail-passive{margin-top:10px;padding:12px;background:rgba(0,0,0,.3);border:1px solid var(--border-dim);border-radius:2px}.card-detail-passive .passive-name{font-family:Cinzel,serif;font-size:13px;font-weight:700;color:#b8a8c8;letter-spacing:1px;text-transform:uppercase}.card-detail-passive .passive-desc{font-family:Inter,sans-serif;font-size:11px;color:var(--text-dim);margin-top:4px;line-height:1.5}
   .card-detail-lore{font-family:Inter,sans-serif;font-size:11px;color:var(--text-dim);font-style:italic;margin-top:6px;line-height:1.6;border-top:1px solid var(--border-dim);padding-top:10px}
   #cdImg{width:180px;height:270px;border-radius:2px;object-fit:cover;border:1px solid var(--border-dim)}
+  #authOverlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(3,3,4,.95);backdrop-filter:blur(15px);z-index:4000;justify-content:center;align-items:center}#authOverlay.show{display:flex;animation:fadeIn .3s ease-out}
+  .auth-form{display:flex;flex-direction:column;gap:16px;width:100%;max-width:360px;padding:40px;background:var(--bg-panel);border:1px solid var(--border-glow);border-radius:4px;box-shadow:0 25px 60px rgba(0,0,0,.8)}
+  .auth-title{font-family:'UnifrakturCook',cursive;font-size:36px;color:var(--accent-gold-bright);text-align:center;letter-spacing:4px;text-shadow:0 0 30px rgba(196,162,101,.3)}
+  .auth-subtitle{font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);text-align:center;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px}
+  .auth-input{background:rgba(0,0,0,.5);border:1px solid var(--border-dim);color:var(--text-primary);font-family:'Inter',sans-serif;font-size:14px;padding:12px 16px;border-radius:2px;outline:none;transition:border-color .3s;letter-spacing:.5px;width:100%}.auth-input:focus{border-color:var(--accent-gold);box-shadow:0 0 10px rgba(138,115,85,.1)}
+  .auth-input::placeholder{color:#4a4a50}
+  .auth-error{font-size:11px;color:#a04040;text-align:center;min-height:16px;font-family:'Inter',sans-serif}
+  .auth-switch{font-size:11px;color:var(--text-dim);text-align:center;font-family:'Inter',sans-serif}.auth-switch a{color:var(--accent-gold-bright);cursor:pointer;text-decoration:none;font-weight:600;transition:color .2s}.auth-switch a:hover{color:#f0d68a}
+  .auth-info{font-size:10px;color:#4a4a50;text-align:center;font-family:'Inter',sans-serif;line-height:1.5}
+  #usernameRow{display:none}
 </style>
 </head>
 <body>
@@ -170,7 +177,8 @@
     <div class="settings-section" id="settingsSectionSound">
       <button class="settings-tab" onclick="switchSettingsTab('sound')">Звук</button>
       <div class="settings-tab-content">
-        <div class="setting-row"><span>Громкость</span><input type="range" class="setting-slider" min="0" max="100" value="60" oninput="setVolume(this.value)"><span class="setting-val" id="volumeVal">60%</span></div>
+        <div class="setting-row"><span>Фоновая музыка</span><button class="toggle on" id="bgmToggle" onclick="toggleBGM()"></button></div>
+        <div class="setting-row"><span>Громкость эффектов</span><input type="range" class="setting-slider" min="0" max="100" value="60" oninput="setVolume(this.value)"><span class="setting-val" id="volumeVal">60%</span></div>
         <button class="settings-back" onclick="switchSettingsTab(null)">← Назад</button>
       </div>
     </div>
@@ -185,6 +193,15 @@
     </div>
   </div>
   <button class="btn gold-btn" id="settingsMainBack" onclick="closeSettings()">Назад</button>
+</div>
+<div id="authOverlay" class="show">
+  <div class="auth-form">
+    <div class="auth-title">Triad Duel</div>
+    <div class="auth-subtitle">Вход через Telegram</div>
+    <div id="tgLoginContainer" style="display:flex;justify-content:center;min-height:44px;"></div>
+    <div class="auth-error" id="authError"></div>
+    <div class="auth-info">Безопасный вход без паролей</div>
+  </div>
 </div>
 <div class="screen" id="shopScreen">
   <video id="bgClep" class="shop-bg-video" autoplay muted loop playsinline><source src="img/game/fonsclep.mp4" type="video/mp4"></video>
@@ -268,8 +285,9 @@ socket.on('disconnect',()=>{console.log('[socket] disconnected')});
 
 socket.on('init',(state)=>{
   gameState=state;
-  applyFullState(state);
+  el('authOverlay').classList.remove('show');
   hideLoading();
+  applyFullState(state);
   showScreen('menu');
 });
 
@@ -277,10 +295,9 @@ socket.on('stateUpdate',(state)=>{
   gameState=state;
   hideLoading();
   if((state.gameEnd||state.battle) && !state.error){
-    // Battle (or game end) - always process through battle handler
     if(!document.getElementById('battleScreen').classList.contains('active') && state.battle){
       showScreen('battle');el('battleLog').innerHTML='';battleCardsReady=false;battleGen++;
-      playSample(sndBattleStart);
+      playSound('battle_start');
     }
     processBattleUpdate(state);
   }else{
@@ -301,17 +318,135 @@ socket.on('stateUpdate',(state)=>{
   }
 });
 
-socket.on('sfx',(name)=>{if(sfx[name])sfx[name]()});
-socket.on('error',(msg)=>{showToast(msg||'Ошибка сервера')});
+socket.on('sfx',(name)=>{playSound(name)});
+socket.on('error',(msg)=>{
+  showToast(msg||'Ошибка сервера');
+  el('authError').textContent=msg||'';
+  if(msg==='Токен недействителен'){
+     localStorage.removeItem('td_access_token');
+     accessToken=null;
+     el('authOverlay').classList.add('show');
+     initTelegramWidget();
+   }
+});
+
+// ═══ AUDIO (ИСПРАВЛЕННЫЙ БЛОК) ═══
+let audioCtx = null;
+let soundEnabled = true;
+let gameVolume = 60;
+let bgmAudio = null, bgmPlaying = false, bgmEnabled = true;
+
+const sfxBuffers = {
+    select: null, attack: null, crit: null, fireball: null,
+    taunt: null, death: null, victory: null, defeat: null,
+    buy: null, battle_start: null, upgrade: null
+};
+
+function getAudioContext() {
+    if (!audioCtx) {
+        try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        } catch(e) {
+            console.warn('[Audio] Web Audio API недоступен:', e);
+            return null;
+        }
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(()=>{});
+    }
+    return audioCtx;
+}
+
+function preloadSamples() {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    
+    const files = {
+        select: 'audio/select.wav',
+        attack: 'audio/attack.opus',
+        crit: 'audio/attack.opus',
+        fireball: 'audio/attack.opus',
+        taunt: 'audio/select.wav',
+        death: 'audio/attack.opus',
+        victory: 'audio/battle_start.wav',
+        defeat: 'audio/battle_start.wav',
+        buy: 'audio/fair.mp3',
+        battle_start: 'audio/battle_start.wav',
+        upgrade: 'audio/select.wav'
+    };
+
+    for (const [key, url] of Object.entries(files)) {
+        fetch(url)
+            .then(res => {
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.arrayBuffer();
+            })
+            .then(buf => ctx.decodeAudioData(buf, decoded => {
+                sfxBuffers[key] = decoded;
+                console.log('✅ [Audio] Загружено:', key);
+            }))
+            .catch(err => console.warn('⚠️ [Audio] Ошибка загрузки', url, ':', err.message));
+    }
+}
+
+function playSound(name) {
+    if (!soundEnabled) return;
+    const buf = sfxBuffers[name];
+    if (!buf) {
+        console.warn('⚠️ [Audio] Звук не загружен:', name);
+        return;
+    }
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    
+    try {
+        const source = ctx.createBufferSource();
+        source.buffer = buf;
+        const gainNode = ctx.createGain();
+        gainNode.gain.value = (gameVolume / 100) * 0.7;
+        source.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        source.start(0);
+    } catch (e) {
+        console.error('❌ [Audio] Ошибка воспроизведения:', name, e);
+    }
+}
+
+function playWarpSmile(){if(Math.random()<0.25)playSound('battle_start')}
+
+// ═══ BGM ═══
+function initBGM(){
+  if(bgmAudio)return;
+  bgmAudio=new Audio('audio/bgm.mp3');
+  bgmAudio.loop=true; bgmAudio.volume=0.2; bgmAudio.preload='auto';
+}
+function startBGM(){
+  if(!bgmEnabled||!soundEnabled||bgmPlaying)return;
+  initBGM();
+  if(!bgmAudio)return;
+  bgmPlaying=true;
+  bgmAudio.play().then(()=>{}).catch(()=>{bgmPlaying=false});
+}
+function stopBGM(){
+  if(!bgmPlaying||!bgmAudio)return;
+  bgmPlaying=false;
+  bgmAudio.pause();
+}
+function toggleBGM(){
+  bgmEnabled=!bgmEnabled;
+  const btn=document.getElementById('bgmToggle');
+  if(btn)btn.classList.toggle('on',bgmEnabled);
+  if(!bgmEnabled)stopBGM(); else startBGM();
+}
 
 // ═══ GLOBAL STATE ═══
-let playerGold=100,playerCollection=['mage_01','tank_01','assa_01'],selectedDeck=[],soundEnabled=true;
+let playerGold=100,playerCollection=['mage_01','tank_01','assa_01'],selectedDeck=[];
 let playerCards=[],enemyCards=[],activeIdx=-1,isPlayerTurn=true,gameOver=false;
 let abilitiesUsedThisTurn=new Set();
 let cardUpgrades={};
 let shopCards=[];
 let currentTab='shop';
-let turnLocked=false,critActivated=false,fireballActive=false,firstTurn=true,fireballOracleProc=false;
+let turnLocked=false,critActivated=false,fireballActive=false,firstTurn=true,waitingForCritTarget=null;
 let roundTimerInterval=null,roundSeconds=20,battleGen=0,battleCardsReady=false;
 
 function upgradeCost(stat,level){return 150*Math.pow(2,level)}
@@ -337,6 +472,8 @@ function applyBattleState(data){
   enemyCards=enrichCards(b.enemyCards);
   activeIdx=b.activeIdx;isPlayerTurn=b.isPlayerTurn;gameOver=b.gameOver;
   turnLocked=b.turnLocked||false;critActivated=b.critActivated||false;fireballActive=b.fireballActive||false;
+  waitingForCritTarget=b.waitingForCritTarget!==undefined?b.waitingForCritTarget:null;
+  critActivated=waitingForCritTarget!==null;
   firstTurn=b.firstTurn!==undefined?b.firstTurn:true;
   abilitiesUsedThisTurn=new Set(b.abilitiesUsedThisTurn||[]);
 }
@@ -353,42 +490,13 @@ function showScreen(n){Object.values(scr).forEach(s=>s.classList.remove('active'
 function showLoading(msg){let o=el('loadingOverlay');if(!o){o=document.createElement('div');o.id='loadingOverlay';o.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(3,3,4,.95);backdrop-filter:blur(15px);z-index:5000;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:16px;';o.innerHTML='<div style="font-family:Cinzel,serif;font-size:18px;color:#c4a265;letter-spacing:2px;" id="loadingText"></div><div style="width:120px;height:2px;background:#2a2a30;border-radius:1px;overflow:hidden;"><div style="width:100%;height:100%;background:#c4a265;animation:loadBar 1.8s cubic-bezier(.4,0,.2,1) infinite;border-radius:1px;"></div></div>';document.body.appendChild(o);let s=document.createElement('style');s.textContent='@keyframes loadBar{0%{transform:translateX(-100%)}100%{transform:translateX(120%)}}';document.head.appendChild(s)}o.style.display='flex';el('loadingText').textContent=msg||'Загрузка...'}
 function hideLoading(){let o=el('loadingOverlay');if(o)o.style.display='none'}
 
-// ═══ AUDIO ═══
-const sfx={select(){playSelect()},attack(){playAttack()},crit(){},fireball(){},taunt(){},death(){},victory(){},defeat(){},buy(){}}
-let sndClick=null,sndPunch=null,sndBattleStart=null,sndBuy=null,sndWarp=null;
-
-function preloadSamples(){
-  const ctx=new(window.AudioContext||window.webkitAudioContext)();
-  function load(url,cb){fetch(url).then(r=>r.arrayBuffer()).then(b=>ctx.decodeAudioData(b,bf=>cb(bf))).catch(()=>{})}
-  load('audio/select.wav',b=>sndClick=b);load('audio/attack.opus',b=>sndPunch=b);load('audio/battle_start.wav',b=>sndBattleStart=b);load('audio/fair.mp3',b=>sndBuy=b);load('audio/warpsmil.mp3',b=>sndWarp=b);
-}
-function playSample(buf,gain){if(!buf||!soundEnabled)return;const ctx=new(window.AudioContext||window.webkitAudioContext)();const src=ctx.createBufferSource();src.buffer=buf;const g=ctx.createGain();g.gain.value=(gain||0.6)*gameVolume/100;src.connect(g);g.connect(ctx.destination);src.start(0);src.onended=()=>{ctx.close().catch(()=>{})}}
-function playSelect(){playSample(sndClick)}
-function playAttack(){playSample(sndPunch)}
-function playWarpSmile(){if(Math.random()<0.25)playSample(sndWarp,0.3)}
-
-// ═══ BGM ═══
-let bgmTimer=null,bgmNode=null,bgmGain=null;
-function initBGM(){
-  const a=new Audio();a.src='audio/bgm.mp3';a.loop=true;a.volume=0.25*gameVolume/100;a.preload='auto';
-  a.addEventListener('canplaythrough',()=>{bgmNode=a;if(localStorage.getItem('kart_bgm')!=='off'){bgmGain=a;a.play().catch(()=>{})}},{once:true});
-  a.load();
-}
-function startBGM(){if(!bgmNode||!soundEnabled)return;if(bgmNode.paused)bgmNode.play().catch(()=>{});if(bgmNode.muted){bgmNode.muted=false;bgmNode.volume=0.25*gameVolume/100}}
-function stopBGM(){if(bgmNode){bgmNode.pause();bgmNode.currentTime=0}}
-function toggleSound(){soundEnabled=!soundEnabled;el('soundToggle').classList.toggle('on',soundEnabled);localStorage.setItem('kart_bgm',soundEnabled?'on':'off');if(bgmNode){if(soundEnabled){bgmNode.muted=false;bgmNode.volume=0.25*gameVolume/100;if(bgmNode.paused)bgmNode.play().catch(()=>{})}else{bgmNode.muted=true}}}
-
 // ═══ SETTINGS ═══
-let gameBrightness=100,gameContrast=100,gameSaturation=100,gameVolume=60;
+let gameBrightness=100,gameContrast=100,gameSaturation=100;
 function applyFilters(){document.body.style.filter=`brightness(${gameBrightness}%) contrast(${gameContrast}%) saturate(${gameSaturation}%)`}
 function setBrightness(v){gameBrightness=v;el('brightnessVal').textContent=v+'%';applyFilters()}
 function setContrast(v){gameContrast=v;el('contrastVal').textContent=v+'%';applyFilters()}
 function setSaturation(v){gameSaturation=v;el('saturationVal').textContent=v+'%';applyFilters()}
-function setVolume(v){
-  gameVolume=v;el('volumeVal').textContent=v+'%';
-  const vol=v/100;
-  if(bgmNode)bgmNode.volume=0.25*vol;
-}
+function setVolume(v){gameVolume=v;el('volumeVal').textContent=v+'%'}
 function switchSettingsTab(tab){
   document.querySelectorAll('.settings-tab').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.settings-tab-content').forEach(c=>c.classList.remove('active'));
@@ -427,13 +535,11 @@ function log(msg){const l=el('battleLog');const e=document.createElement('div');
 
 function sh(arr){return arr.slice().sort(()=>Math.random()-.5)}
 function byId(id){return ALL_CARDS.find(c=>c.id===id)||{}}
-// Вся боевая математика считается на сервере. card.atk уже включает апгрейд,
-// card.maxHp уже посчитан сервером — клиент только отображает.
 function getEffAtk(c){return Math.max(0,(c.atk||0)-(c.atkDebuff||0))}
 
 // ═══ MENU ═══
 function newCampaign(){showLoading('Создаём кампанию...');socket.emit('newCampaign')}
-function backToMenu(){stopBGM();Object.values(scr).forEach(s=>s.classList.remove('active'));scr.menu.classList.add('active')}
+function backToMenu(){Object.values(scr).forEach(s=>s.classList.remove('active'));scr.menu.classList.add('active')}
 
 // ═══ SHOP ═══
 function showShopTab(tab){
@@ -470,7 +576,7 @@ function renderShopGrid(){
   const g=el('shopGrid');g.innerHTML='';
   if(!shopCards||!shopCards.length){g.innerHTML='<div class="deck-empty">Нет карт в продаже</div>';return}
   shopCards.forEach((c,i)=>{
-    const card=c;const base=byId(card.id)||{};const owned=playerCollection.includes(card.id);
+    const card=c;const owned=playerCollection.includes(card.id);
     const div=document.createElement('div');div.className='shop-card';div.style.animationDelay=(i*.03)+'s';
     div.innerHTML=`<img class="shop-card-img" src="${IMG_BASE}${card.id}.webp" loading="lazy" alt="${card.name}"
       onerror="this.onerror=null;this.src='${IMG_BASE}default.webp'">${statsBlockHTML(card,null)}<div class="shop-card-name">${card.name}</div>
@@ -500,7 +606,7 @@ function renderColGrid(){const g=el('shopGrid');g.innerHTML='';
 }
 function renderChaosGrid(){const g=el('shopGrid');g.innerHTML='';const owned=playerCollection.map(id=>{const b=byId(id);return b?{...b}:null}).filter(Boolean);
   if(!owned.length){g.innerHTML='<div class="deck-empty">Нет карт для прокачки</div>';return}
-  owned.forEach(c=>{const base=byId(c.id);const up=getUp(c.id);const effAtk=base.atk+up.atk;const effHp=base.hp+up.hp;const effManaCap=c.type==='mage'?MAX_MANA+up.mana:c.type==='assa'?5+up.mana:0;
+  owned.forEach(c=>{const base=byId(c.id);const up=getUp(c.id);
     const costs={hp:upgradeCost('hp',up.hp),atk:upgradeCost('atk',up.atk),mana:upgradeCost('mana',up.mana)};
     const colors={mage:'#7a5a9a'};const div=document.createElement('div');div.className='chaos-card';div.style.animationDelay=(owned.indexOf(c)*.03)+'s';
     const upgradeHtml=['hp','atk','mana'].map(stat=>{const lvl=up[stat];const maxLvl=(stat==='mana'&&c.type==='assa')?0:(stat==='mana'?4:10);
@@ -513,9 +619,9 @@ function renderChaosGrid(){const g=el('shopGrid');g.innerHTML='';const owned=pla
   });
 }
 
-function buyCard(id){playSelect();socket.emit('buyCard',id)}
-function toggleDeckCard(id){playSelect();socket.emit('updateDeck',{cardId:id})}
-async function doUpgrade(cardId,stat){playSelect();const up=getUp(cardId);const lvl=up[stat];const cost=upgradeCost(stat,lvl);
+function buyCard(id){playSound('select');socket.emit('buyCard',id)}
+function toggleDeckCard(id){playSound('select');socket.emit('updateDeck',{cardId:id})}
+async function doUpgrade(cardId,stat){playSound('select');const up=getUp(cardId);const lvl=up[stat];const cost=upgradeCost(stat,lvl);
   if(playerGold<cost){showToast('Не хватает Remains',cost-playerGold);return}
   if(stat==='mana'&&lvl>=4){showToast('Мана на максимуме');return}
   socket.emit('upgradeCard',{cardId,stat})}
@@ -533,7 +639,6 @@ function showCardDetail(cardId,price){
 function closeCardDetail(e){if(e&&e.target!==e.currentTarget)return;el('cardDetailOverlay').classList.remove('show')}
 
 // ═══ BATTLE ═══
-
 function rCard(card,isPlayer,idx){
   if(!card||!card.id){return'<div class="card" style="background:rgba(0,0,0,.5);border:1px dashed #2a2a30;"><div style="display:flex;align-items:center;justify-content:center;height:100%;color:#3a3a40;font-size:12px;">Пусто</div></div>'}
   const up=getUp(card.id);const maxHP=card.maxHp!=null?card.maxHp:(card.hp||0);const hp=card.hp!=null?card.hp:maxHP;
@@ -640,9 +745,12 @@ function refreshBattleCards(){
   playerCards.forEach((c,i)=>{const ce=pCards[i];patch(c,ce);if(ce){if(i===activeIdx&&c.hp>0)ce.classList.add('selected');else ce.classList.remove('selected')}});
   enemyCards.forEach((c,i)=>{
     const ce=eCards[i];patch(c,ce);if(!ce)return;
-    if(activeIdx>=0&&playerCards[activeIdx]&&playerCards[activeIdx].hp>0&&c.hp>0&&!gameOver&&isPlayerTurn&&!turnLocked){
+    const attIdx=activeIdx>=0?activeIdx:waitingForCritTarget;
+    const canTarget=attIdx!==null&&attIdx>=0&&playerCards[attIdx]&&playerCards[attIdx].hp>0&&c.hp>0&&!gameOver&&isPlayerTurn&&!turnLocked;
+    if(canTarget){
       const t=enemyCards.find(e=>e.tauntActive&&e.hp>0);
-      const ignoreTaunt=playerCards[activeIdx].type==='assa'&&playerCards[activeIdx].id==='assa_03'&&playerCards[activeIdx].critReady;
+      const att=playerCards[attIdx];
+      const ignoreTaunt=att&&att.type==='assa'&&att.id==='assa_03'&&att.critReady;
       ce.classList.toggle('enemy-targetable',!t||c.id===t.id||ignoreTaunt);
     }else ce.classList.remove('enemy-targetable');
   });
@@ -679,19 +787,20 @@ function updateRoundTimerUI(){
 function onCard(isP,idx){
   if(gameOver||!isPlayerTurn||turnLocked)return;
   if(isP){
+    if(critActivated||fireballActive)return;
     if(!playerCards[idx]||playerCards[idx].hp<=0)return;
-    if((critActivated||fireballActive)&&activeIdx!==idx)return;
     activeIdx=activeIdx===idx?-1:idx;
-    if(activeIdx>=0)playSelect();
+    if(activeIdx>=0)playSound('select');
     updUI();
   }else{
-    if(activeIdx<0||!enemyCards[idx]||enemyCards[idx].hp<=0)return;
-    if(fireballActive){doFireball(activeIdx,idx);return}
+    const actualAttackerIdx=waitingForCritTarget!==null?waitingForCritTarget:activeIdx;
+    if(actualAttackerIdx<0||!enemyCards[idx]||enemyCards[idx].hp<=0)return;
+    if(fireballActive){doFireball(actualAttackerIdx,idx);return}
     const taunter=enemyCards.find(e=>e.tauntActive&&e.hp>0);
-    const att=playerCards[activeIdx];
+    const att=playerCards[actualAttackerIdx];
     const ignoreTaunt=att&&att.type==='assa'&&att.id==='assa_03'&&att.critReady;
     if(taunter&&!ignoreTaunt&&enemyCards[idx].id!==taunter.id)return;
-    doAttack(activeIdx,idx);
+    doAttack(actualAttackerIdx,idx);
   }
 }
 
@@ -714,14 +823,13 @@ function doFireball(aIdx,dIdx){
   if(aE)aE.classList.add('attacking');if(dE)dE.classList.add('taking-damage');
   fireballActive=false;
   setTimeout(()=>{if(aE)aE.classList.remove('attacking');if(dE)dE.classList.remove('taking-damage')},450);
-  socket.emit('playerAction',{type:'fireball',attackerIdx:aIdx,defenderIdx:dIdx,oracleProc:fireballOracleProc});
-  fireballOracleProc=false;
+  socket.emit('playerAction',{type:'fireball',attackerIdx:aIdx,defenderIdx:dIdx});
 }
 
 function useTaunt(){
   if(activeIdx<0||!isPlayerTurn||gameOver||turnLocked||firstTurn)return;
   turnLocked=true;
-  sfx.taunt();flash('radial-gradient(rgba(138,74,26,.15),transparent)');
+  playSound('taunt');flash('radial-gradient(rgba(138,74,26,.15),transparent)');
   stopRoundTimer();updUI();
   el('endTurnBtn').style.display='none';
   el('actionHint').innerHTML='<span class="key">Провокация!</span> Ход завершается...';
@@ -736,22 +844,26 @@ function useCrit(){
 
 function useFireball(){
   if(activeIdx<0||!isPlayerTurn||gameOver||firstTurn||turnLocked)return;
-  const c=playerCards[activeIdx];const cost=c.id==='mage_01'?2:3;
+  const c=playerCards[activeIdx];
+  if(!c)return;
+  const cost=c.id==='mage_01'?2:3;
   if(c.type!=='mage'||c.mana<cost||abilitiesUsedThisTurn.has(activeIdx))return;
-  c.mana-=cost;abilitiesUsedThisTurn.add(activeIdx);fireballActive=true;
-  fireballOracleProc=c.id==='mage_11'&&Math.random()<.4;
-  if(fireballOracleProc){c.mana=Math.min(MAX_MANA,c.mana+2);log(`<span class="log-ability">${c.passive}: фаербол стоил 1 ману!</span>`)}
-  let costMsg=c.id==='mage_01'?' [Эрудит: 2 маны]':(c.id==='mage_11'?' [Оракул: 40% скидка]':'');
+
+  // Сервер сам спишет ману, учтёт пассивы (Оракул, Эрудит) и пометит использование
+  fireballActive=true;
+  let costMsg=c.id==='mage_01'?' [Эрудит: 2 маны]':(c.id==='mage_11'?' [Оракул: шанс на 1 ману]':'');
   log(`<span class="log-ability">${c.name} готовит ОГНЕННЫЙ ШАР${costMsg}! Выберите цель.</span>`);
   flash('radial-gradient(rgba(138,74,26,.1),transparent)');updUI();
 }
 
 function endPlayerTurn(){
-  if(gameOver||!isPlayerTurn)return;stopRoundTimer();turnLocked=true;updUI();
+  if(gameOver||!isPlayerTurn)return;
+  fireballActive=false;
+  stopRoundTimer();turnLocked=true;updUI();
   el('endTurnBtn').style.display='none';socket.emit('playerAction',{type:'endTurn'});
 }
 
-function startBattle(){stopRoundTimer();battleGen++;playSample(sndBattleStart);el('battleLog').innerHTML='';socket.emit('startBattle')}
+function startBattle(){stopRoundTimer();battleGen++;el('battleLog').innerHTML='';socket.emit('startBattle')}
 
 // ═══ ANIMATE AI ACTION ═══
 function animateAiAction(action){
@@ -761,23 +873,23 @@ function animateAiAction(action){
     const dE=action.targetIdx!=null?el('playerRow').querySelector(`[data-idx="${action.targetIdx}"]`):null;
     if(action.type==='attack'){
       if(aE)aE.classList.add('attacking');
-      if(dE){if(action.damage>0){dE.classList.add('taking-damage');dmgNum(dE,action.damage,action.isCrit?'#c08030':'#c04030');impact(dE);if(action.isCrit)critText(dE);if(action.isDead){dE.classList.add('dying');deathFx(dE);sfx.death()}setTimeout(()=>dE.classList.remove('taking-damage'),450)}}
-      if(action.mageSplashes)action.mageSplashes.forEach(s=>{const sE=el('playerRow').querySelector(`[data-idx="${s.neighborIdx}"]`);if(sE){sE.classList.add('taking-damage');dmgNum(sE,s.damage,'#8050c0');impact(sE);if(playerCards[s.neighborIdx]&&playerCards[s.neighborIdx].hp<=0){sE.classList.add('dying');deathFx(sE);sfx.death()}setTimeout(()=>sE.classList.remove('taking-damage'),450)}});
+      if(dE){if(action.damage>0){dE.classList.add('taking-damage');dmgNum(dE,action.damage,action.isCrit?'#c08030':'#c04030');impact(dE);if(action.isCrit)critText(dE);if(action.isDead){dE.classList.add('dying');deathFx(dE);playSound('death')}setTimeout(()=>dE.classList.remove('taking-damage'),450)}}
+      if(action.mageSplashes)action.mageSplashes.forEach(s=>{const sE=el('playerRow').querySelector(`[data-idx="${s.neighborIdx}"]`);if(sE){sE.classList.add('taking-damage');dmgNum(sE,s.damage,'#8050c0');impact(sE);if(playerCards[s.neighborIdx]&&playerCards[s.neighborIdx].hp<=0){sE.classList.add('dying');deathFx(sE);playSound('death')}setTimeout(()=>sE.classList.remove('taking-damage'),450)}});
       if(action.assaSplash){const sE=el('playerRow').querySelector(`[data-idx="${action.assaSplash.neighborIdx}"]`);if(sE){sE.classList.add('taking-damage');dmgNum(sE,action.assaSplash.damage,'#c04030');impact(sE);setTimeout(()=>sE.classList.remove('taking-damage'),450)}}
-      if(action.isCrit)sfx.crit();
-      else sfx.attack();
+      if(action.isCrit)playSound('crit');
+      else playSound('attack');
     }else if(action.type==='crit'||action.type==='fireball'){
-      if(dE){if(action.damage>0){dE.classList.add('taking-damage');dmgNum(dE,action.damage,action.type==='crit'?'#c08030':'#e07830');impact(dE);if(action.isCrit)critText(dE);if(action.isDead){dE.classList.add('dying');deathFx(dE);sfx.death()}setTimeout(()=>dE.classList.remove('taking-damage'),450)}}
-      if(action.mageSplashes)action.mageSplashes.forEach(s=>{const sE=el('playerRow').querySelector(`[data-idx="${s.neighborIdx}"]`);if(sE){sE.classList.add('taking-damage');dmgNum(sE,s.damage,'#8050c0');impact(sE);if(playerCards[s.neighborIdx]&&playerCards[s.neighborIdx].hp<=0){sE.classList.add('dying');deathFx(sE);sfx.death()}setTimeout(()=>sE.classList.remove('taking-damage'),450)}});
+      if(dE){if(action.damage>0){dE.classList.add('taking-damage');dmgNum(dE,action.damage,action.type==='crit'?'#c08030':'#e07830');impact(dE);if(action.isCrit)critText(dE);if(action.isDead){dE.classList.add('dying');deathFx(dE);playSound('death')}setTimeout(()=>dE.classList.remove('taking-damage'),450)}}
+      if(action.mageSplashes)action.mageSplashes.forEach(s=>{const sE=el('playerRow').querySelector(`[data-idx="${s.neighborIdx}"]`);if(sE){sE.classList.add('taking-damage');dmgNum(sE,s.damage,'#8050c0');impact(sE);if(playerCards[s.neighborIdx]&&playerCards[s.neighborIdx].hp<=0){sE.classList.add('dying');deathFx(sE);playSound('death')}setTimeout(()=>sE.classList.remove('taking-damage'),450)}});
       if(action.assaSplash){const sE=el('playerRow').querySelector(`[data-idx="${action.assaSplash.neighborIdx}"]`);if(sE){sE.classList.add('taking-damage');dmgNum(sE,action.assaSplash.damage,'#c04030');impact(sE);setTimeout(()=>sE.classList.remove('taking-damage'),450)}}
-      if(action.type==='crit')sfx.crit();
-      else{sfx.fireball();flash('radial-gradient(rgba(138,74,26,.15),transparent)');}
+      if(action.type==='crit')playSound('crit');
+      else{playSound('fireball');flash('radial-gradient(rgba(138,74,26,.15),transparent)');}
     }else if(action.type==='taunt'){
-      sfx.taunt();
+      playSound('taunt');
       flash('radial-gradient(rgba(138,74,26,.15),transparent)');
     }else if(action.type==='attack_blocked'||action.type==='crit_blocked'){
       if(aE)aE.classList.add('attacking');
-      sfx.attack();
+      playSound('attack');
     }
     setTimeout(()=>{if(aE)aE.classList.remove('attacking')},450);
   },200);
@@ -794,7 +906,7 @@ function processBattleUpdate(state){
     if(dE&&pa.damage>0){
       dmgNum(dE,pa.damage,pa.isCrit?'#c08030':pa.type==='fireball'?'#e07830':'#c04030');
       impact(dE);if(pa.isCrit)critText(dE);
-      if(pa.isDead){dE.classList.add('dying');deathFx(dE);sfx.death()}
+      if(pa.isDead){dE.classList.add('dying');deathFx(dE);playSound('death')}
       if(pa.mageSplashes)pa.mageSplashes.forEach(s=>{
         const sE=el('enemyRow').querySelector(`[data-idx="${s.neighborIdx}"]`);
         if(sE){dmgNum(sE,s.damage,'#8050c0');aoeFx(sE)}
@@ -804,9 +916,9 @@ function processBattleUpdate(state){
         if(sE){dmgNum(sE,pa.assaSplash.damage,'#c04030');impact(sE)}
       }
     }
-    if(pa.type==='fireball'){sfx.fireball();flash('radial-gradient(rgba(138,74,26,.15),transparent)')}
-    else if(pa.isCrit)sfx.crit();
-    else sfx.attack();
+    if(pa.type==='fireball'){playSound('fireball');flash('radial-gradient(rgba(138,74,26,.15),transparent)')}
+    else if(pa.isCrit)playSound('crit');
+    else playSound('attack');
   }
 
   if(state.aiAction){
@@ -865,7 +977,7 @@ function showGameEnd(gameEnd){
   el('resultText').className='result-text '+(isWin?'win':'lose');
   el('resultGold').textContent=isWin?`+${gameEnd.reward||0} Remains завоёвано`:'Все ваши воины пали...';
   el('resultOverlay').classList.add('show');
-  if(isWin){sfx.victory();playerGold+=gameEnd.reward||0}else{sfx.defeat()}
+  if(isWin){playSound('victory');playerGold+=gameEnd.reward||0}else{playSound('defeat')}
   stopRoundTimer();
 }
 
@@ -876,10 +988,57 @@ function backToShop(){stopRoundTimer();showScreen('shop');currentTab='shop';
   socket.emit('getShop');}
 function backToShopFromResult(){el('resultOverlay').classList.remove('show');backToShop()}
 
+// ═══ AUTH ═══
+let accessToken=localStorage.getItem('td_access_token')||null;
+
+// Called by Telegram Login Widget after user authorizes
+function onTelegramAuth(user){
+  el('authError').textContent='';
+  fetch('/auth/telegram',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(user)
+  })
+  .then(res=>res.json())
+  .then(data=>{
+    if(data.error){el('authError').textContent=data.error;return}
+    accessToken=data.token;
+    localStorage.setItem('td_access_token',accessToken);
+    socket.emit('auth',{access_token:accessToken});
+  })
+  .catch(()=>{el('authError').textContent='Ошибка соединения с сервером'});
+}
+
+function initTelegramWidget(){
+  const container=el('tgLoginContainer');
+  if(!container)return;
+  container.innerHTML='';
+  const script=document.createElement('script');
+  script.async=true;
+  script.src='https://telegram.org/js/telegram-widget.js?22';
+  script.setAttribute('data-telegram-login','triad_duel_bot');
+  script.setAttribute('data-size','large');
+  script.setAttribute('data-onauth','onTelegramAuth(user)');
+  script.setAttribute('data-request-access','write');
+  container.appendChild(script);
+}
+
+// Auto-auth if token exists
+if(accessToken){
+  socket.emit('auth',{access_token:accessToken});
+} else {
+  initTelegramWidget();
+}
+
 // ═══ INIT ═══
-showLoading('Подключение к серверу...');
-initParticles();preloadSamples();initBGM();
+initParticles();preloadSamples();
 applyFilters();
+
+// Активация AudioContext по первому клику (требование браузеров)
+document.addEventListener('click', () => {
+    const ctx = getAudioContext();
+    if (ctx && ctx.state === 'suspended') ctx.resume();
+}, { once: true });
 </script>
 </body>
 </html>
