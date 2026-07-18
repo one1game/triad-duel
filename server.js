@@ -42,6 +42,29 @@ function verifyTelegramHash(data) {
   return hmac === hash;
 }
 
+// ═══ AUTH CODES (in-memory, 5min TTL) ═══
+const authCodes = new Map();
+function generateAuthCode() {
+  const code = crypto.randomBytes(16).toString('hex');
+  authCodes.set(code, { createdAt: Date.now() });
+  // Cleanup expired codes
+  for (const [k, v] of authCodes) {
+    if (Date.now() - v.createdAt > 5 * 60 * 1000) authCodes.delete(k);
+  }
+  return code;
+}
+function resolveAuthCode(code, telegramId) {
+  if (!authCodes.has(code)) return false;
+  authCodes.set(code, { telegramId, createdAt: Date.now() });
+  return true;
+}
+function getAuthCodeTelegramId(code) {
+  const entry = authCodes.get(code);
+  if (!entry || !entry.telegramId) return null;
+  authCodes.delete(code);
+  return entry.telegramId;
+}
+
 // ═══ CONSTANTS ═══
 const CARDS_PER_SIDE = 3;
 const SHOP_SIZE = 12;
@@ -195,18 +218,42 @@ function getManaCap(cardId, cardUpgrades) {
 }
 
 // ═══ AUTH ENDPOINTS ═══
-APP.post('/auth/telegram', async (req, res) => {
-  const userData = req.body;
-  if (!userData || !userData.id || !userData.hash) {
-    return res.status(400).json({ error: 'Нет данных Telegram' });
-  }
-  if (!verifyTelegramHash(userData)) {
-    return res.status(403).json({ error: 'Подпись Telegram недействительна' });
-  }
-  const telegramId = userData.id;
-  const player = await getOrCreatePlayer(telegramId, userData);
+// Step 1: request auth from site → get code + bot link
+APP.get('/auth/bot/start', (req, res) => {
+  const code = generateAuthCode();
+  const botUrl = `https://t.me/triad_duel_bot?start=${code}`;
+  res.json({ code, bot_url: botUrl });
+});
+
+// Step 2: poll for auth result
+APP.get('/auth/bot/poll', async (req, res) => {
+  const { code } = req.query;
+  if (!code) return res.status(400).json({ error: 'code required' });
+  const telegramId = getAuthCodeTelegramId(code);
+  if (!telegramId) return res.json({ ready: false });
+  const player = await getOrCreatePlayer(telegramId, { username: 'tg' + telegramId });
   const token = signJWT({ sub: player.id, telegram_id: telegramId, username: player.username });
-  res.json({ token, user: { id: player.id, username: player.username } });
+  res.json({ ready: true, token, user: { id: player.id, username: player.username } });
+});
+
+// Step 3: bot webhook — receives Telegram messages
+APP.post('/bot/webhook', express.json(), async (req, res) => {
+  try {
+    const msg = req.body?.message || req.body?.edited_message;
+    if (!msg?.text || !msg?.from?.id) return res.sendStatus(200);
+    const text = msg.text.trim();
+    const telegramId = msg.from.id;
+    if (text.startsWith('/start ')) {
+      const code = text.replace('/start ', '').trim();
+      if (resolveAuthCode(code, telegramId)) {
+        console.log(`[bot] auth code ${code.substring(0, 8)}... → tg${telegramId}`);
+      }
+    }
+    res.sendStatus(200);
+  } catch (e) {
+    console.error('[webhook error]', e.message);
+    res.sendStatus(200);
+  }
 });
 
 // ═══ SOCKET.IO ═══
@@ -824,4 +871,17 @@ function endGame(battle, victory, s, socket, sessionId, userId) {
 const PORT = process.env.PORT || 3000;
 SERVER.listen(PORT, '0.0.0.0', () => {
   console.log(`[server] Triad Duel running on 0.0.0.0:${PORT}`);
+  // Set Telegram bot webhook
+  const webhookUrl = `${process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`}/bot/webhook`;
+  if (TELEGRAM_BOT_TOKEN) {
+    const https = require('https');
+    const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setWebhook?url=${encodeURIComponent(webhookUrl)}`;
+    https.get(url, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try { console.log('[webhook]', JSON.parse(data).description || data); } catch { console.log('[webhook]', data); }
+      });
+    }).on('error', e => console.error('[webhook fail]', e.message));
+  }
 });

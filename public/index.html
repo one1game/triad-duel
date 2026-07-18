@@ -198,9 +198,9 @@
   <div class="auth-form">
     <div class="auth-title">Triad Duel</div>
     <div class="auth-subtitle">Вход через Telegram</div>
-    <div id="tgLoginContainer" style="display:flex;justify-content:center;min-height:44px;"></div>
+    <button class="btn gold-btn" id="tgLoginBtn" onclick="startBotAuth()" style="width:100%;padding:14px;font-size:14px">Войти через Telegram</button>
     <div class="auth-error" id="authError"></div>
-    <div class="auth-info">Безопасный вход без паролей</div>
+    <div class="auth-info" id="authStatus">Без паролей — просто открой бота</div>
   </div>
 </div>
 <div class="screen" id="shopScreen">
@@ -331,11 +331,11 @@ socket.on('error',(msg)=>{
   showToast(msg||'Ошибка сервера');
   el('authError').textContent=msg||'';
   if(msg==='Токен недействителен'){
-     localStorage.removeItem('td_access_token');
-     accessToken=null;
-     el('authOverlay').classList.add('show');
-     initTelegramWidget();
-   }
+    localStorage.removeItem('td_access_token');
+    accessToken=null;
+    el('authOverlay').classList.add('show');
+    resetAuthBtn();
+  }
 });
 
 // ═══ AUDIO (ИСПРАВЛЕННЫЙ БЛОК) ═══
@@ -998,53 +998,70 @@ function backToShopFromResult(){el('resultOverlay').classList.remove('show');bac
 
 // ═══ AUTH ═══
 let accessToken=localStorage.getItem('td_access_token')||null;
+let pollTimer=null;
 
-// Called by Telegram Login Widget after user authorizes
-function onTelegramAuth(user){
+async function startBotAuth(){
   el('authError').textContent='';
-  fetch('/auth/telegram',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(user)
-  })
-  .then(res=>res.json())
-  .then(data=>{
-    if(data.error){el('authError').textContent=data.error;return}
-    accessToken=data.token;
-    localStorage.setItem('td_access_token',accessToken);
-    socket.emit('auth',{access_token:accessToken});
-    // Fallback: old server already sent init, apply it now
-    if(pendingInit){
-      gameState=pendingInit;
-      pendingInit=null;
-      el('authOverlay').classList.remove('show');
-      hideLoading();
-      applyFullState(gameState);
-      showScreen('menu');
-    }
-  })
-  .catch(()=>{el('authError').textContent='Ошибка соединения с сервером'});
+  el('tgLoginBtn').disabled=true;
+  el('tgLoginBtn').textContent='Соединение...';
+  el('authStatus').textContent='Генерирую код...';
+  try{
+    const res=await fetch('/auth/bot/start');
+    const data=await res.json();
+    if(data.error){el('authError').textContent=data.error;resetAuthBtn();return}
+    el('authStatus').textContent='Открой бота и нажми START';
+    el('tgLoginBtn').textContent='Открыть бота';
+    el('tgLoginBtn').disabled=false;
+    el('tgLoginBtn').onclick=()=>window.open(data.bot_url,'_blank');
+    // Start polling
+    pollForAuth(data.code);
+  }catch(e){
+    el('authError').textContent='Ошибка сервера';
+    resetAuthBtn();
+  }
 }
 
-function initTelegramWidget(){
-  const container=el('tgLoginContainer');
-  if(!container)return;
-  container.innerHTML='';
-  const script=document.createElement('script');
-  script.async=true;
-  script.src='https://telegram.org/js/telegram-widget.js?22';
-  script.setAttribute('data-telegram-login','triad_duel_bot');
-  script.setAttribute('data-size','large');
-  script.setAttribute('data-onauth','onTelegramAuth(user)');
-  script.setAttribute('data-request-access','write');
-  container.appendChild(script);
+function pollForAuth(code){
+  if(pollTimer)clearInterval(pollTimer);
+  let attempts=0;
+  pollTimer=setInterval(async()=>{
+    attempts++;
+    if(attempts>60){clearInterval(pollTimer);el('authError').textContent='Время истекло. Попробуй снова.';resetAuthBtn();return}
+    try{
+      const res=await fetch(`/auth/bot/poll?code=${code}`);
+      const data=await res.json();
+      if(data.ready){
+        clearInterval(pollTimer);
+        accessToken=data.token;
+        localStorage.setItem('td_access_token',accessToken);
+        socket.emit('auth',{access_token:accessToken});
+        if(pendingInit){
+          gameState=pendingInit;
+          pendingInit=null;
+          el('authOverlay').classList.remove('show');
+          hideLoading();
+          applyFullState(gameState);
+          showScreen('menu');
+        }
+      }else{
+        const dots='.'.repeat((attempts%3)+1);
+        el('authStatus').textContent='Ожидание входа'+dots;
+      }
+    }catch(e){/* poll errors are silent */}
+  },2000);
+}
+
+function resetAuthBtn(){
+  const btn=el('tgLoginBtn');
+  btn.disabled=false;
+  btn.textContent='Войти через Telegram';
+  btn.onclick=startBotAuth;
+  el('authStatus').textContent='Без паролей — просто открой бота';
 }
 
 // Auto-auth if token exists
 if(accessToken){
   socket.emit('auth',{access_token:accessToken});
-} else {
-  initTelegramWidget();
 }
 
 // ═══ INIT ═══
