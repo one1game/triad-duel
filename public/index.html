@@ -296,10 +296,13 @@ socket.on('init',(state)=>{
   hideLoading();
   applyFullState(state);
   const saved=loadSavedState();
-  if(saved&&saved.screen==='battle'&&saved.battle){
+  if(saved&&saved.screen==='battle'&&saved.battle&&saved.battle.playerCards){
     showScreen('battle');el('battleLog').innerHTML='';battleCardsReady=false;battleGen++;
     processBattleUpdate(saved);
     saveGameState(saved,'battle');
+  }else if(saved&&saved.screen==='battle'){
+    showScreen('battle');el('battleLog').innerHTML='';battleCardsReady=false;battleGen++;
+    socket.emit('startBattle');
   }else if(saved&&saved.screen==='shop'){
     showScreen('shop');currentTab='shop';
     el('tabShopBtn').classList.add('active');el('tabInvBtn').classList.remove('active');el('tabChaosBtn').classList.remove('active');
@@ -562,7 +565,7 @@ function byId(id){return ALL_CARDS.find(c=>c.id===id)||{}}
 function getEffAtk(c){return Math.max(0,(c.atk||0)-(c.atkDebuff||0))}
 
 // ═══ MENU ═══
-function newCampaign(){showLoading('Создаём кампанию...');socket.emit('newCampaign')}
+function newCampaign(){showLoading('Создаём кампанию...');saveGameState({playerGold,playerCollection,selectedDeck,cardUpgrades,shopCards,battle:null},'shop');socket.emit('newCampaign');if(!socket.connected){setTimeout(()=>{if(!socket.connected)location.reload()},3000)}}
 function backToMenu(){Object.values(scr).forEach(s=>s.classList.remove('active'));scr.menu.classList.add('active')}
 
 // ═══ SHOP ═══
@@ -887,7 +890,7 @@ function endPlayerTurn(){
   el('endTurnBtn').style.display='none';socket.emit('playerAction',{type:'endTurn'});
 }
 
-function startBattle(){stopRoundTimer();battleGen++;el('battleLog').innerHTML='';socket.emit('startBattle')}
+function startBattle(){stopRoundTimer();battleGen++;el('battleLog').innerHTML='';saveGameState({playerGold,playerCollection,selectedDeck,cardUpgrades,shopCards,battle:{}}, 'battle');socket.emit('startBattle')}
 
 // ═══ ANIMATE AI ACTION ═══
 function animateAiAction(action){
