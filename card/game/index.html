@@ -246,7 +246,13 @@
   <button class="btn gold-btn" onclick="backToShopFromResult()">Продолжить</button>
 </div>
 <div class="footer">Triad Duel &copy; 2025 &bull; Warhammer-inspired card battler</div>
-<script src="https://triad-duel-server.onrender.com/socket.io/socket.io.js"></script>
+<script>
+var isLocal=location.hostname==='localhost'||location.hostname==='127.0.0.1';
+document.write('<script src="'+(isLocal?'/socket.io/socket.io.js':'https://triad-duel-server.onrender.com/socket.io/socket.io.js')+'"><\/script>');
+</script>
+<script>
+window.SERVER_URL=isLocal?undefined:'https://triad-duel-server.onrender.com';
+</script>
 <script>
 // @ts-nocheck
 // ═══ CONSTANTS ═══
@@ -254,7 +260,7 @@ const ALL_CARDS=[{id:'mage_01',name:'Библиарий Кассиан',atk:6,hp
 const IMG_BASE='img/cards/',CARDS_PER_SIDE=3,SHOP_SIZE=12,MAX_MANA=10;
 
 // ═══ SOCKET.IO ═══
-const socket=io('https://triad-duel-server.onrender.com');
+const socket=io(window.SERVER_URL);
 let gameState=null;
 
 socket.on('connect',()=>{console.log('[socket] connected:',socket.id)});
