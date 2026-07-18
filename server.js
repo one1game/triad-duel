@@ -206,7 +206,8 @@ function executeAiAction(session) {
     const liveP = session.playerCards.filter(c => c.hp > 0);
     liveP.forEach(p => {
       if (e.type !== 'assa' || e.id !== 'assa_03' || critMul === 1) { const t = aliveP.find(x => x.tauntActive && x.hp > 0); if (t && p !== t) return; }
-      const avgDmg = rollDamage(e.atk * critMul, e.variance || 0.15);
+      const baseAtk = getEffAtk(e); const bonusAtk = (e.id === 'assa_02' && p.hp <= p.maxHp * 0.5) ? 2 : 0;
+      const avgDmg = rollDamage((baseAtk + bonusAtk) * critMul, e.variance || 0.15);
       const defBonus = getDefBonus(p); const finalDmg = Math.max(1, avgDmg - defBonus);
       const kill = p.hp <= finalDmg; const oldHp = p.hp; p.hp = Math.max(0, p.hp - finalDmg);
       const posDelta = aiEvalPosition(session.enemyCards, session.playerCards) - basePosScore;
@@ -237,7 +238,7 @@ function executeAiAction(session) {
     // CRIT
     aliveE.forEach(e => {
       if (e.type !== 'assa' || e.mana < 2 || e.critReady) return;
-      const mul = e.id === 'assa_05' ? 2.5 : 2, rawDmg = rollDamage(e.atk * mul, e.variance || 0.15), ignoreT = e.id === 'assa_03';
+      const mul = e.id === 'assa_05' ? 2.5 : 2, rawDmg = rollDamage(getEffAtk(e) * mul, e.variance || 0.15), ignoreT = e.id === 'assa_03';
       const liveP = session.playerCards.filter(c => c.hp > 0);
       liveP.forEach(p => {
         if (!ignoreT) { const t = aliveP.find(x => x.tauntActive && x.hp > 0); if (t && p !== t) return; }
@@ -629,7 +630,7 @@ io.on('connection', (socket) => {
         baseDmg = att.atk * (att.id === 'assa_05' ? 2.5 : 2); wasCrit = true; att.critReady = false; session.critActivated = false;
         if (att.id === 'assa_01' && Math.random() < 0.3) { att.mana = Math.min(MAX_MANA, att.mana + 1); logEntries.push(`${att.passive}: мана возвращена!`); }
       } else {
-        baseDmg = att.atk;
+        baseDmg = getEffAtk(att);
         if (att.type === 'assa' && att.id === 'assa_02' && def.hp <= def.maxHp * 0.5) baseDmg += 2;
       }
       const defBonus = getDefBonus(def);
