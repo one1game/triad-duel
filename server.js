@@ -684,7 +684,6 @@ io.on('connection', (socket) => {
       }
       session.isPlayerTurn = false;
       const ai = executeAiAction(session);
-      socket.emit('sfx', wasCrit ? 'crit' : 'attack');
       socket.emit('stateUpdate', {
         ...buildFullState(session),
         stateAfterPlayer,
