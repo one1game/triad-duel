@@ -102,6 +102,13 @@ const IO = new Server(SERVER, { cors: { origin: '*', methods: ['GET', 'POST'] } 
 
 APP.use(express.static(path.join(__dirname, 'public')));
 APP.use(express.json());
+APP.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') return res.sendStatus(200);
+  next();
+});
 
 // ═══ HELPERS ═══
 function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
