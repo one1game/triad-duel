@@ -299,15 +299,16 @@ socket.on('init',(state)=>{
   if(saved&&saved.screen==='battle'&&saved.battle){
     showScreen('battle');el('battleLog').innerHTML='';battleCardsReady=false;battleGen++;
     processBattleUpdate(saved);
-    saveGameState(saved);
+    saveGameState(saved,'battle');
   }else if(saved&&saved.screen==='shop'){
     showScreen('shop');currentTab='shop';
     el('tabShopBtn').classList.add('active');el('tabInvBtn').classList.remove('active');el('tabChaosBtn').classList.remove('active');
     el('shopTabTitle').textContent='Склеп';el('deckCount').style.visibility='hidden';el('toBattleBtn').style.display='none';
     renderShop();socket.emit('getShop');
-    saveGameState(saved);
+    saveGameState(saved,'shop');
   }else{
     showScreen('menu');
+    saveGameState(state,'menu');
   }
 });
 
@@ -320,7 +321,7 @@ socket.on('stateUpdate',(state)=>{
       playSound('battle_start');
     }
     processBattleUpdate(state);
-    saveGameState(state);
+    saveGameState(state,'battle');
   }else{
     if(state.error)showToast(state.error);
     if(state.battle){
@@ -336,7 +337,7 @@ socket.on('stateUpdate',(state)=>{
       }
       renderShop();
     }
-    saveGameState(state);
+    saveGameState(state,'shop');
   }
 });
 
@@ -1016,9 +1017,9 @@ const AUTH_BASE='https://triad-duel-server.onrender.com';
 let accessToken=localStorage.getItem('td_access_token')||null;
 let pollTimer=null;
 
-function saveGameState(state){
+function saveGameState(state,screen){
   try{
-    const s={screen:scr.battle.classList.contains('active')?'battle':scr.shop.classList.contains('active')?'shop':scr.menu.classList.contains('active')?'menu':null,battle:state.battle||null,playerGold:state.playerGold,playerCollection:state.playerCollection,selectedDeck:state.selectedDeck,cardUpgrades:state.cardUpgrades,shopCards:state.shopCards};
+    const s={screen:screen||'menu',battle:state.battle||null,playerGold:state.playerGold,playerCollection:state.playerCollection,selectedDeck:state.selectedDeck,cardUpgrades:state.cardUpgrades,shopCards:state.shopCards};
     localStorage.setItem('td_game_state',JSON.stringify(s));
   }catch(e){}
 }
