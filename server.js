@@ -315,7 +315,7 @@ IO.on('connection', (socket) => {
     s.selectedDeck = [];
     s.battle = null;
     s.shopCards = eraDef();
-    socket.emit('init', getSessionState(sessionId));
+    socket.emit('stateUpdate', getSessionState(sessionId));
   });
 
   // ═══ GET SHOP ═══
