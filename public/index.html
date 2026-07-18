@@ -314,13 +314,13 @@ socket.on('init',(state)=>{
 socket.on('stateUpdate',(state)=>{
   gameState=state;
   hideLoading();
-  saveGameState(state);
   if((state.gameEnd||state.battle) && !state.error){
     if(!document.getElementById('battleScreen').classList.contains('active') && state.battle){
       showScreen('battle');el('battleLog').innerHTML='';battleCardsReady=false;battleGen++;
       playSound('battle_start');
     }
     processBattleUpdate(state);
+    saveGameState(state);
   }else{
     if(state.error)showToast(state.error);
     if(state.battle){
@@ -336,6 +336,7 @@ socket.on('stateUpdate',(state)=>{
       }
       renderShop();
     }
+    saveGameState(state);
   }
 });
 
