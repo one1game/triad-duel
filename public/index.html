@@ -283,7 +283,15 @@ let gameState=null;
 socket.on('connect',()=>{console.log('[socket] connected:',socket.id)});
 socket.on('disconnect',()=>{console.log('[socket] disconnected')});
 
+let pendingInit=null;
+
 socket.on('init',(state)=>{
+  if(!accessToken){
+    // Save state from old server (pre-auth init), apply after login
+    pendingInit=state;
+    return;
+  }
+  pendingInit=null;
   gameState=state;
   el('authOverlay').classList.remove('show');
   hideLoading();
@@ -1005,6 +1013,15 @@ function onTelegramAuth(user){
     accessToken=data.token;
     localStorage.setItem('td_access_token',accessToken);
     socket.emit('auth',{access_token:accessToken});
+    // Fallback: old server already sent init, apply it now
+    if(pendingInit){
+      gameState=pendingInit;
+      pendingInit=null;
+      el('authOverlay').classList.remove('show');
+      hideLoading();
+      applyFullState(gameState);
+      showScreen('menu');
+    }
   })
   .catch(()=>{el('authError').textContent='Ошибка соединения с сервером'});
 }
