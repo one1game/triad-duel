@@ -280,7 +280,7 @@ const IMG_BASE='img/cards/',CARDS_PER_SIDE=3,SHOP_SIZE=12,MAX_MANA=10;
 const socket=io(window.SERVER_URL);
 let gameState=null;
 
-socket.on('connect',()=>{console.log('[socket] connected:',socket.id)});
+socket.on('connect',()=>{console.log('[socket] connected:',socket.id);if(accessToken){socket.emit('auth',{access_token:accessToken});}});
 socket.on('disconnect',()=>{console.log('[socket] disconnected')});
 
 let pendingInit=null;
@@ -1058,11 +1058,6 @@ function resetAuthBtn(){
   btn.textContent='Войти через Telegram';
   btn.onclick=startBotAuth;
   el('authStatus').textContent='Без паролей — просто открой бота';
-}
-
-// Auto-auth if token exists
-if(accessToken){
-  socket.emit('auth',{access_token:accessToken});
 }
 
 // ═══ INIT ═══
