@@ -287,7 +287,6 @@ let pendingInit=null;
 
 socket.on('init',(state)=>{
   if(!accessToken){
-    // Save state from old server (pre-auth init), apply after login
     pendingInit=state;
     return;
   }
@@ -296,12 +295,26 @@ socket.on('init',(state)=>{
   el('authOverlay').classList.remove('show');
   hideLoading();
   applyFullState(state);
-  showScreen('menu');
+  const saved=loadSavedState();
+  if(saved&&saved.screen==='battle'&&saved.battle){
+    showScreen('battle');el('battleLog').innerHTML='';battleCardsReady=false;battleGen++;
+    processBattleUpdate(saved);
+    saveGameState(saved);
+  }else if(saved&&saved.screen==='shop'){
+    showScreen('shop');currentTab='shop';
+    el('tabShopBtn').classList.add('active');el('tabInvBtn').classList.remove('active');el('tabChaosBtn').classList.remove('active');
+    el('shopTabTitle').textContent='Склеп';el('deckCount').style.visibility='hidden';el('toBattleBtn').style.display='none';
+    renderShop();socket.emit('getShop');
+    saveGameState(saved);
+  }else{
+    showScreen('menu');
+  }
 });
 
 socket.on('stateUpdate',(state)=>{
   gameState=state;
   hideLoading();
+  saveGameState(state);
   if((state.gameEnd||state.battle) && !state.error){
     if(!document.getElementById('battleScreen').classList.contains('active') && state.battle){
       showScreen('battle');el('battleLog').innerHTML='';battleCardsReady=false;battleGen++;
@@ -332,6 +345,7 @@ socket.on('error',(msg)=>{
   el('authError').textContent=msg||'';
   if(msg==='Токен недействителен'){
     localStorage.removeItem('td_access_token');
+    localStorage.removeItem('td_game_state');
     accessToken=null;
     el('authOverlay').classList.add('show');
     resetAuthBtn();
@@ -1000,6 +1014,16 @@ function backToShopFromResult(){el('resultOverlay').classList.remove('show');bac
 const AUTH_BASE='https://triad-duel-server.onrender.com';
 let accessToken=localStorage.getItem('td_access_token')||null;
 let pollTimer=null;
+
+function saveGameState(state){
+  try{
+    const s={screen:scr.battle.classList.contains('active')?'battle':scr.shop.classList.contains('active')?'shop':scr.menu.classList.contains('active')?'menu':null,battle:state.battle||null,playerGold:state.playerGold,playerCollection:state.playerCollection,selectedDeck:state.selectedDeck,cardUpgrades:state.cardUpgrades,shopCards:state.shopCards};
+    localStorage.setItem('td_game_state',JSON.stringify(s));
+  }catch(e){}
+}
+function loadSavedState(){
+  try{return JSON.parse(localStorage.getItem('td_game_state'))}catch(e){return null}
+}
 
 async function startBotAuth(){
   el('authError').textContent='';
