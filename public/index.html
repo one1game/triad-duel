@@ -266,6 +266,7 @@
 <script src="/socket.io.min.js"></script>
 <script>
 window.SERVER_URL=location.hostname==='localhost'||location.hostname==='127.0.0.1'?undefined:'https://triad-duel-server.onrender.com';
+window.isLocal=!window.SERVER_URL;
 </script>
 <script>
 // @ts-nocheck
@@ -277,7 +278,19 @@ const IMG_BASE='img/cards/',CARDS_PER_SIDE=3,SHOP_SIZE=12,MAX_MANA=10;
 const socket=io(window.SERVER_URL);
 let gameState=null;
 
-socket.on('connect',()=>{console.log('[socket] connected:',socket.id);if(accessToken){socket.emit('auth',{access_token:accessToken});}});
+socket.on('connect',()=>{
+  console.log('[socket] connected:',socket.id);
+  if(accessToken){
+    socket.emit('auth',{access_token:accessToken});
+  }else if(isLocal){
+    // Dev mode: auto-auth without Telegram
+    fetch('/auth/dev').then(r=>r.json()).then(d=>{
+      accessToken=d.token;
+      localStorage.setItem('td_access_token',accessToken);
+      socket.emit('auth',{access_token:accessToken});
+    });
+  }
+});
 socket.on('disconnect',()=>{console.log('[socket] disconnected')});
 
 let pendingInit=null;

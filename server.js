@@ -228,6 +228,16 @@ function getManaCap(cardId, cardUpgrades) {
 }
 
 // ═══ AUTH ENDPOINTS ═══
+// Dev auth for localhost
+APP.get('/auth/dev', async (req, res) => {
+  if (!req.get('host')?.startsWith('localhost') && !req.get('host')?.startsWith('127.0.0.1')) {
+    return res.status(403).json({ error: 'dev mode only' });
+  }
+  const player = await getOrCreatePlayer(0, { username: 'DevTester' });
+  const token = signJWT({ sub: player.id, telegram_id: 0, username: 'DevTester' });
+  res.json({ token, user: { id: player.id, username: 'DevTester' } });
+});
+
 // Step 1: request auth from site → get code + bot link
 APP.get('/auth/bot/start', (req, res) => {
   const code = generateAuthCode();
