@@ -393,6 +393,14 @@ function getAudioContext() {
     return audioCtx;
 }
 
+// Unlock AudioContext on first user interaction
+function unlockAudio() {
+    const ctx = getAudioContext();
+    if (!ctx || ctx.state !== 'suspended') return;
+    ctx.resume().then(() => console.log('[Audio] Контекст разблокирован'));
+}
+['click','touchstart','keydown'].forEach(e => document.addEventListener(e, unlockAudio, { once: true }));
+
 function preloadSamples() {
     const ctx = getAudioContext();
     if (!ctx) return;
