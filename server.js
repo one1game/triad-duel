@@ -16,9 +16,6 @@ const supabase = createClient(
 
 // ═══ TELEGRAM + JWT ═══
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
-if (!process.env.JWT_SECRET) {
-  console.error('[FATAL] JWT_SECRET не задан в env! Токены будут умирать при каждом рестарте.');
-}
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
 
 function signJWT(payload) {
@@ -73,7 +70,7 @@ const CARDS_PER_SIDE = 3;
 const SHOP_SIZE = 12;
 const MAX_MANA = 10;
 const BASE_REWARD = 50;
-const FIRST_TURN_MANA = 1;
+const FIRST_TURN_MANA = 2;
 
 const ALL_CARDS = [
   { id: 'mage_01', name: 'Библиарий Кассиан', atk: 6, hp: 11, price: 650, type: 'mage', variance: .10, passive: 'Эрудит', passiveDesc: 'Фаербол стоит 2 маны. Раскол: 5% шанс 1-3 урона соседним', lore: 'Хранитель запретных знаний из библиотек Некрона.' },
@@ -118,10 +115,8 @@ function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + m
 function shuffle(arr) { return arr.slice().sort(() => Math.random() - .5); }
 function byId(id) { return ALL_CARDS.find(c => c.id === id); }
 function eraDef() {
-  const pool = Math.random() < 0.4
-    ? ALL_CARDS.filter(c => c.id.endsWith('_01') || c.id.endsWith('_02') || c.id.endsWith('_03'))
-    : ALL_CARDS.filter(c => !c.id.endsWith('_01') && !c.id.endsWith('_02') && !c.id.endsWith('_03'));
-  return shuffle(ALL_CARDS).slice(0, SHOP_SIZE).map(c => ({ id: c.id, price: c.price }));
+  const pool = ALL_CARDS.filter(c => !['mage_01','tank_01','assa_01'].includes(c.id));
+  return shuffle(pool).map(c => ({ id: c.id, price: c.price }));
 }
 
 // ═══ PLAYER DATA (Supabase) ═══
@@ -228,16 +223,6 @@ function getManaCap(cardId, cardUpgrades) {
 }
 
 // ═══ AUTH ENDPOINTS ═══
-// Dev auth for localhost
-APP.get('/auth/dev', async (req, res) => {
-  if (!req.get('host')?.startsWith('localhost') && !req.get('host')?.startsWith('127.0.0.1')) {
-    return res.status(403).json({ error: 'dev mode only' });
-  }
-  const player = await getOrCreatePlayer(0, { username: 'DevTester' });
-  const token = signJWT({ sub: player.id, telegram_id: 0, username: 'DevTester' });
-  res.json({ token, user: { id: player.id, username: 'DevTester' } });
-});
-
 // Step 1: request auth from site → get code + bot link
 APP.get('/auth/bot/start', (req, res) => {
   const code = generateAuthCode();
@@ -280,7 +265,7 @@ APP.post('/bot/webhook', express.json(), async (req, res) => {
 IO.on('connection', (socket) => {
   let userId = null;
   let playerData = null;
-  const sessionId = socket.id;
+  let sessionId = socket.id;
   console.log(`[connect] ${sessionId}`);
 
   // Store temporary session for battles
@@ -301,6 +286,15 @@ IO.on('connection', (socket) => {
       const decoded = verifyJWT(access_token);
       if (!decoded) { socket.emit('error', 'Токен недействителен'); return; }
       userId = decoded.sub;
+
+      // Если у этого userId уже есть активная сессия с боем — переиспользуем её
+      const existingKey = Object.keys(sessions).find(k => sessions[k].userId === userId);
+      if (existingKey && existingKey !== sessionId) {
+        sessions[sessionId] = sessions[existingKey];
+        delete sessions[existingKey];
+      }
+      sessions[sessionId].userId = userId;
+
       const dbPlayer = await getOrCreatePlayer(decoded.telegram_id, { username: decoded.username });
       playerData = dbPlayer;
       sessions[sessionId].playerGold = dbPlayer.gold;
@@ -428,7 +422,7 @@ IO.on('connection', (socket) => {
       if (battle.abilitiesUsedThisTurn.includes(attackerIdx)) return;
       const cost = attacker.baseId === 'mage_01' ? 2 : 3;
       if (attacker.mana < cost) return;
-      actionResult = executeFireball(battle, attackerIdx, defenderIdx);
+      actionResult = executeFireball(battle, attackerIdx, defenderIdx, s.cardUpgrades);
     } else if (type === 'taunt') {
       if (attacker.type !== 'tank' || attacker.mana < 2) return;
       if (battle.firstTurn) return;
@@ -450,6 +444,12 @@ IO.on('connection', (socket) => {
       battle.playerAction = actionResult;
     }
 
+    // Если способность только "активирована" (ждём выбор цели) — ход НЕ завершаем
+    if (actionResult && (actionResult.type === 'crit_ready' || actionResult.type === 'fireball_ready')) {
+      socket.emit('stateUpdate', getSessionState(sessionId));
+      return;
+    }
+
     // End of player action: auto-end turn
     executePlayerEndTurn(s, socket, userId);
   });
@@ -460,8 +460,11 @@ IO.on('connection', (socket) => {
     if (userId && sessions[sessionId]) {
       const s = sessions[sessionId];
       await savePlayerData(userId, s);
+      // Держим сессию 2 минуты на случай реконнекта (F5)
+      setTimeout(() => {
+        if (sessions[sessionId] && sessions[sessionId].userId === userId) delete sessions[sessionId];
+      }, 120000);
     }
-    delete sessions[sessionId];
   });
 });
 
@@ -526,15 +529,22 @@ function executeAttack(battle, attIdx, defIdx, isPlayer) {
   // Mage shield passive
   if (defender.type === 'mage' && defender.baseId === 'mage_05') dmg = Math.max(1, dmg - 1);
 
-  // Tank thorns
-  if (defender.type === 'tank' && defender.baseId === 'tank_02') {
-    attacker.hp -= 1;
-    if (attacker.hp < 0) attacker.hp = 0;
+  // Tank cover passive — 5% шанс не получить урон вообще
+  let blocked = false;
+  if (defender.type === 'tank' && Math.random() < 0.05) {
+    dmg = 0;
+    blocked = true;
   }
 
   defender.hp = Math.max(0, defender.hp - dmg);
   const isDead = defender.hp <= 0;
   if (isDead) defender.alive = false;
+
+  // Tank thorns
+  if (defender.type === 'tank' && defender.baseId === 'tank_02') {
+    attacker.hp -= 1;
+    if (attacker.hp < 0) attacker.hp = 0;
+  }
 
   // Tank rage passive
   if (attacker.type === 'tank' && attacker.baseId === 'tank_03' && attacker.hp < attacker.maxHp * 0.5) {
@@ -553,14 +563,8 @@ function executeAttack(battle, attIdx, defIdx, isPlayer) {
     }
   }
 
-  // Tank cover passive
-  if (defender.type === 'tank' && Math.random() < 0.05) {
-    dmg = 0;
-    defender.hp += dmg; // revert
-    isCrit = false;
-  }
-
-  battle.battleLog.push(`<span class="log-player">${attacker.name}</span> атакует <span class="log-enemy">${defender.name}</span> на <span class="log-dmg">${dmg}</span> урона${isDead ? ' <span class="log-death">[УБИТ]</span>' : ''}`);
+  if (blocked) battle.battleLog.push(`<span class="log-enemy">${defender.name}</span> <span class="log-ability">блокирует атаку!</span>`);
+  else battle.battleLog.push(`<span class="log-player">${attacker.name}</span> атакует <span class="log-enemy">${defender.name}</span> на <span class="log-dmg">${dmg}</span> урона${isDead ? ' <span class="log-death">[УБИТ]</span>' : ''}`);
   if (assaSplash) battle.battleLog.push(`<span class="log-ability">Кровопускание!</span> <span class="log-dmg">${assaSplash.damage}</span> урона соседнему врагу`);
 
   return { type: 'attack', attackerIdx: attIdx, defenderIdx: defIdx, damage: dmg, isCrit, isDead, assaSplash, attackerName: attacker.name, defenderName: defender.name };
@@ -591,6 +595,9 @@ function executeCrit(battle, attIdx, defIdx) {
   if (attacker.baseId === 'assa_01' && Math.random() < 0.3) manaCost = 1;
   attacker.mana -= manaCost;
 
+  // Mana refund (Искажение)
+  if (attacker.baseId === 'mage_06' && Math.random() < 0.3) attacker.mana = Math.min(attacker.mana + 1, getManaCap(attacker.baseId, cardUpgrades));
+
   // Variance
   const variance = base.variance || 0;
   dmg = Math.max(1, Math.round(dmg * (1 - variance + Math.random() * variance * 2)));
@@ -619,7 +626,7 @@ function executeCrit(battle, attIdx, defIdx) {
   return { type: 'crit', attackerIdx: attIdx, defenderIdx: defIdx, damage: dmg, isCrit: true, isDead, assaSplash, attackerName: attacker.name, defenderName: defender.name };
 }
 
-function executeFireball(battle, attIdx, defIdx) {
+function executeFireball(battle, attIdx, defIdx, cardUpgrades) {
   const attacker = battle.playerCards[attIdx];
   if (!defIdx && defIdx !== 0) {
     // No target yet - activate fireball mode
@@ -646,9 +653,6 @@ function executeFireball(battle, attIdx, defIdx) {
   if (attacker.baseId === 'mage_11' && Math.random() < 0.4) manaCost = 1;
   attacker.mana -= manaCost;
 
-  // Mana refund
-  if (attacker.baseId === 'mage_06' && Math.random() < 0.3) attacker.mana = Math.min(attacker.mana + 1, MAX_MANA + ((sessions[Object.keys(sessions)[0]]?.cardUpgrades || {})[attacker.baseId]?.mana || 0));
-
   // Variance
   const variance = base.variance || 0;
   dmg = Math.max(1, Math.round(dmg * (1 - variance + Math.random() * variance * 2)));
@@ -666,12 +670,12 @@ function executeFireball(battle, attIdx, defIdx) {
   if (attacker.baseId === 'mage_03') attacker.hp = Math.min(attacker.maxHp, attacker.hp + 2);
   if (attacker.baseId === 'mage_09' && isDead) {
     attacker.hp = Math.min(attacker.maxHp, attacker.hp + 2);
-    attacker.mana = Math.min(getManaCap(attacker.baseId, sessions[Object.keys(sessions)[0]]?.cardUpgrades || {}), attacker.mana + 1);
+    attacker.mana = Math.min(getManaCap(attacker.baseId, cardUpgrades), attacker.mana + 1);
   }
 
-  // Steal mana
+  // Steal mana (Пожиратель)
   if (attacker.baseId === 'mage_08') {
-    if (defender.mana > 0) { defender.mana--; attacker.mana = Math.min(getManaCap(attacker.baseId, {}), attacker.mana + 1); }
+    if (defender.mana > 0) { defender.mana--; attacker.mana = Math.min(getManaCap(attacker.baseId, cardUpgrades), attacker.mana + 1); }
   }
 
   // Mage splash (Раскол)
@@ -768,16 +772,6 @@ function executePlayerEndTurn(s, socket, userId) {
     battle.abilitiesUsedThisTurn = [];
     battle.firstTurn = false;
     battle.activeIdx = -1;
-
-    // Mana regen for player
-    battle.playerCards.forEach(c => {
-      if (c.hp > 0) c.mana = Math.min(getManaCap(c.baseId, s.cardUpgrades), c.mana + 1);
-    });
-
-    // Mana regen for enemy
-    battle.enemyCards.forEach(c => {
-      if (c.hp > 0) c.mana = Math.min(MAX_MANA, c.mana + 1);
-    });
 
     // Clear taunts
     battle.playerCards.forEach(c => { c.tauntActive = false; });

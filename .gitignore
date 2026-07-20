@@ -5,3 +5,17 @@ node_modules/
 *.zip
 ffmpeg-release-essentials.zip
 tmp/
+
+# ── AI тулинг (не для деплоя) ──
+.code-review-graph/
+.claude/
+.codebuddy/
+.gemini/
+.qoder/
+.mcp.json
+opencode.jsonc
+
+# ── Дубликаты / мусор ──
+card/
+bgm_looped.mp3
+indexold.html
