@@ -21,7 +21,7 @@
   .btn{background:rgba(20,20,25,.6);border:1px solid var(--border-dim);color:var(--text-dim);font-family:'Cinzel',serif;padding:12px 28px;cursor:pointer;letter-spacing:2px;text-transform:uppercase;transition:all .35s cubic-bezier(.4,0,.2,1);font-size:12px;font-weight:600;position:relative;overflow:hidden}
   .btn::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.04),transparent);transition:left .6s cubic-bezier(.4,0,.2,1)}.btn:hover::before{left:100%}
   .btn:hover{border-color:var(--accent-gold);color:var(--accent-gold-bright);box-shadow:0 0 25px rgba(138,115,85,.12);transform:translateY(-1px)}.btn:active{transform:scale(.96);transition:transform .1s ease}
-  .btn.gold-btn{border-color:var(--accent-gold);color:var(--accent-gold-bright);background:rgba(138,115,85,.05);transition:all .35s cubic-bezier(.4,0,.2,1)}.btn.gold-btn:hover{background:rgba(138,115,85,.15);box-shadow:0 0 30px rgba(138,115,85,.25);transform:translateY(-2px)}.btn.small{padding:6px 16px;font-size:10px;letter-spacing:1.5px}
+  .btn.gold-btn{border-color:var(--accent-gold);color:var(--accent-gold-bright);background:rgba(138,115,85,.05);transition:all .35s cubic-bezier(.4,0,.2,1)}.btn.gold-btn:hover{background:rgba(138,115,85,.15);box-shadow:0 0 30px rgba(138,115,85,.25);transform:translateY(-2px)}.btn.small{padding:6px 16px;font-size:10px;letter-spacing:1.5px}.btn.surrender-btn{border-color:#6a1a1a;color:#d44;background:rgba(106,26,26,.1);transition:all .35s cubic-bezier(.4,0,.2,1)}.btn.surrender-btn:hover{background:rgba(106,26,26,.25);box-shadow:0 0 30px rgba(180,30,30,.3);border-color:#a22}
   .btn:disabled{opacity:.2;pointer-events:none;border-color:var(--border-dim);color:var(--text-dim)}
   .btn.ability-btn{border-color:#5a4a6a;color:#b8a8c8;font-family:'Inter',sans-serif;font-weight:600;font-size:11px;padding:8px 16px;letter-spacing:.5px;text-transform:none}
   .btn.ability-btn:hover{border-color:#9a8aae;color:#d0c0e0;box-shadow:0 0 15px rgba(154,138,174,.3);background:rgba(154,138,174,.1)}
@@ -135,7 +135,7 @@
   .result-text.win{color:var(--accent-gold-bright);text-shadow:0 0 50px rgba(138,115,85,.4)}.result-text.lose{color:#6a1a1a;text-shadow:0 0 50px rgba(106,26,26,.5)}
   .result-gold{font-family:'Cinzel',serif;font-size:18px;color:var(--text-primary);letter-spacing:2px;margin-top:-10px}
   @media(max-width:1024px){.screen{max-width:100%;padding:16px}}
-  @media(max-width:768px){body{align-items:flex-start;padding-top:8px}body::before{opacity:.6}body::after{opacity:.25}#particlesCanvas{opacity:.35}.screen{padding:10px;gap:16px}.screen.active{gap:16px}.menu-title{font-size:36px;letter-spacing:3px}.menu-subtitle{font-size:10px;letter-spacing:4px;margin-bottom:32px;padding:8px 0}.menu-buttons{gap:10px;max-width:260px}.menu-buttons .btn{padding:14px;font-size:12px}.section-title{font-size:14px;letter-spacing:2px}.shop-tabs{padding:12px 14px 0}.shop-header{flex-wrap:wrap;gap:10px;padding:10px 14px}#shopGrid,#shopGridInv,#shopGridChaos{padding:10px 14px}.shop-footer{padding:6px 14px 12px}.gold-display{font-size:13px}.card{width:130px;height:195px}.card-image{width:130px;height:195px}.atk-badge{font-size:11px;padding:2px 6px;top:5px;left:5px}.hp-text{font-size:9px;padding:1px 4px;top:5px;right:5px}.card-name{font-size:8px;padding:3px 4px}.card-role{font-size:6px;bottom:5px;right:6px}.card-overlay{height:55%;padding:30px 6px 8px}.mana-orbs{bottom:5px;left:5px;gap:3px}.mana-orb{width:5px;height:5px}.dot-status{font-size:7px!important;top:20px!important;left:5px!important}.card-grid{grid-template-columns:repeat(3,130px);gap:14px}.shop-card{width:130px;height:195px}.shop-card-img{width:130px;height:195px}.deck-card{width:130px;height:195px}.deck-card-img{width:130px;height:195px}.shop-card-name{font-size:8px;bottom:38px;padding:3px 5px}.shop-card-price{font-size:11px;bottom:8px;left:8px}.shop-card-passive{font-size:6px;bottom:26px;max-width:110px}.shop-card-buy{font-size:9px;padding:4px 10px;bottom:6px;right:6px}.deck-info-btn{width:18px;height:18px;font-size:10px;top:4px;right:4px}.shop-tab{font-size:11px;padding:8px 18px;letter-spacing:1.5px}.battle-header{padding:8px 12px;margin-bottom:8px}.battle-header .title{font-size:16px}.battlefield{gap:24px}.card-row{gap:10px;justify-content:center}.battlefield{padding:8px 0}.btn{padding:10px 18px;font-size:10px;letter-spacing:1.5px;min-height:40px;display:inline-flex;align-items:center;justify-content:center}.btn.small{padding:6px 12px;font-size:9px}.btn.ability-btn{padding:8px 12px;font-size:10px;min-height:40px}#endTurnBtn{padding:12px 28px;font-size:11px}.ability-panel{flex-wrap:wrap;gap:8px;padding:6px}.action-hint{font-size:10px}.battle-log{max-height:80px;font-size:10px;padding:10px}.battle-log .log-entry{padding:2px 0}.turn-indicator{font-size:12px}.footer{font-size:8px;bottom:12px;letter-spacing:2px}#settingsOverlay{gap:20px}.settings-title{font-size:18px}.setting-row{font-size:12px;gap:14px}.setting-slider{width:120px}.result-large-title{font-size:36px}.result-text{font-size:18px}.result-gold{font-size:15px}.card-detail{flex-direction:column;padding:20px;gap:16px;max-width:340px}.card-detail-img{width:120px;height:180px;align-self:center}.card-detail-name{font-size:15px}.card-detail-stat{font-size:11px}.card-detail-passive .passive-name{font-size:11px}.card-detail-passive .passive-desc{font-size:10px}.card-detail-lore{font-size:10px}.card-detail-close{width:28px;height:28px;font-size:14px;top:8px;right:8px}.card.attacking{animation:atkLungeM .35s cubic-bezier(.2,.8,.2,1)}@keyframes atkLungeM{0%{transform:translateX(0) translateY(-8px) scale(1.03)}40%{transform:translateX(15px) translateY(-10px) scale(1.05)}100%{transform:translateX(0) translateY(-8px) scale(1.03)}}.card.taking-damage{animation:dmgShakeM .35s ease}@keyframes dmgShakeM{0%,100%{transform:translateX(0) translateY(-6px) scale(1.02)}20%{transform:translateX(-5px) translateY(-6px) scale(1.02)}40%{transform:translateX(5px) translateY(-6px) scale(1.02)}60%{transform:translateX(-3px) translateY(-6px) scale(1.02)}}.card.selected{transform:translateY(-8px) scale(1.03)!important}.card:hover{transform:translateY(-6px) scale(1.02)}.card.enemy-targetable:hover{transform:translateY(-4px) scale(1.01)}.damage-number{font-size:20px}.chaos-card{width:130px}.chaos-card-frame{width:130px}.chaos-card-name{font-size:9px;bottom:38px}.chaos-upgrades{padding:6px 0 0}.chaos-upg-btn{font-size:8px;min-height:42px}.chaos-upg-icon{width:100%;height:100%}.chaos-upg-label{font-size:7px}.shop-card-name{font-size:9px;bottom:42px}.shop-card-price{font-size:11px;bottom:8px}.shop-card-passive{font-size:6px;bottom:30px}.shop-card-buy{font-size:8px;padding:3px 9px;bottom:6px}.deck-card-name{font-size:9px}.result-text{font-size:40px}.result-gold{font-size:14px}.round-timer-text{font-size:18px}.round-timer{padding:4px 0}.settings-title{font-size:16px}.setting-row{font-size:12px}}
+  @media(max-width:768px){body{align-items:flex-start;padding-top:8px}body::before{opacity:.6}body::after{opacity:.25}#particlesCanvas{opacity:.35}.screen{padding:10px;gap:16px}.screen.active{gap:16px}.menu-title{font-size:36px;letter-spacing:3px}.menu-subtitle{font-size:10px;letter-spacing:4px;margin-bottom:32px;padding:8px 0}.menu-buttons{gap:10px;max-width:260px}.menu-buttons .btn{padding:14px;font-size:12px}.section-title{font-size:14px;letter-spacing:2px}.shop-tabs{padding:12px 14px 0}.shop-header{flex-wrap:wrap;gap:10px;padding:10px 14px}#shopGrid,#shopGridInv,#shopGridChaos{padding:10px 14px}.shop-footer{padding:6px 14px 12px}.gold-display{font-size:13px}.card{width:130px;height:195px}.card-image{width:130px;height:195px}.atk-badge{font-size:11px;padding:2px 6px;top:5px;left:5px}.hp-text{font-size:9px;padding:1px 4px;top:5px;right:5px}.card-name{font-size:8px;padding:3px 4px}.card-role{font-size:6px;bottom:5px;right:6px}.card-overlay{height:55%;padding:30px 6px 8px}.mana-orbs{bottom:5px;left:5px;gap:3px}.mana-orb{width:5px;height:5px}.dot-status{font-size:7px!important;top:20px!important;left:5px!important}.card-grid{grid-template-columns:repeat(3,130px);gap:14px}.shop-card{width:130px;height:195px}.shop-card-img{width:130px;height:195px}.deck-card{width:130px;height:195px}.deck-card-img{width:130px;height:195px}.shop-card-name{font-size:8px;bottom:38px;padding:3px 5px}.shop-card-price{font-size:11px;bottom:8px;left:8px}.shop-card-passive{font-size:6px;bottom:26px;max-width:110px}.shop-card-buy{font-size:9px;padding:4px 10px;bottom:6px;right:6px}.deck-info-btn{width:18px;height:18px;font-size:10px;top:4px;right:4px}.shop-tab{font-size:11px;padding:8px 18px;letter-spacing:1.5px}.battle-header{padding:8px 12px;margin-bottom:8px}.battle-header .title{font-size:16px}.battlefield{gap:24px}.card-row{gap:10px;justify-content:center}.battlefield{padding:8px 0}.btn{padding:10px 18px;font-size:10px;letter-spacing:1.5px;min-height:40px;display:inline-flex;align-items:center;justify-content:center}.btn.small{padding:6px 12px;font-size:9px}.btn.surrender-btn{padding:8px 14px;font-size:10px;min-height:38px}.btn.ability-btn{padding:8px 12px;font-size:10px;min-height:40px}#endTurnBtn{padding:12px 28px;font-size:11px}.ability-panel{flex-wrap:wrap;gap:8px;padding:6px}.action-hint{font-size:10px}.battle-log{max-height:80px;font-size:10px;padding:10px}.battle-log .log-entry{padding:2px 0}.turn-indicator{font-size:12px}.footer{font-size:8px;bottom:12px;letter-spacing:2px}#settingsOverlay{gap:20px}.settings-title{font-size:18px}.setting-row{font-size:12px;gap:14px}.setting-slider{width:120px}.result-large-title{font-size:36px}.result-text{font-size:18px}.result-gold{font-size:15px}.card-detail{flex-direction:column;padding:20px;gap:16px;max-width:340px}.card-detail-img{width:120px;height:180px;align-self:center}.card-detail-name{font-size:15px}.card-detail-stat{font-size:11px}.card-detail-passive .passive-name{font-size:11px}.card-detail-passive .passive-desc{font-size:10px}.card-detail-lore{font-size:10px}.card-detail-close{width:28px;height:28px;font-size:14px;top:8px;right:8px}.card.attacking{animation:atkLungeM .35s cubic-bezier(.2,.8,.2,1)}@keyframes atkLungeM{0%{transform:translateX(0) translateY(-8px) scale(1.03)}40%{transform:translateX(15px) translateY(-10px) scale(1.05)}100%{transform:translateX(0) translateY(-8px) scale(1.03)}}.card.taking-damage{animation:dmgShakeM .35s ease}@keyframes dmgShakeM{0%,100%{transform:translateX(0) translateY(-6px) scale(1.02)}20%{transform:translateX(-5px) translateY(-6px) scale(1.02)}40%{transform:translateX(5px) translateY(-6px) scale(1.02)}60%{transform:translateX(-3px) translateY(-6px) scale(1.02)}}.card.selected{transform:translateY(-8px) scale(1.03)!important}.card:hover{transform:translateY(-6px) scale(1.02)}.card.enemy-targetable:hover{transform:translateY(-4px) scale(1.01)}.damage-number{font-size:20px}.chaos-card{width:130px}.chaos-card-frame{width:130px}.chaos-card-name{font-size:9px;bottom:38px}.chaos-upgrades{padding:6px 0 0}.chaos-upg-btn{font-size:8px;min-height:42px}.chaos-upg-icon{width:100%;height:100%}.chaos-upg-label{font-size:7px}.shop-card-name{font-size:9px;bottom:42px}.shop-card-price{font-size:11px;bottom:8px}.shop-card-passive{font-size:6px;bottom:30px}.shop-card-buy{font-size:8px;padding:3px 9px;bottom:6px}.deck-card-name{font-size:9px}.result-text{font-size:40px}.result-gold{font-size:14px}.round-timer-text{font-size:18px}.round-timer{padding:4px 0}.settings-title{font-size:16px}.setting-row{font-size:12px}}
   #cardDetailOverlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(3,3,4,.95);backdrop-filter:blur(15px);z-index:3000;justify-content:center;align-items:center}#cardDetailOverlay.show{display:flex;animation:fadeIn .3s ease-out}
   .card-detail{display:flex;gap:28px;background:var(--bg-panel);border:1px solid var(--border-glow);padding:32px;border-radius:4px;max-width:600px;position:relative;box-shadow:0 25px 60px rgba(0,0,0,.8)}
   .card-detail-close{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.5);border:1px solid var(--border-dim);color:var(--text-dim);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s;font-family:Inter,sans-serif}.card-detail-close:hover{border-color:var(--accent-gold);color:var(--accent-gold-bright)}
@@ -243,7 +243,7 @@
 </div>
 <div class="screen" id="battleScreen">
   <div class="battle-header">
-    <button class="btn small" onclick="backToShop()">◂ Сдаться</button>
+    <button class="btn small surrender-btn" onclick="surrenderBattle()">🏳 Сдаться</button>
     <span class="title" style="font-family:'UnifrakturCook',cursive;font-size:24px;color:#c4a265;text-shadow:0 0 20px rgba(138,115,85,.2);">Битва</span>
     <span class="turn-indicator" id="turnIndicator">Ваш ход</span>
   </div>
@@ -307,9 +307,17 @@ socket.on('init',(state)=>{
   applyFullState(state);
   const saved=loadSavedState();
   if(saved&&saved.screen==='battle'){
-    showScreen('battle');el('battleLog').innerHTML='';battleCardsReady=false;battleGen++;
-    if(state.battle){ processBattleUpdate(state); }
-    else { socket.emit('startBattle'); }
+    if(state.battle){
+      showScreen('battle');el('battleLog').innerHTML='';battleCardsReady=false;battleGen++;
+      processBattleUpdate(state);
+    } else if(state.selectedDeck && state.selectedDeck.length===3){
+      showScreen('battle');el('battleLog').innerHTML='';battleCardsReady=false;battleGen++;
+      socket.emit('startBattle');
+    } else {
+      // Нет боя и нет колоды — сбрасываем в меню
+      localStorage.removeItem('td_game_state');
+      showScreen('menu');
+    }
   }else if(saved&&saved.screen==='shop'){
     showScreen('shop');currentTab='shop';
     el('tabShopBtn').classList.add('active');el('tabInvBtn').classList.remove('active');el('tabChaosBtn').classList.remove('active');
@@ -325,7 +333,7 @@ socket.on('init',(state)=>{
 socket.on('stateUpdate',(state)=>{
   gameState=state;
   hideLoading();
-  if((state.gameEnd||state.battle) && !state.error){
+  if((state.battle && state.battle.gameEnd || state.battle) && !state.error){
     if(!document.getElementById('battleScreen').classList.contains('active') && state.battle){
       showScreen('battle');el('battleLog').innerHTML='';battleCardsReady=false;battleGen++;
       playSound('battle_start');
@@ -363,12 +371,12 @@ socket.on('error',(msg)=>{
   }
 });
 
-// ═══ AUDIO (ИСПРАВЛЕННЫЙ БЛОК) ═══
+// ═══ AUDIO (AudioContext — не блокируется autoplay policy) ═══
 let soundEnabled = true;
 let gameVolume = 60;
 let bgmAudio = null, bgmPlaying = false, bgmEnabled = true;
-
-const sfxAudio = {};
+let audioCtx = null;
+const sfxBuffers = {};
 const sfxFiles = {
     select: 'audio/select.wav', attack: 'audio/attack.mp3',
     crit: 'audio/crit.mp3', fireball: 'audio/fireball.mp3',
@@ -378,29 +386,44 @@ const sfxFiles = {
     upgrade: 'audio/select.wav'
 };
 
-function initSFX() {
-    if (Object.keys(sfxAudio).length > 0) return;
-    for (const [name, url] of Object.entries(sfxFiles)) {
-        if (sfxAudio[name]) continue;
-        const a = new Audio(url);
-        a.preload = 'auto';
-        a.volume = 0.7;
-        sfxAudio[name] = a;
+async function initSFX() {
+    if (Object.keys(sfxBuffers).length > 0) return;
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        await audioCtx.resume();
     }
-    console.log('[Audio] SFX инициализированы');
+    for (const [name, url] of Object.entries(sfxFiles)) {
+        if (sfxBuffers[name]) continue;
+        try {
+            const resp = await fetch(url);
+            const arrBuf = await resp.arrayBuffer();
+            sfxBuffers[name] = await audioCtx.decodeAudioData(arrBuf);
+        } catch (e) {
+            console.warn(`[Audio] failed to load ${name}:`, e.message);
+        }
+    }
+    console.log('[Audio] SFX инициализированы (AudioContext)');
 }
 
-// lazy init on first interaction
-['click','touchstart','keydown'].forEach(e => document.addEventListener(e, initSFX, { once: true }));
+// lazy init + resume AudioContext on first interaction
+['click','touchstart','keydown'].forEach(e => document.addEventListener(e, () => {
+    initSFX();
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}, { once: true }));
 initSFX();
 
 function playSound(name) {
-    if (!soundEnabled) return;
-    const a = sfxAudio[name];
-    if (!a) return;
-    a.volume = (gameVolume / 100) * 0.7;
-    a.currentTime = 0;
-    a.play().catch(() => {});
+    if (!soundEnabled || !audioCtx) return;
+    const buf = sfxBuffers[name];
+    if (!buf) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const src = audioCtx.createBufferSource();
+    const gain = audioCtx.createGain();
+    gain.gain.value = (gameVolume / 100) * 0.7;
+    src.buffer = buf;
+    src.connect(gain);
+    gain.connect(audioCtx.destination);
+    src.start(0);
 }
 
 function playWarpSmile(){if(Math.random()<0.25)playSound('battle_start')}
@@ -882,6 +905,13 @@ function endPlayerTurn(){
 
 function startBattle(){stopRoundTimer();battleGen++;el('battleLog').innerHTML='';saveGameState({playerGold,playerCollection,selectedDeck,cardUpgrades,shopCards,battle:{}}, 'battle');socket.emit('startBattle')}
 
+function surrenderBattle(){
+  if(!battleGen||gameOver)return;
+  playSound('defeat');
+  stopRoundTimer();
+  socket.emit('surrender');
+}
+
 // ═══ ANIMATE AI ACTION ═══
 function animateAiAction(action){
   if(!action){console.log('[ai] animateAiAction: no action');return;}
@@ -896,6 +926,7 @@ function animateAiAction(action){
     if(action.isCrit)playSound('crit');
     else playSound('attack');
   }else if(action.type==='crit'||action.type==='fireball'){
+    if(aE)aE.classList.add('enemy-attacking');
     if(dE){if(action.damage>0){dE.classList.add('taking-damage');dmgNum(dE,action.damage,action.type==='crit'?'#c08030':'#e07830');impact(dE);if(action.isCrit)critText(dE);if(action.isDead){dE.classList.add('dying');deathFx(dE);playSound('death')}setTimeout(()=>dE.classList.remove('taking-damage'),450)}}
     if(action.mageSplashes)action.mageSplashes.forEach(s=>{const sE=el('playerRow').querySelector(`[data-idx="${s.neighborIdx}"]`);if(sE){sE.classList.add('taking-damage');dmgNum(sE,s.damage,'#8050c0');impact(sE);if(playerCards[s.neighborIdx]&&playerCards[s.neighborIdx].hp<=0){sE.classList.add('dying');deathFx(sE);playSound('death')}setTimeout(()=>sE.classList.remove('taking-damage'),450)}});
     if(action.assaSplash){const sE=el('playerRow').querySelector(`[data-idx="${action.assaSplash.neighborIdx}"]`);if(sE){sE.classList.add('taking-damage');dmgNum(sE,action.assaSplash.damage,'#c04030');impact(sE);setTimeout(()=>sE.classList.remove('taking-damage'),450)}}
@@ -913,10 +944,11 @@ function animateAiAction(action){
 
 // ═══ PROCESS BATTLE UPDATE ═══
 function processBattleUpdate(state){
-  if(state.log)state.log.forEach(msg=>log(msg));
+  const b = state.battle || state;
+  if(b.log)b.log.forEach(msg=>log(msg));
 
-  if(state.playerAction){
-    const pa=state.playerAction;
+  if(b.playerAction){
+    const pa=b.playerAction;
     const aE=el('playerRow').querySelector(`[data-idx="${pa.attackerIdx}"]`);
     const dE=el('enemyRow').querySelector(`[data-idx="${pa.defenderIdx}"]`);
     if(dE&&pa.damage>0){
@@ -935,42 +967,37 @@ function processBattleUpdate(state){
     if(pa.type==='fireball')flash('radial-gradient(rgba(138,74,26,.15),transparent)');
   }
 
-  if(state.aiAction){
-    if(state.stateAfterPlayer)applyBattleState(state.stateAfterPlayer);
-    else if(state.stateBeforeAi)applyBattleState(state.stateBeforeAi);
-    else applyBattleState(state);
+  if(b.aiAction){
     turnLocked=true;isPlayerTurn=false;updUI();
-    log('<span class="log-ability">⚡ Противник анализирует позицию...</span>');
-    el('turnIndicator').textContent='Враг думает...';el('turnIndicator').classList.add('enemy-turn');
+    el('turnIndicator').textContent='Враг атакует!';el('turnIndicator').classList.add('enemy-turn');
     el('endTurnBtn').style.display='none';updateRowStates();startRoundTimer();
-    const gen=battleGen;const thinkMs=3000+Math.floor(Math.random()*4000);
+    const gen=battleGen;
+    applyBattleState(state);
+    animateAiAction(b.aiAction);
     setTimeout(()=>{
       if(battleGen!==gen)return;
-      applyBattleState(state);
-      animateAiAction(state.aiAction);
-      setTimeout(()=>{
-        if(battleGen!==gen)return;
-        updUI();updateRowStates();
-        if(state.gameEnd||gameOver){
-          gameOver=true;stopRoundTimer();isPlayerTurn=false;activeIdx=-1;
-          el('turnIndicator').textContent='Бой окончен';el('endTurnBtn').style.display='none';updUI();updateRowStates();
-          setTimeout(()=>{if(battleGen!==gen)return;showGameEnd(state.gameEnd)},700);
-        }else{
-          isPlayerTurn=true;turnLocked=false;abilitiesUsedThisTurn=new Set();
-          el('turnIndicator').textContent='Ваш ход';el('turnIndicator').classList.remove('enemy-turn');
-          el('endTurnBtn').style.display='block';startRoundTimer();
-        }
-      },450);
-    },thinkMs);
+      updUI();updateRowStates();
+      if((state.battle && state.battle.gameEnd)||gameOver){
+        gameOver=true;stopRoundTimer();isPlayerTurn=false;activeIdx=-1;
+        el('turnIndicator').textContent='Бой окончен';el('endTurnBtn').style.display='none';updUI();updateRowStates();
+        const ge = state.battle ? state.battle.gameEnd : null;
+        setTimeout(()=>{if(battleGen!==gen)return;showGameEnd(ge)},700);
+      }else{
+        isPlayerTurn=true;turnLocked=false;abilitiesUsedThisTurn=new Set();
+        el('turnIndicator').textContent='Ваш ход';el('turnIndicator').classList.remove('enemy-turn');
+        el('endTurnBtn').style.display='block';startRoundTimer();
+      }
+    },450);
     return;
   }
 
   applyBattleState(state);
-  if(state.gameEnd||gameOver){
+  if((state.battle && state.battle.gameEnd)||gameOver){
+    const ge = state.battle ? state.battle.gameEnd : null;
     gameOver=true;stopRoundTimer();isPlayerTurn=false;activeIdx=-1;
     el('turnIndicator').textContent='Бой окончен';el('endTurnBtn').style.display='none';updUI();updateRowStates();
     const gen=battleGen;
-    setTimeout(()=>{if(battleGen!==gen)return;showGameEnd(state.gameEnd)},700);
+    setTimeout(()=>{if(battleGen!==gen)return;showGameEnd(ge)},700);
     return;
   }
   updUI();updateRowStates();
@@ -989,7 +1016,11 @@ function showGameEnd(gameEnd){
   const isWin=gameEnd.victory;
   el('resultText').textContent=isWin?'ПОБЕДА':'ПОРАЖЕНИЕ';
   el('resultText').className='result-text '+(isWin?'win':'lose');
-  el('resultGold').textContent=isWin?`+${gameEnd.reward||0} Remains завоёвано`:'Все ваши воины пали...';
+  if(gameEnd.reward < 0){
+    el('resultGold').textContent=`Вы сдались! -${Math.abs(gameEnd.reward)} Remains`;
+  }else{
+    el('resultGold').textContent=isWin?`+${gameEnd.reward||0} Remains завоёвано`:'Все ваши воины пали...';
+  }
   el('resultOverlay').classList.add('show');
   if(isWin){playSound('victory');playerGold+=gameEnd.reward||0}else{playSound('defeat')}
   stopRoundTimer();
