@@ -510,7 +510,7 @@ function seedBattle(playerDeckIds, enemyDeckIds, cardUpgrades) {
 		playerCards,
 		enemyCards,
 		activeIdx: -1,
-		isPlayerTurn: true,
+		isPlayerTurn: Math.random() < 0.5,
 		gameOver: false,
 		turnLocked: false,
 		critActivated: false,
@@ -752,6 +752,46 @@ IO.on("connection", (socket) => {
 			'<span class="log-ability">⚔ Битва начинается!</span>',
 		);
 		socket.emit("stateUpdate", getSessionState(sessionId));
+
+		// If AI goes first, trigger its turn with thinking delay
+		if (!s.battle.isPlayerTurn) {
+			const aiThinkMs = 3000 + Math.floor(Math.random() * 5000);
+			console.log(`[ai] first turn, thinking for ${aiThinkMs}ms...`);
+			setTimeout(() => {
+				const battle = s.battle;
+				if (!battle || battle.gameOver) return;
+				try {
+					executeAiTurn(battle, s.cardUpgrades);
+				} catch (e) {
+					console.error("[ai] first turn crashed:", e.message);
+					battle.aiAction = null;
+				}
+				if (
+					battle.enemyCards.every((c) => c.hp <= 0) ||
+					battle.playerCards.every((c) => c.hp <= 0)
+				) {
+					endGame(
+						battle,
+						battle.enemyCards.every((c) => c.hp <= 0),
+						s,
+						socket,
+						sessionId,
+						s.userId,
+					);
+					return;
+				}
+				battle.isPlayerTurn = true;
+				battle.turnLocked = false;
+				battle.abilitiesUsedThisTurn = [];
+				battle.firstTurn = false;
+				battle.activeIdx = -1;
+				for (const c of battle.playerCards) c.tauntActive = false;
+				for (const c of battle.enemyCards) c.tauntActive = false;
+				battle.battleLog.push('<span class="log-ability">— Новый ход —</span>');
+				battle.aiAction = null;
+				socket.emit("stateUpdate", getSessionState(sessionId));
+			}, aiThinkMs);
+		}
 	});
 
 	// ═══ PLAYER ACTION ═══
@@ -1540,18 +1580,10 @@ function executeAiTurn(battle, _cardUpgrades) {
 		}
 	});
 
-	// Find taunter
+	// Find taunter (player card forcing AI to target it)
 	const taunter = alivePlayers.find((c) => c.tauntActive);
-
-	// AI: pick a random alive enemy
-	const actor = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
-	const actorIdx = battle.enemyCards.indexOf(actor);
-
-	// Helper: pick target respecting taunt
-	const pickTarget = () => {
-		if (taunter) return taunter;
-		return alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
-	};
+	// Do we already have an active taunt on our own side this round?
+	const ourTaunterActive = aliveEnemies.find((c) => c.tauntActive);
 
 	// Helper: tank cover — 5% шанс сосед-танк заберёт атаку без урона
 	const checkCover = (targetIdx, allTargets) => {
@@ -1569,194 +1601,302 @@ function executeAiTurn(battle, _cardUpgrades) {
 		return null;
 	};
 
-	// Helper: apply defender armor/shield/thorns
-	const applyDefense = (target, rawDmg) => {
+	// Helper: apply defender armor/shield/thorns (mutating — used on final execution)
+	const applyDefense = (attackerRef, target, rawDmg) => {
 		let dmg = rawDmg;
-		// Armor (tank_01: only during taunt, tank_04: always)
 		if (target.type === "tank") {
 			if (target.baseId === "tank_04") dmg = Math.max(1, dmg - 1);
 			else if (target.baseId === "tank_01" && target.tauntActive)
 				dmg = Math.max(1, dmg - 1);
 		}
-		// Mage shield
 		if (target.type === "mage" && target.baseId === "mage_05")
 			dmg = Math.max(1, dmg - 1);
-		// Thorns (tank_02: only during taunt)
 		if (
 			target.type === "tank" &&
 			target.baseId === "tank_02" &&
 			target.tauntActive
 		) {
-			actor.hp -= 1;
-			if (actor.hp < 0) actor.hp = 0;
+			attackerRef.hp -= 1;
+			if (attackerRef.hp < 0) attackerRef.hp = 0;
 		}
 		target.hp = Math.max(0, target.hp - dmg);
 		return dmg;
 	};
 
-	let aiAction = null;
-	const canAbility = !battle.firstTurn && actor.mana >= 2;
-
-	if (canAbility && Math.random() < 0.4) {
-		if (actor.type === "tank") {
-			actor.mana -= 2;
-			actor.tauntActive = true;
-			if (actor.baseId === "tank_05")
-				actor.hp = Math.min(actor.maxHp, actor.hp + 2);
-			battle.battleLog.push(
-				`<span class="log-enemy">${actor.name}</span> использует <span class="log-ability">ПРОВОКАЦИЮ!</span>`,
-			);
-			aiAction = { type: "taunt", actorIdx, targetIdx: null, damage: 0 };
-		} else if (actor.type === "assa" && actor.mana >= 2) {
-			// assa_03: crit ignores taunt — pick any alive player
-			const target =
-				actor.baseId === "assa_03"
-					? alivePlayers[Math.floor(Math.random() * alivePlayers.length)]
-					: pickTarget();
-			const tIdx = battle.playerCards.indexOf(target);
-			let dmg = Math.round(actor.atk * 2);
+	// ═══ STRATEGIC BRAIN ═══
+	// Pure (non-mutating) estimate of the damage a given action would deal.
+	const estimateRawDamage = (actor, actionType, target) => {
+		let dmg;
+		if (actionType === "attack") {
+			dmg = actor.atk;
+		} else if (actionType === "crit") {
+			dmg = Math.round(actor.atk * 2);
 			if (actor.baseId === "assa_05") dmg = Math.round(actor.atk * 2.5);
 			if (actor.baseId === "assa_02" && target.hp < target.maxHp * 0.5)
 				dmg += 2;
-			// Tank cover check
-			const coverName = checkCover(tIdx, battle.playerCards);
-			if (coverName) {
-				dmg = 0;
-				actor.mana -= 2;
-				// assa_01: 30% refund if cover prevented damage
-				if (actor.baseId === "assa_01" && Math.random() < 0.3)
-					actor.mana = Math.min(actor.mana + 1, 10);
-				battle.battleLog.push(
-					`<span class="log-enemy">${actor.name}</span> <span class="log-crit">КРИТ</span> — <span class="log-ability">${coverName} прикрыл союзника!</span>`,
-				);
-				aiAction = {
-					type: "crit",
-					actorIdx,
-					targetIdx: tIdx,
-					damage: 0,
-					isCrit: true,
-					isDead: false,
-					attackerName: actor.name,
-					defenderName: target.name,
-				};
-			} else {
-				dmg = applyDefense(target, dmg);
-				actor.mana -= 2;
-				// assa_01: 30% chance crit costs 1 mana instead of 2
-				if (actor.baseId === "assa_01" && Math.random() < 0.3)
-					actor.mana = Math.min(actor.mana + 1, 10);
-				const isDead = target.hp <= 0;
-				if (actor.baseId === "assa_04" && isDead)
-					actor.mana = Math.min(actor.mana + 2, 10);
-				// AI assa splash (5%)
-				let splashText = "";
-				if (Math.random() < 0.05) {
-					const others = alivePlayers.filter((c) => c !== target);
-					if (others.length > 0) {
-						const s = others[Math.floor(Math.random() * others.length)];
-						const sDmg = Math.floor(dmg / 2);
-						s.hp = Math.max(0, s.hp - sDmg);
-						splashText = ` <span class="log-ability">(+ ${sDmg} splash)</span>`;
-					}
-				}
-				battle.battleLog.push(
-					`<span class="log-enemy">${actor.name}</span> <span class="log-crit">КРИТ</span> по <span class="log-player">${target.name}</span> на <span class="log-dmg">${dmg}</span>${isDead ? ' <span class="log-death">[УБИТ]</span>' : ""}${splashText}`,
-				);
-				aiAction = {
-					type: "crit",
-					actorIdx,
-					targetIdx: tIdx,
-					damage: dmg,
-					isCrit: true,
-					isDead,
-					attackerName: actor.name,
-					defenderName: target.name,
-				};
-			}
-		} else if (actor.type === "mage" && actor.mana >= 3) {
-			const target = pickTarget();
-			const tIdx = battle.playerCards.indexOf(target);
-			let dmg = actor.atk + 2;
-			// mage_10: +2 damage when HP < 50%
+		} else {
+			// fireball
+			dmg = actor.atk + 2;
 			if (actor.baseId === "mage_10" && actor.hp < actor.maxHp * 0.5) dmg += 2;
 			if (actor.baseId === "mage_07" && target.type === "tank") dmg += 1;
-			// Tank cover check
-			const coverName = checkCover(tIdx, battle.playerCards);
-			if (coverName) {
-				dmg = 0;
-				actor.mana -= 3;
-				battle.battleLog.push(
-					`<span class="log-enemy">${actor.name}</span> <span class="log-ability">ОГНЕННЫЙ ШАР</span> — <span class="log-ability">${coverName} прикрыл союзника!</span>`,
-				);
-				aiAction = {
-					type: "fireball",
+		}
+		if (target.type === "tank") {
+			if (target.baseId === "tank_04") dmg = Math.max(1, dmg - 1);
+			else if (target.baseId === "tank_01" && target.tauntActive)
+				dmg = Math.max(1, dmg - 1);
+		}
+		if (target.type === "mage" && target.baseId === "mage_05")
+			dmg = Math.max(1, dmg - 1);
+		return dmg;
+	};
+
+	// How dangerous/valuable a target is to remove from play.
+	const targetThreatValue = (t) => {
+		let v = t.atk * 1.5;
+		if (t.type === "assa") v += 4; // hits hard, high burst
+		if (t.type === "mage") v += 3; // ranged burst + utility
+		if (t.mana >= 2) v += 2; // has an ability ready right now
+		return v;
+	};
+
+	// Score a specific (actor, actionType, target) combination.
+	const scoreTargetForAction = (actor, actionType, target) => {
+		const dmg = estimateRawDamage(actor, actionType, target);
+		const lethal = dmg >= target.hp;
+		let score = dmg;
+		if (lethal) {
+			// Killing a card outright is the single strongest move on the board.
+			score += 15 + targetThreatValue(target);
+		} else {
+			// Reward chipping down already-wounded targets (sets up a kill next turn).
+			score += Math.max(0, target.maxHp - (target.hp - dmg)) * 0.15;
+		}
+		score += targetThreatValue(target) * 0.3;
+		// Slight discount if a neighboring tank could intercept the hit (5% chance).
+		const idx = battle.playerCards.indexOf(target);
+		const hasCoverNeighbor = [-1, 1].some((o) => {
+			const n = battle.playerCards[idx + o];
+			return n && n.hp > 0 && n.type === "tank";
+		});
+		if (hasCoverNeighbor) score *= 0.97;
+		return score;
+	};
+
+	// Pick the best legal target for a given actor/action (respects taunt).
+	const bestTargetFor = (actor, actionType) => {
+		const ignoresTaunt = actionType === "crit" && actor.baseId === "assa_03";
+		const candidates = taunter && !ignoresTaunt ? [taunter] : alivePlayers;
+		let best = null;
+		let bestScore = -Infinity;
+		for (const t of candidates) {
+			const sc = scoreTargetForAction(actor, actionType, t);
+			if (sc > bestScore) {
+				bestScore = sc;
+				best = t;
+			}
+		}
+		return { target: best, score: bestScore };
+	};
+
+	// Value of using Taunt right now for a given tank.
+	const tauntValue = (actor) => {
+		let v = 4;
+		if (actor.baseId === "tank_04") v += 3; // permanent -1 dmg armor
+		if (actor.baseId === "tank_01") v += 2; // -1 dmg while taunting
+		if (actor.baseId === "tank_02") v += 2; // reflects damage
+		if (actor.baseId === "tank_05") v += 3; // heals 2 HP on activation
+		if (actor.hp < actor.maxHp * 0.5) v += 6; // self-preservation
+		// Protect the most fragile ally if it looks like it could die soon.
+		const weakestAlly = aliveEnemies
+			.filter((e) => e !== actor)
+			.sort((a, b) => a.hp - b.hp)[0];
+		if (weakestAlly && weakestAlly.hp <= 6) v += 5;
+		return v;
+	};
+
+	// Build every viable action this turn across all living enemy cards.
+	const actions = [];
+	for (const actor of aliveEnemies) {
+		const actorIdx = battle.enemyCards.indexOf(actor);
+
+		// Basic attack is always available.
+		{
+			const { target, score } = bestTargetFor(actor, "attack");
+			if (target)
+				actions.push({ actor, actorIdx, type: "attack", target, score });
+		}
+
+		if (!battle.firstTurn) {
+			if (actor.type === "tank" && actor.mana >= 2 && !ourTaunterActive) {
+				actions.push({
+					actor,
 					actorIdx,
-					targetIdx: tIdx,
-					damage: 0,
-					isCrit: false,
-					isDead: false,
-					attackerName: actor.name,
-					defenderName: target.name,
-				};
-			} else {
-				dmg = applyDefense(target, dmg);
-				actor.mana -= 3;
-				const isDead = target.hp <= 0;
-				// mage_02: atkDebuff on target
-				if (actor.baseId === "mage_02")
-					target.atkDebuff = (target.atkDebuff || 0) + 1;
-				// mage_03: heal self 2 HP
-				if (actor.baseId === "mage_03")
-					actor.hp = Math.min(actor.maxHp, actor.hp + 2);
-				// mage_04: DOT (1 dmg/turn for 2 turns)
-				if (actor.baseId === "mage_04") target.dotTurns = 2;
-				// mage_06: 30% mana refund
-				if (actor.baseId === "mage_06" && Math.random() < 0.3)
-					actor.mana = Math.min(actor.mana + 1, 10);
-				// mage_08: steal 1 mana from target
-				if (actor.baseId === "mage_08") {
-					target.mana = Math.max(0, target.mana - 1);
-					actor.mana = Math.min(10, actor.mana + 1);
+					type: "taunt",
+					target: null,
+					score: tauntValue(actor),
+				});
+			} else if (actor.type === "assa" && actor.mana >= 2) {
+				const { target, score } = bestTargetFor(actor, "crit");
+				if (target)
+					actions.push({ actor, actorIdx, type: "crit", target, score });
+			} else if (actor.type === "mage") {
+				const cost = actor.baseId === "mage_01" ? 2 : 3;
+				if (actor.mana >= cost) {
+					const { target, score } = bestTargetFor(actor, "fireball");
+					if (target)
+						actions.push({ actor, actorIdx, type: "fireball", target, score });
 				}
-				// mage_09: heal + mana on kill
-				if (actor.baseId === "mage_09" && isDead) {
-					actor.hp = Math.min(actor.maxHp, actor.hp + 2);
-					actor.mana = Math.min(10, actor.mana + 1);
-				}
-				// AI mage splash (5%)
-				let splashText = "";
-				if (Math.random() < 0.05) {
-					const others = alivePlayers.filter((c) => c !== target);
-					if (others.length > 0) {
-						const s = others[Math.floor(Math.random() * others.length)];
-						const sDmg = 1 + Math.floor(Math.random() * 3);
-						s.hp = Math.max(0, s.hp - sDmg);
-						splashText = ` <span class="log-ability">(+ ${sDmg} splash)</span>`;
-					}
-				}
-				battle.battleLog.push(
-					`<span class="log-enemy">${actor.name}</span> <span class="log-ability">ОГНЕННЫЙ ШАР</span> в <span class="log-player">${target.name}</span> на <span class="log-dmg">${dmg}</span>${isDead ? ' <span class="log-death">[УБИТ]</span>' : ""}${splashText}`,
-				);
-				aiAction = {
-					type: "fireball",
-					actorIdx,
-					targetIdx: tIdx,
-					damage: dmg,
-					isCrit: false,
-					isDead,
-					attackerName: actor.name,
-					defenderName: target.name,
-				};
 			}
 		}
 	}
 
-	if (!aiAction) {
-		// Basic attack — pick target respecting taunt
-		const target = pickTarget();
+	if (!actions.length) return;
+
+	// Small jitter to break ties between near-equal options without ever
+	// overturning a clearly better (especially lethal) play.
+	actions.forEach((a) => {
+		a.score += Math.random() * 1.2;
+	});
+	actions.sort((a, b) => b.score - a.score);
+	const { actor, actorIdx, type, target } = actions[0];
+
+	let aiAction = null;
+
+	if (type === "taunt") {
+		actor.mana -= 2;
+		actor.tauntActive = true;
+		if (actor.baseId === "tank_05")
+			actor.hp = Math.min(actor.maxHp, actor.hp + 2);
+		battle.battleLog.push(
+			`<span class="log-enemy">${actor.name}</span> использует <span class="log-ability">ПРОВОКАЦИЮ!</span>`,
+		);
+		aiAction = { type: "taunt", actorIdx, targetIdx: null, damage: 0 };
+	} else if (type === "crit") {
+		const tIdx = battle.playerCards.indexOf(target);
+		let dmg = Math.round(actor.atk * 2);
+		if (actor.baseId === "assa_05") dmg = Math.round(actor.atk * 2.5);
+		if (actor.baseId === "assa_02" && target.hp < target.maxHp * 0.5) dmg += 2;
+		const coverName = checkCover(tIdx, battle.playerCards);
+		if (coverName) {
+			dmg = 0;
+			actor.mana -= 2;
+			if (actor.baseId === "assa_01" && Math.random() < 0.3)
+				actor.mana = Math.min(actor.mana + 1, 10);
+			battle.battleLog.push(
+				`<span class="log-enemy">${actor.name}</span> <span class="log-crit">КРИТ</span> — <span class="log-ability">${coverName} прикрыл союзника!</span>`,
+			);
+			aiAction = {
+				type: "crit",
+				actorIdx,
+				targetIdx: tIdx,
+				damage: 0,
+				isCrit: true,
+				isDead: false,
+				attackerName: actor.name,
+				defenderName: target.name,
+			};
+		} else {
+			dmg = applyDefense(actor, target, dmg);
+			actor.mana -= 2;
+			if (actor.baseId === "assa_01" && Math.random() < 0.3)
+				actor.mana = Math.min(actor.mana + 1, 10);
+			const isDead = target.hp <= 0;
+			if (actor.baseId === "assa_04" && isDead)
+				actor.mana = Math.min(actor.mana + 2, 10);
+			let splashText = "";
+			if (Math.random() < 0.05) {
+				const others = alivePlayers.filter((c) => c !== target);
+				if (others.length > 0) {
+					const s = others[Math.floor(Math.random() * others.length)];
+					const sDmg = Math.floor(dmg / 2);
+					s.hp = Math.max(0, s.hp - sDmg);
+					splashText = ` <span class="log-ability">(+ ${sDmg} splash)</span>`;
+				}
+			}
+			battle.battleLog.push(
+				`<span class="log-enemy">${actor.name}</span> <span class="log-crit">КРИТ</span> по <span class="log-player">${target.name}</span> на <span class="log-dmg">${dmg}</span>${isDead ? ' <span class="log-death">[УБИТ]</span>' : ""}${splashText}`,
+			);
+			aiAction = {
+				type: "crit",
+				actorIdx,
+				targetIdx: tIdx,
+				damage: dmg,
+				isCrit: true,
+				isDead,
+				attackerName: actor.name,
+				defenderName: target.name,
+			};
+		}
+	} else if (type === "fireball") {
+		const tIdx = battle.playerCards.indexOf(target);
+		let dmg = actor.atk + 2;
+		if (actor.baseId === "mage_10" && actor.hp < actor.maxHp * 0.5) dmg += 2;
+		if (actor.baseId === "mage_07" && target.type === "tank") dmg += 1;
+		const cost = actor.baseId === "mage_01" ? 2 : 3;
+		const coverName = checkCover(tIdx, battle.playerCards);
+		if (coverName) {
+			dmg = 0;
+			actor.mana -= cost;
+			battle.battleLog.push(
+				`<span class="log-enemy">${actor.name}</span> <span class="log-ability">ОГНЕННЫЙ ШАР</span> — <span class="log-ability">${coverName} прикрыл союзника!</span>`,
+			);
+			aiAction = {
+				type: "fireball",
+				actorIdx,
+				targetIdx: tIdx,
+				damage: 0,
+				isCrit: false,
+				isDead: false,
+				attackerName: actor.name,
+				defenderName: target.name,
+			};
+		} else {
+			dmg = applyDefense(actor, target, dmg);
+			actor.mana -= cost;
+			const isDead = target.hp <= 0;
+			if (actor.baseId === "mage_02")
+				target.atkDebuff = (target.atkDebuff || 0) + 1;
+			if (actor.baseId === "mage_03")
+				actor.hp = Math.min(actor.maxHp, actor.hp + 2);
+			if (actor.baseId === "mage_04") target.dotTurns = 2;
+			if (actor.baseId === "mage_06" && Math.random() < 0.3)
+				actor.mana = Math.min(actor.mana + 1, 10);
+			if (actor.baseId === "mage_08") {
+				target.mana = Math.max(0, target.mana - 1);
+				actor.mana = Math.min(10, actor.mana + 1);
+			}
+			if (actor.baseId === "mage_09" && isDead) {
+				actor.hp = Math.min(actor.maxHp, actor.hp + 2);
+				actor.mana = Math.min(10, actor.mana + 1);
+			}
+			let splashText = "";
+			if (Math.random() < 0.05) {
+				const others = alivePlayers.filter((c) => c !== target);
+				if (others.length > 0) {
+					const s = others[Math.floor(Math.random() * others.length)];
+					const sDmg = 1 + Math.floor(Math.random() * 3);
+					s.hp = Math.max(0, s.hp - sDmg);
+					splashText = ` <span class="log-ability">(+ ${sDmg} splash)</span>`;
+				}
+			}
+			battle.battleLog.push(
+				`<span class="log-enemy">${actor.name}</span> <span class="log-ability">ОГНЕННЫЙ ШАР</span> в <span class="log-player">${target.name}</span> на <span class="log-dmg">${dmg}</span>${isDead ? ' <span class="log-death">[УБИТ]</span>' : ""}${splashText}`,
+			);
+			aiAction = {
+				type: "fireball",
+				actorIdx,
+				targetIdx: tIdx,
+				damage: dmg,
+				isCrit: false,
+				isDead,
+				attackerName: actor.name,
+				defenderName: target.name,
+			};
+		}
+	} else {
+		// basic attack
 		const tIdx = battle.playerCards.indexOf(target);
 		let dmg = actor.atk;
-		// Tank cover check
 		const coverName = checkCover(tIdx, battle.playerCards);
 		if (coverName) {
 			dmg = 0;
@@ -1774,11 +1914,10 @@ function executeAiTurn(battle, _cardUpgrades) {
 				defenderName: target.name,
 			};
 		} else {
-			dmg = applyDefense(target, dmg);
+			dmg = applyDefense(actor, target, dmg);
 			const isDead = target.hp <= 0;
 			if (actor.baseId === "assa_04" && isDead)
 				actor.mana = Math.min(actor.mana + 2, 10);
-			// AI assa splash (5%)
 			let splashText = "";
 			if (actor.type === "assa" && Math.random() < 0.05) {
 				const others = alivePlayers.filter((c) => c !== target);
