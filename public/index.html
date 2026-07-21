@@ -59,7 +59,10 @@
   .user-badge-avatar{width:26px;height:26px;border-radius:50%;object-fit:cover;border:1px solid var(--border-glow);flex-shrink:0}
   .user-badge-name{font-size:11px;color:var(--text-dim);font-family:'Inter',sans-serif;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .enemy-badge{border-color:#5a1a1a}
-  .enemy-badge .user-badge-name{color:#c06060}
+  .enemy-badge .user-badge-name{color:#c06060;max-width:160px}
+  .premium-badge{border-color:#d42020!important;box-shadow:0 0 12px rgba(220,30,30,.35),0 0 4px rgba(255,60,60,.15)}
+  .premium-badge .user-badge-avatar{border-color:#e03030!important;box-shadow:0 0 8px rgba(240,60,60,.4)}
+  .premium-badge .user-badge-name{color:#ff5050!important;text-shadow:0 0 8px rgba(255,60,60,.5)}
   .btn{background:rgba(20,20,25,.6);border:1px solid var(--border-dim);color:var(--text-dim);font-family:'Cinzel',serif;padding:12px 28px;cursor:pointer;letter-spacing:2px;text-transform:uppercase;transition:all .35s cubic-bezier(.4,0,.2,1);font-size:12px;font-weight:600;position:relative;overflow:hidden}
   .btn::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.04),transparent);transition:left .6s cubic-bezier(.4,0,.2,1)}.btn:hover::before{left:100%}
   .btn:hover{border-color:var(--accent-gold);color:var(--accent-gold-bright);box-shadow:0 0 25px rgba(138,115,85,.12);transform:translateY(-1px)}.btn:active{transform:scale(.96);transition:transform .1s ease}
@@ -274,7 +277,7 @@
     .battle-header>div{gap:4px!important}
     .turn-indicator{font-size:8px;padding:2px 6px}
     .battle-header .btn.small{padding:4px 8px;font-size:8px}
-    .user-badge-name{max-width:50px;font-size:8px}.user-badge{padding:2px 6px 2px 2px;gap:3px}
+    .user-badge-name{max-width:50px;font-size:8px}.enemy-badge .user-badge-name{max-width:80px}.user-badge{padding:2px 6px 2px 2px;gap:3px}
     .user-badge-avatar{width:18px;height:18px}
     .ability-panel{gap:6px;flex-wrap:nowrap;overflow-x:auto}
     .ability-panel .btn{padding:6px 10px;font-size:9px;white-space:nowrap}
@@ -362,7 +365,7 @@
     .battle-header>div{gap:3px!important}
     .turn-indicator{font-size:7px;padding:1px 4px;letter-spacing:1px}
     .battle-header .btn.small{padding:3px 6px;font-size:7px}
-    .user-badge-name{max-width:36px;font-size:7px}.user-badge{padding:1px 4px 1px 1px;gap:2px}
+    .user-badge-name{max-width:36px;font-size:7px}.enemy-badge .user-badge-name{max-width:55px}.user-badge{padding:1px 4px 1px 1px;gap:2px}
     .user-badge-avatar{width:15px;height:15px}
     .ability-panel{gap:4px;padding:4px;min-height:36px}
     .ability-panel .btn{padding:4px 7px;font-size:8px}
@@ -944,12 +947,14 @@ function updateUserBadge(tgUser){
   const avatarUrl=hasValidId?`https://t.me/i/userpic/320/${tgUser.id}.jpg`:'';
   const name=(tgUser.firstName||'')+(tgUser.lastName?' '+tgUser.lastName:'');
   const displayName=name||tgUser.username||'Игрок';
+  const premium=isPremiumActiveClient();
   ['shop','battle'].forEach(prefix=>{
     const badge=el(prefix+'UserBadge');
     const avatar=el(prefix+'UserAvatar');
     const nameEl=el(prefix+'UserName');
     if(!badge) return;
     badge.style.display='';
+    badge.classList.toggle('premium-badge',premium);
     if(avatar){avatar.src=avatarUrl;avatar.onerror=()=>{avatar.style.display='none'}}
     if(nameEl) nameEl.textContent=displayName;
   });
@@ -1045,6 +1050,12 @@ function updatePremiumUI(){
   }else{
     statusEl.style.display='none';
   }
+  // re-apply premium glow to badges
+  const premium=isPremiumActiveClient();
+  ['shop','battle'].forEach(p=>{
+    const b=el(p+'UserBadge');
+    if(b) b.classList.toggle('premium-badge',premium);
+  });
 }
 
 function openPremium(){
