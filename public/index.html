@@ -559,6 +559,13 @@ if(isTelegramMiniApp){
   const tg=window.Telegram.WebApp;
   tg.ready();
   tg.expand();
+  // Полный экран — скрываем всё кроме игры
+  tg.setHeaderColor('#030304');
+  if(tg.setHeaderColor) tg.setHeaderColor({color:'#030304',secondary_color:'#030304'});
+  tg.BackButton?.hide();
+  tg.SettingsButton?.hide();
+  if(tg.disableVerticalSwipes) tg.disableVerticalSwipes();
+  if(tg.requestFullscreen) tg.requestFullscreen();
   // Apply Telegram theme colors
   const tp=tg.themeParams;
   document.documentElement.style.setProperty('--tg-bg',tp.bg_color||'#030304');
@@ -567,8 +574,6 @@ if(isTelegramMiniApp){
   document.documentElement.style.setProperty('--tg-link',tp.link_color||'#c4a265');
   document.documentElement.style.setProperty('--tg-button',tp.button_color||'#c4a265');
   document.documentElement.style.setProperty('--tg-button-text',tp.button_text_color||'#030304');
-  // Fullscreen
-  if(tg.requestFullscreen) tg.requestFullscreen();
   // Safe area offset для шторки телефона
   const safeTop=tg.contentSafeAreaInset?.top||parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-top'))||0;
   document.documentElement.style.setProperty('--safe-top',safeTop+'px');
