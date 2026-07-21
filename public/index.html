@@ -161,15 +161,43 @@
   .auth-info{font-size:10px;color:#4a4a50;text-align:center;font-family:'Inter',sans-serif;line-height:1.5}
   #usernameRow{display:none}
   @media(max-width:600px){
+    .screen{padding:6px}
+    /* ═══ MENU ═══ */
+    .menu-title{font-size:28px;letter-spacing:3px}
+    .menu-subtitle{font-size:8px;letter-spacing:3px;margin-bottom:24px;padding:8px 0;max-width:280px}
+    .menu-buttons{max-width:240px;gap:8px}.menu-buttons .btn{padding:12px;font-size:11px}
+    /* ═══ SHOP HEADER ═══ */
+    .shop-header{flex-wrap:nowrap;gap:6px;padding:8px 10px}
+    .shop-header .btn.small{padding:4px 8px;font-size:8px;min-height:auto}
+    .gold-display{font-size:11px;gap:3px}.gold-display img{width:13px;height:13px}
+    .section-title{font-size:11px;letter-spacing:1px}
+    /* ═══ SHOP TABS ═══ */
+    .shop-tabs{padding:10px 8px 0;gap:5px}
+    .shop-tab{width:96px;height:50px;border-radius:8px}
+    .shop-tab-title{font-size:11px;letter-spacing:.5px}
+    /* ═══ SHOP / DECK / CHAOS GRID ═══ */
+    #shopGrid,#shopGridInv,#shopGridChaos{padding:8px 8px}
+    .shop-footer{padding:4px 8px 10px}
+    .card-grid{grid-template-columns:repeat(3,96px);gap:7px}
+    .shop-card,.deck-card{width:96px;height:144px}
+    .shop-card-img,.deck-card-img{width:96px;height:144px}
+    .chaos-card,.chaos-card-frame{width:96px}
+    .chaos-card-img{height:144px}
+    .shop-card-name{font-size:7px;bottom:26px;padding:2px 4px;max-width:80px}
+    .shop-card-price{font-size:8px;bottom:4px;left:5px}.shop-card-price img{width:12px;height:12px}
+    .shop-card-passive{font-size:5px;bottom:19px;max-width:80px}
+    .shop-card-buy{font-size:7px;padding:2px 5px;bottom:3px;right:3px}
+    .deck-card-name{font-size:7px;padding:3px}
+    .deck-info-btn{width:14px;height:14px;font-size:8px;top:3px}
+    .chaos-card-name{font-size:7px;bottom:26px}
+    .chaos-upgrades{padding:4px 0 0;gap:1px}
+    .chaos-upg-btn{font-size:7px;min-height:34px}
+    .chaos-upg-btn::after{font-size:8px}
+    /* ═══ BATTLE ═══ */
     .card-row{gap:8px}
-    .card{width:105px;height:158px;font-size:7px}
+    .card{width:105px;height:158px}
     .card-name{font-size:9px;margin-bottom:2px}
-    .card-stats{font-size:8px;gap:4px;margin-bottom:2px}
-    .card-type-badge{font-size:6px;padding:1px 4px}
-    .card-text{font-size:6px;padding:2px 4px;line-height:1.2}
-    .card-passive{font-size:6px;line-height:1.2;margin-bottom:2px}
-    .card-hp-bar{height:3px;margin-top:2px}
-    .card-status-zone{font-size:7px;padding:1px 3px;gap:2px}
+    .card-overlay{height:55%;padding:30px 6px 8px}
     .mana-orb{width:5px;height:5px}.mana-orbs{bottom:4px;left:4px;gap:2px}
     .battle-header{padding:6px 8px;flex-wrap:nowrap;gap:4px}
     .battle-header .title{font-size:14px;flex-shrink:0}
@@ -182,9 +210,140 @@
     .ability-panel .btn{padding:6px 10px;font-size:9px;white-space:nowrap}
     .ability-panel .btn.small{padding:4px 8px;font-size:8px}
     .damage-number{font-size:18px}
-    .screen{padding:8px}
     #endTurnBtn{font-size:11px;padding:10px 24px}
     .battle-log{font-size:10px;max-height:80px;padding:8px}
+    .battlefield{gap:20px;padding:8px 0}
+    .atk-badge{font-size:9px;padding:2px 4px;top:4px;left:4px}
+    .hp-text{font-size:7px;padding:1px 3px;top:4px;right:4px}
+    .card-role{font-size:5px;bottom:4px;right:4px}
+    /* ═══ AUTH ═══ */
+    .auth-form{padding:24px 16px;max-width:100%;gap:12px}
+    .auth-title{font-size:28px;letter-spacing:3px}
+    .auth-subtitle{font-size:10px;letter-spacing:2px}
+    .auth-input{padding:10px 14px;font-size:13px}
+    /* ═══ CARD DETAIL ═══ */
+    .card-detail{max-width:300px;padding:16px;gap:12px}
+    #cdImg{width:100px;height:150px}
+    .card-detail-name{font-size:14px;letter-spacing:1px}
+    .card-detail-role{font-size:10px}
+    .card-detail-stat-row{gap:12px;flex-wrap:wrap}
+    .card-detail-stat{font-size:11px}
+    .card-detail-passive{padding:8px;margin-top:6px}
+    .card-detail-passive .passive-name{font-size:11px}
+    .card-detail-passive .passive-desc{font-size:9px}
+    .card-detail-lore{font-size:9px}
+    .card-detail-close{width:26px;height:26px;font-size:13px;top:6px;right:6px}
+    /* ═══ RESULT ═══ */
+    .result-text{font-size:32px;letter-spacing:4px}
+    .result-gold{font-size:12px}
+    #resultOverlay{gap:16px}
+    /* ═══ SETTINGS ═══ */
+    .settings-title{font-size:15px;letter-spacing:2px}
+    .settings-tab{font-size:16px;letter-spacing:2px}
+    .setting-row{font-size:11px;gap:8px}
+    .setting-slider{width:100px}
+    .setting-val{font-size:10px;min-width:30px}
+    .settings-back{font-size:12px}
+    /* ═══ FOOTER ═══ */
+    .footer{font-size:7px;bottom:8px;letter-spacing:1px}
+  }
+  @media(max-width:420px){
+    .screen{padding:4px}
+    /* ═══ MENU ═══ */
+    .menu-title{font-size:22px;letter-spacing:2px}
+    .menu-subtitle{font-size:7px;letter-spacing:2px;margin-bottom:20px;max-width:240px;padding:6px 0}
+    .menu-buttons{max-width:200px;gap:6px}.menu-buttons .btn{padding:10px;font-size:10px;letter-spacing:1px}
+    /* ═══ SHOP HEADER ═══ */
+    .shop-header{padding:6px 6px;gap:4px}
+    .shop-header .btn.small{padding:3px 6px;font-size:7px;letter-spacing:.5px}
+    .gold-display{font-size:10px}.gold-display img{width:11px;height:11px}
+    .section-title{font-size:10px;letter-spacing:.5px}
+    /* ═══ SHOP TABS ═══ */
+    .shop-tabs{padding:8px 6px 0;gap:4px}
+    .shop-tab{width:80px;height:42px;border-radius:6px}
+    .shop-tab-title{font-size:9px}
+    /* ═══ SHOP / DECK / CHAOS GRID ═══ */
+    #shopGrid,#shopGridInv,#shopGridChaos{padding:6px 6px}
+    .shop-footer{padding:2px 6px 8px}
+    .card-grid{grid-template-columns:repeat(3,80px);gap:5px}
+    .shop-card,.deck-card{width:80px;height:120px}
+    .shop-card-img,.deck-card-img{width:80px;height:120px}
+    .chaos-card,.chaos-card-frame{width:80px}
+    .chaos-card-img{height:120px}
+    .shop-card-name{font-size:6px;bottom:22px;padding:1px 3px;max-width:68px}
+    .shop-card-price{font-size:7px;bottom:3px;left:3px}.shop-card-price img{width:10px;height:10px}
+    .shop-card-passive{font-size:4px;bottom:16px;max-width:68px}
+    .shop-card-buy{font-size:6px;padding:1px 4px;bottom:2px;right:2px}
+    .deck-card-name{font-size:6px;padding:2px}
+    .deck-info-btn{width:12px;height:12px;font-size:7px;top:2px}
+    .deck-select-count{font-size:10px;letter-spacing:1px;margin-top:8px}
+    .chaos-card-name{font-size:6px;bottom:22px}
+    .chaos-upgrades{padding:3px 0 0;gap:1px}
+    .chaos-upg-btn{font-size:6px;min-height:28px}
+    .chaos-upg-btn::after{font-size:7px}
+    /* ═══ BATTLE ═══ */
+    .card-row{gap:4px}
+    .card{width:86px;height:129px}
+    .card-name{font-size:7px;padding:2px 3px}
+    .card-overlay{height:58%;padding:24px 4px 6px}
+    .battle-header{padding:4px 6px;gap:3px}
+    .battle-header .title{font-size:11px}
+    .battle-header>div{gap:3px!important}
+    .turn-indicator{font-size:7px;padding:1px 4px;letter-spacing:1px}
+    .battle-header .btn.small{padding:3px 6px;font-size:7px}
+    .user-badge-name{max-width:36px;font-size:7px}.user-badge{padding:1px 4px 1px 1px;gap:2px}
+    .user-badge-avatar{width:15px;height:15px}
+    .ability-panel{gap:4px;padding:4px;min-height:36px}
+    .ability-panel .btn{padding:4px 7px;font-size:8px}
+    .ability-panel .btn.small{padding:3px 5px;font-size:7px}
+    .damage-number{font-size:15px}
+    #endTurnBtn{font-size:10px;padding:8px 18px;letter-spacing:1px}
+    .battle-log{font-size:9px;max-height:60px;padding:6px}
+    .battlefield{gap:14px;padding:4px 0}
+    .atk-badge{font-size:7px;padding:1px 3px;top:3px;left:3px}
+    .hp-text{font-size:6px;padding:1px 2px;top:3px;right:3px}
+    .card-role{font-size:5px;bottom:3px;right:3px;padding:1px 3px}
+    .mana-orb{width:4px;height:4px}.mana-orbs{bottom:3px;left:3px;gap:1px}
+    .action-hint{font-size:8px}
+    .round-timer-text{font-size:14px}
+    .round-timer{padding:2px 0}
+    /* ═══ AUTH ═══ */
+    .auth-form{padding:20px 12px;gap:10px}
+    .auth-title{font-size:24px;letter-spacing:2px}
+    .auth-subtitle{font-size:9px}
+    .auth-input{padding:8px 12px;font-size:12px}
+    #tgLoginBtn{font-size:12px!important;padding:10px!important}
+    /* ═══ CARD DETAIL ═══ */
+    .card-detail{max-width:260px;padding:12px;gap:8px}
+    #cdImg{width:80px;height:120px}
+    .card-detail-name{font-size:12px}
+    .card-detail-role{font-size:9px}
+    .card-detail-stat-row{gap:8px}
+    .card-detail-stat{font-size:9px}
+    .card-detail-passive{padding:6px}
+    .card-detail-passive .passive-name{font-size:10px}
+    .card-detail-passive .passive-desc{font-size:8px}
+    .card-detail-lore{font-size:8px}
+    .card-detail-close{width:24px;height:24px;font-size:12px;top:4px;right:4px}
+    /* ═══ RESULT ═══ */
+    .result-text{font-size:24px;letter-spacing:3px}
+    .result-gold{font-size:11px}
+    #resultOverlay{gap:12px}
+    #resultOverlay .btn{padding:10px 20px;font-size:11px}
+    /* ═══ SETTINGS ═══ */
+    .settings-title{font-size:13px;letter-spacing:2px}
+    .settings-tab{font-size:14px;letter-spacing:2px}
+    .setting-row{font-size:10px;gap:6px}
+    .setting-slider{width:80px;height:4px}
+    .setting-slider::-webkit-slider-thumb{width:14px;height:14px}
+    .setting-val{font-size:9px;min-width:26px}
+    .toggle{width:44px;height:22px}.toggle::after{width:16px;height:16px;top:2px;left:2px}.toggle.on::after{left:24px}
+    .settings-back{font-size:10px}
+    #settingsOverlay{gap:14px}
+    /* ═══ FOOTER ═══ */
+    .footer{font-size:6px;bottom:6px;letter-spacing:1px}
+    /* ═══ TOAST ═══ */
+    .shop-toast{font-size:11px;padding:8px 14px;bottom:60px}
   }
 </style>
 </head>
