@@ -2744,5 +2744,19 @@ SERVER.listen(PORT, "0.0.0.0", () => {
 				});
 			})
 			.on("error", (e) => console.error("[webhook fail]", e.message));
+		// Set menu button — shows "Играть" directly in Telegram chat list
+		const appUrl = process.env.APP_URL || "https://triad-duel.pages.dev/";
+		const menuBtnData = JSON.stringify({ menu_button: { type: "web_app", text: "Играть", web_app: { url: appUrl } } });
+		const menuReq = https.request(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setChatMenuButton`, {
+			method: "POST",
+			headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(menuBtnData) }
+		}, (res) => {
+			let d = "";
+			res.on("data", (c) => (d += c));
+			res.on("end", () => { try { console.log("[menu_button]", JSON.parse(d).description || d); } catch { console.log("[menu_button]", d); } });
+		});
+		menuReq.on("error", (e) => console.error("[menu_button fail]", e.message));
+		menuReq.write(menuBtnData);
+		menuReq.end();
 	}
 });
