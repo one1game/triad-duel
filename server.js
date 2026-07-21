@@ -489,8 +489,9 @@ async function savePlayerData(userId, data) {
 			losses: data.losses || 0,
 			updated_at: new Date().toISOString(),
 		})
-		.eq("id", userId);
+		.eq("telegram_id", userId);
 	if (error) console.error("Failed to save player:", error.message);
+	else console.log("[db] player saved:", userId, "gold:", data.playerGold);
 }
 
 async function saveBattleResult(
@@ -1232,6 +1233,7 @@ IO.on("connection", (socket) => {
 				username: decoded.username,
 			});
 			_playerData = dbPlayer;
+			sessions[sessionId]._dbPlayerId = dbPlayer.id;
 			sessions[sessionId].userId = userId;
 			sessions[sessionId].playerGold = dbPlayer.gold;
 			sessions[sessionId].playerCollection = dbPlayer.collection || [];
@@ -1299,6 +1301,7 @@ IO.on("connection", (socket) => {
 				username: tgUser.username,
 			});
 			_playerData = dbPlayer;
+			sessions[sessionId]._dbPlayerId = dbPlayer.id;
 			sessions[sessionId].userId = userId;
 			sessions[sessionId].playerGold = dbPlayer.gold;
 			sessions[sessionId].playerCollection = dbPlayer.collection || [];
@@ -2698,9 +2701,9 @@ function endGame(battle, victory, s, socket, sessionId, userId) {
 	battle.gameEnd = { victory, reward };
 
 	// Save battle result
-	if (userId) {
-		saveBattleResult(
-			userId,
+		if (userId) {
+			saveBattleResult(
+				s._dbPlayerId || userId,
 			victory ? "win" : "loss",
 			reward,
 			battle.playerDeckIds || s.selectedDeck,
