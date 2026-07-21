@@ -40,7 +40,7 @@
   .preloader-text{font-family:'Inter',sans-serif;font-size:11px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase}
   .btn.ability-btn{border-color:#5a4a6a;color:#b8a8c8;font-family:'Inter',sans-serif;font-weight:600;font-size:11px;padding:8px 16px;letter-spacing:.5px;text-transform:none}
   .btn.ability-btn:hover{border-color:#9a8aae;color:#d0c0e0;box-shadow:0 0 15px rgba(154,138,174,.3);background:rgba(154,138,174,.1)}
-  #endTurnBtn{font-size:13px;padding:14px 40px;border-color:var(--accent-blood);color:#a05050;margin-top:12px;animation:pulse-blood 2.5s ease-in-out infinite;flex-shrink:0}
+  #endTurnBtn{font-size:13px;padding:14px 40px;border-color:var(--accent-blood);color:#a05050;margin-top:auto;align-self:center;animation:pulse-blood 2.5s ease-in-out infinite;flex-shrink:0}
   @keyframes pulse-blood{0%,100%{box-shadow:0 0 8px rgba(90,26,26,.15);border-color:var(--accent-blood)}50%{box-shadow:0 0 25px rgba(138,42,42,.5);border-color:var(--accent-blood-bright);color:#c06060}}
   #toBattleBtn{font-size:10px;padding:8px 20px;letter-spacing:2px}
   #menuScreen{justify-content:center;min-height:100vh}
@@ -109,12 +109,13 @@
   .chaos-upg-icon{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover}.chaos-upg-label{display:none}
   .chaos-card:nth-child(1){animation-delay:.02s}.chaos-card:nth-child(2){animation-delay:.05s}.chaos-card:nth-child(3){animation-delay:.08s}.chaos-card:nth-child(4){animation-delay:.11s}.chaos-card:nth-child(5){animation-delay:.14s}.chaos-card:nth-child(6){animation-delay:.17s}.chaos-card:nth-child(7){animation-delay:.2s}.chaos-card:nth-child(8){animation-delay:.23s}.chaos-card:nth-child(9){animation-delay:.26s}.chaos-card:nth-child(10){animation-delay:.29s}.chaos-card:nth-child(11){animation-delay:.32s}.chaos-card:nth-child(12){animation-delay:.35s}
   .shop-toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.9);color:var(--accent-gold-bright);font-family:'Cinzel',serif;font-size:14px;font-weight:600;padding:12px 24px;border-radius:4px;border:1px solid var(--accent-gold);pointer-events:none;opacity:0;transition:opacity .3s ease,transform .3s ease;z-index:100;display:flex;align-items:center;gap:8px;white-space:nowrap}.shop-toast.show{opacity:1;transform:translateX(-50%) translateY(-8px)}.shop-toast img{width:18px;height:18px}
-  #battleScreen.active{justify-content:flex-start;height:100vh;height:100dvh;overflow:hidden}
-  body.miniapp #battleScreen.active{height:calc(100vh - var(--safe-top));height:calc(100dvh - var(--safe-top));justify-content:center}
+  #battleScreen.active{display:flex;flex-direction:column;align-self:stretch;margin:0 auto;width:100%;max-width:900px;height:var(--tg-viewport-stable-height,100%);overflow:hidden;padding:0;padding-top:var(--safe-top);gap:0}
+  body.miniapp #battleScreen.active{height:var(--tg-viewport-stable-height,100%);justify-content:flex-start}
   body.miniapp .shop-footer{padding-bottom:calc(12px + var(--safe-bottom, 0px))}
-  .battle-header{width:100%;display:flex;justify-content:space-between;align-items:center;padding:16px 24px;background:var(--bg-panel);backdrop-filter:blur(12px);border:1px solid var(--border-dim);border-radius:2px;position:relative;box-shadow:0 10px 40px rgba(0,0,0,.5);flex-shrink:0}
-  .battle-header::after{content:'';position:absolute;bottom:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,var(--accent-gold),transparent);opacity:.3}
-  .battle-header .title{font-family:'UnifrakturCook',cursive;font-size:28px;color:var(--accent-gold-bright);text-shadow:0 0 20px rgba(138,115,85,.2);letter-spacing:3px;text-align:center;flex:1}
+  .battle-header{width:100%;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:12px 32px;border-bottom:1px solid var(--border-dim);flex-shrink:0;background:var(--bg-deep)}
+  .battle-header .title{font-family:'UnifrakturCook',cursive;font-size:28px;color:var(--accent-gold-bright);text-shadow:0 0 20px rgba(138,115,85,.2);letter-spacing:3px;text-align:center}
+  .battle-header>div:first-child{justify-self:start}
+  .battle-header>div:last-child{justify-self:end}
   .turn-indicator{font-family:'Cinzel',serif;font-size:12px;padding:8px 20px;border:1px solid var(--border-dim);color:var(--text-dim);text-transform:uppercase;letter-spacing:3px;transition:all .4s;background:rgba(0,0,0,.3)}.turn-indicator.enemy-turn{border-color:var(--accent-blood-bright);color:#c06060;box-shadow:0 0 15px rgba(138,42,42,.2);animation:pulse-enemy 2s infinite}
   @keyframes pulse-enemy{0%,100%{opacity:1}50%{opacity:.6}}
   .battlefield{display:flex;flex-direction:column;gap:32px;width:100%;padding:20px 0;position:relative;flex:1;min-height:0;overflow-y:auto}
@@ -142,7 +143,8 @@
   .ability-panel{display:flex;gap:12px;justify-content:center;align-items:center;min-height:44px;padding:8px;background:rgba(0,0,0,.2);border-radius:4px;border:1px solid transparent;transition:border-color .3s}.ability-panel:has(.ability-btn){border-color:var(--border-dim);background:rgba(12,12,15,.6)}
   .action-hint{font-size:12px;color:var(--text-dim);text-align:center;letter-spacing:1px;font-family:'Inter',sans-serif;min-height:20px;transition:color .3s}.action-hint .key{color:var(--accent-gold-bright);font-weight:600}
   .round-timer{text-align:center;padding:6px 0}.round-timer-text{font-family:'Cinzel',serif;font-size:22px;font-weight:800;color:#c08030;letter-spacing:3px}.round-timer-text.warning{color:#e0a040}.round-timer-text.danger{color:#e05040;animation:pulse-enemy 1s ease-in-out infinite}
-  .battle-log{background:rgba(5,5,6,.8);backdrop-filter:blur(8px);border:1px solid var(--border-dim);border-radius:2px;padding:16px;max-height:120px;overflow-y:auto;font-family:'Inter',sans-serif;font-size:12px;line-height:1.7;color:var(--text-dim);text-align:left;width:100%;scrollbar-width:thin;scrollbar-color:var(--border-glow) transparent;box-shadow:inset 0 0 20px rgba(0,0,0,.5);flex-shrink:0}.battle-log::-webkit-scrollbar{width:4px}.battle-log::-webkit-scrollbar-thumb{background:var(--border-glow);border-radius:2px}
+  .battle-log{background:rgba(5,5,6,.8);border-top:1px solid var(--border-dim);border-bottom:1px solid var(--border-dim);padding:10px 24px;max-height:96px;overflow-y:auto;font-family:'Inter',sans-serif;font-size:12px;line-height:1.7;color:var(--text-dim);text-align:left;width:100%;scrollbar-width:thin;scrollbar-color:var(--border-glow) transparent;flex-shrink:0}.battle-log::-webkit-scrollbar{width:4px}.battle-log::-webkit-scrollbar-thumb{background:var(--border-glow);border-radius:2px}
+.battle-footer{flex-shrink:0;width:100%;display:flex;justify-content:center;align-items:center;padding:12px 24px;padding-bottom:calc(12px + var(--safe-bottom, 0px));background:var(--bg-deep);border-top:1px solid var(--border-dim)}
   .battle-log .log-entry{padding:4px 0;border-bottom:1px solid rgba(255,255,255,.02);animation:lfi .4s ease}@keyframes lfi{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
   .log-player{color:var(--accent-gold-bright);font-weight:600}.log-enemy{color:#a05050;font-weight:600}.log-dmg{color:#c07060;font-weight:700}.log-death{color:#8a1a1a;font-weight:800;text-transform:uppercase;letter-spacing:1px}
   .log-victory{color:var(--accent-gold-bright);font-size:14px;font-weight:700;letter-spacing:1px}.log-defeat{color:#8a1a1a;font-size:14px;font-weight:700;letter-spacing:1px}.log-ability{color:#b8a8c8;font-style:italic}.log-crit{color:#c08030;font-weight:800;text-shadow:0 0 8px rgba(192,128,48,.4)}
@@ -157,7 +159,7 @@
   .result-text.win{color:var(--accent-gold-bright);text-shadow:0 0 50px rgba(138,115,85,.4)}.result-text.lose{color:#6a1a1a;text-shadow:0 0 50px rgba(106,26,26,.5)}
   .result-gold{font-family:'Cinzel',serif;font-size:18px;color:var(--text-primary);letter-spacing:2px;margin-top:-10px}
   @media(max-width:1024px){.screen{max-width:100%;padding:16px}}
-  @media(max-width:768px){body{align-items:flex-start;padding-top:calc(8px + var(--safe-top))}body::before{opacity:.6}body::after{opacity:.25}#particlesCanvas{opacity:.35}.screen{padding:10px;gap:16px;padding-top:calc(10px + var(--safe-top))}.screen.active{gap:16px}.menu-title{font-size:36px;letter-spacing:3px}.menu-subtitle{font-size:10px;letter-spacing:4px;margin-bottom:32px;padding:8px 0}.menu-buttons{gap:10px;max-width:260px}.menu-buttons .btn{padding:14px;font-size:12px}.section-title{font-size:14px;letter-spacing:2px}.shop-tabs{padding:12px 14px 8px}.shop-header{flex-wrap:wrap;gap:10px;padding:10px 20px}#shopGrid,#shopGridInv,#shopGridChaos{padding:10px 14px}.shop-footer{padding:8px 14px;padding-bottom:calc(8px + var(--safe-bottom, 0px))}.gold-display{font-size:13px}.card{width:130px;height:195px}.card-image{width:130px;height:195px}.atk-badge{font-size:11px;padding:2px 6px;top:5px;left:5px}.hp-text{font-size:9px;padding:1px 4px;top:5px;right:5px}.card-name{font-size:8px;padding:3px 4px}.card-role{font-size:6px;bottom:5px;right:6px}.card-overlay{height:55%;padding:30px 6px 8px}.mana-orbs{bottom:5px;left:5px;gap:3px}.mana-orb{width:5px;height:5px}.dot-status{font-size:7px!important;top:20px!important;left:5px!important}.card-grid{grid-template-columns:repeat(3,130px);gap:14px}.shop-card{width:130px;height:195px}.shop-card-img{width:130px;height:195px}.deck-card{width:130px;height:195px}.deck-card-img{width:130px;height:195px}.shop-card-name{font-size:8px;bottom:38px;padding:3px 5px}.shop-card-price{font-size:11px;bottom:8px;left:8px}.shop-card-passive{font-size:6px;bottom:26px;max-width:110px}.shop-card-buy{font-size:9px;padding:4px 10px;bottom:6px;right:6px}.deck-info-btn{width:18px;height:18px;font-size:10px;top:4px;right:4px}.shop-tab{font-size:11px;padding:8px 18px;letter-spacing:1.5px}.battle-header{padding:8px 12px;margin-bottom:8px}.battle-header .title{font-size:16px}.battlefield{gap:24px}.card-row{gap:10px;justify-content:center}.battlefield{padding:8px 0}.btn{padding:10px 18px;font-size:10px;letter-spacing:1.5px;min-height:40px;display:inline-flex;align-items:center;justify-content:center}.btn.small{padding:6px 12px;font-size:9px}.btn.surrender-btn{padding:8px 14px;font-size:10px;min-height:38px}.btn.ability-btn{padding:8px 12px;font-size:10px;min-height:40px}#endTurnBtn{padding:12px 28px;font-size:11px}.ability-panel{flex-wrap:wrap;gap:8px;padding:6px}.action-hint{font-size:10px}.battle-log{max-height:80px;font-size:10px;padding:10px}.battle-log .log-entry{padding:2px 0}.turn-indicator{font-size:12px}#settingsOverlay{gap:20px}.settings-title{font-size:18px}.setting-row{font-size:12px;gap:14px}.setting-slider{width:120px}.result-large-title{font-size:36px}.result-text{font-size:18px}.result-gold{font-size:15px}.card-detail{flex-direction:column;padding:20px;gap:16px;max-width:340px}.card-detail-img{width:120px;height:180px;align-self:center}.card-detail-name{font-size:15px}.card-detail-stat{font-size:11px}.card-detail-passive .passive-name{font-size:11px}.card-detail-passive .passive-desc{font-size:10px}.card-detail-lore{font-size:10px}.card-detail-close{width:28px;height:28px;font-size:14px;top:8px;right:8px}.card.attacking{animation:atkLungeM .35s cubic-bezier(.2,.8,.2,1)}@keyframes atkLungeM{0%{transform:translateX(0) translateY(-8px) scale(1.03)}40%{transform:translateX(15px) translateY(-10px) scale(1.05)}100%{transform:translateX(0) translateY(-8px) scale(1.03)}}.card.taking-damage{animation:dmgShakeM .35s ease}@keyframes dmgShakeM{0%,100%{transform:translateX(0) translateY(-6px) scale(1.02)}20%{transform:translateX(-5px) translateY(-6px) scale(1.02)}40%{transform:translateX(5px) translateY(-6px) scale(1.02)}60%{transform:translateX(-3px) translateY(-6px) scale(1.02)}}.card.selected{transform:translateY(-8px) scale(1.03)!important}.card:hover{transform:translateY(-6px) scale(1.02)}.card.enemy-targetable:hover{transform:translateY(-4px) scale(1.01)}.damage-number{font-size:20px}.chaos-card{width:130px}.chaos-card-frame{width:130px}.chaos-card-name{font-size:9px;bottom:38px}.chaos-upgrades{padding:6px 0 0}.chaos-upg-btn{font-size:8px;min-height:42px}.chaos-upg-icon{width:100%;height:100%}.chaos-upg-label{font-size:7px}.shop-card-name{font-size:9px;bottom:42px}.shop-card-price{font-size:11px;bottom:8px}.shop-card-passive{font-size:6px;bottom:30px}.shop-card-buy{font-size:8px;padding:3px 9px;bottom:6px}.deck-card-name{font-size:9px}.result-text{font-size:40px}.result-gold{font-size:14px}.round-timer-text{font-size:18px}.round-timer{padding:4px 0}.settings-title{font-size:16px}.setting-row{font-size:12px}}
+  @media(max-width:768px){body{align-items:flex-start;padding-top:calc(8px + var(--safe-top))}body::before{opacity:.6}body::after{opacity:.25}#particlesCanvas{opacity:.35}.screen{padding:10px;gap:16px;padding-top:calc(10px + var(--safe-top))}.screen.active{gap:16px}.menu-title{font-size:36px;letter-spacing:3px}.menu-subtitle{font-size:10px;letter-spacing:4px;margin-bottom:32px;padding:8px 0}.menu-buttons{gap:10px;max-width:260px}.menu-buttons .btn{padding:14px;font-size:12px}.section-title{font-size:14px;letter-spacing:2px}.shop-tabs{padding:12px 14px 8px}.shop-header{flex-wrap:wrap;gap:10px;padding:10px 20px}#shopGrid,#shopGridInv,#shopGridChaos{padding:10px 14px}.shop-footer{padding:8px 14px;padding-bottom:calc(8px + var(--safe-bottom, 0px))}.battle-footer{padding:8px 20px;padding-bottom:calc(8px + var(--safe-bottom, 0px))}.gold-display{font-size:13px}.card{width:130px;height:195px}.card-image{width:130px;height:195px}.atk-badge{font-size:11px;padding:2px 6px;top:5px;left:5px}.hp-text{font-size:9px;padding:1px 4px;top:5px;right:5px}.card-name{font-size:8px;padding:3px 4px}.card-role{font-size:6px;bottom:5px;right:6px}.card-overlay{height:55%;padding:30px 6px 8px}.mana-orbs{bottom:5px;left:5px;gap:3px}.mana-orb{width:5px;height:5px}.dot-status{font-size:7px!important;top:20px!important;left:5px!important}.card-grid{grid-template-columns:repeat(3,130px);gap:14px}.shop-card{width:130px;height:195px}.shop-card-img{width:130px;height:195px}.deck-card{width:130px;height:195px}.deck-card-img{width:130px;height:195px}.shop-card-name{font-size:8px;bottom:38px;padding:3px 5px}.shop-card-price{font-size:11px;bottom:8px;left:8px}.shop-card-passive{font-size:6px;bottom:26px;max-width:110px}.shop-card-buy{font-size:9px;padding:4px 10px;bottom:6px;right:6px}.deck-info-btn{width:18px;height:18px;font-size:10px;top:4px;right:4px}.shop-tab{font-size:11px;padding:8px 18px;letter-spacing:1.5px}.battle-header{padding:8px 20px}.battle-header .title{font-size:16px}.battlefield{gap:24px}.card-row{gap:10px;justify-content:center}.battlefield{padding:8px 0}.btn{padding:10px 18px;font-size:10px;letter-spacing:1.5px;min-height:40px;display:inline-flex;align-items:center;justify-content:center}.btn.small{padding:6px 12px;font-size:9px}.btn.surrender-btn{padding:8px 14px;font-size:10px;min-height:38px}.btn.ability-btn{padding:8px 12px;font-size:10px;min-height:40px}#endTurnBtn{padding:12px 28px;font-size:11px}.ability-panel{flex-wrap:wrap;gap:8px;padding:6px}.action-hint{font-size:10px}.battle-log{max-height:72px;font-size:10px;padding:8px 20px}.battle-log .log-entry{padding:2px 0}.turn-indicator{font-size:12px}#settingsOverlay{gap:20px}.settings-title{font-size:18px}.setting-row{font-size:12px;gap:14px}.setting-slider{width:120px}.result-large-title{font-size:36px}.result-text{font-size:18px}.result-gold{font-size:15px}.card-detail{flex-direction:column;padding:20px;gap:16px;max-width:340px}.card-detail-img{width:120px;height:180px;align-self:center}.card-detail-name{font-size:15px}.card-detail-stat{font-size:11px}.card-detail-passive .passive-name{font-size:11px}.card-detail-passive .passive-desc{font-size:10px}.card-detail-lore{font-size:10px}.card-detail-close{width:28px;height:28px;font-size:14px;top:8px;right:8px}.card.attacking{animation:atkLungeM .35s cubic-bezier(.2,.8,.2,1)}@keyframes atkLungeM{0%{transform:translateX(0) translateY(-8px) scale(1.03)}40%{transform:translateX(15px) translateY(-10px) scale(1.05)}100%{transform:translateX(0) translateY(-8px) scale(1.03)}}.card.taking-damage{animation:dmgShakeM .35s ease}@keyframes dmgShakeM{0%,100%{transform:translateX(0) translateY(-6px) scale(1.02)}20%{transform:translateX(-5px) translateY(-6px) scale(1.02)}40%{transform:translateX(5px) translateY(-6px) scale(1.02)}60%{transform:translateX(-3px) translateY(-6px) scale(1.02)}}.card.selected{transform:translateY(-8px) scale(1.03)!important}.card:hover{transform:translateY(-6px) scale(1.02)}.card.enemy-targetable:hover{transform:translateY(-4px) scale(1.01)}.damage-number{font-size:20px}.chaos-card{width:130px}.chaos-card-frame{width:130px}.chaos-card-name{font-size:9px;bottom:38px}.chaos-upgrades{padding:6px 0 0}.chaos-upg-btn{font-size:8px;min-height:42px}.chaos-upg-icon{width:100%;height:100%}.chaos-upg-label{font-size:7px}.shop-card-name{font-size:9px;bottom:42px}.shop-card-price{font-size:11px;bottom:8px}.shop-card-passive{font-size:6px;bottom:30px}.shop-card-buy{font-size:8px;padding:3px 9px;bottom:6px}.deck-card-name{font-size:9px}.result-text{font-size:40px}.result-gold{font-size:14px}.round-timer-text{font-size:18px}.round-timer{padding:4px 0}.settings-title{font-size:16px}.setting-row{font-size:12px}}
 /* === КРИТИЧЕСКИЙ ФИКС ДЛЯ КНОПКИ "В БОЙ!" === */
 @media(max-width:768px){
   #shopScreen.active{height:calc(100vh - 120px)!important;max-height:calc(100dvh - 120px)!important}
@@ -201,6 +203,7 @@
     /* ═══ SHOP / DECK / CHAOS GRID ═══ */
     #shopGrid,#shopGridInv,#shopGridChaos{padding:8px 8px}
     .shop-footer{padding:8px 14px;padding-bottom:calc(8px + var(--safe-bottom, 0px))}
+    .battle-footer{padding:8px 16px;padding-bottom:calc(8px + var(--safe-bottom, 0px))}
     .card-grid{grid-template-columns:repeat(3,96px);gap:7px}
     .shop-card,.deck-card{width:96px;height:144px}
     .shop-card-img,.deck-card-img{width:96px;height:144px}
@@ -222,8 +225,8 @@
     .card-name{font-size:9px;margin-bottom:2px}
     .card-overlay{height:55%;padding:30px 6px 8px}
     .mana-orb{width:5px;height:5px}.mana-orbs{bottom:4px;left:4px;gap:2px}
-    .battle-header{padding:6px 8px;flex-wrap:nowrap;gap:4px}
-    .battle-header .title{font-size:14px;flex-shrink:0}
+    .battle-header{padding:6px 16px}
+    .battle-header .title{font-size:14px}
     .battle-header>div{gap:4px!important}
     .turn-indicator{font-size:8px;padding:2px 6px}
     .battle-header .btn.small{padding:4px 8px;font-size:8px}
@@ -234,7 +237,7 @@
     .ability-panel .btn.small{padding:4px 8px;font-size:8px}
     .damage-number{font-size:18px}
     #endTurnBtn{font-size:11px;padding:10px 24px}
-    .battle-log{font-size:10px;max-height:80px;padding:8px}
+    .battle-log{font-size:10px;max-height:64px;padding:8px 16px}
     .battlefield{gap:20px;padding:8px 0}
     .atk-badge{font-size:9px;padding:2px 4px;top:4px;left:4px}
     .hp-text{font-size:7px;padding:1px 3px;top:4px;right:4px}
@@ -288,6 +291,7 @@
     /* ═══ SHOP / DECK / CHAOS GRID ═══ */
     #shopGrid,#shopGridInv,#shopGridChaos{padding:6px 6px}
     .shop-footer{padding:6px 6px;padding-bottom:calc(6px + var(--safe-bottom, 0px))}
+    .battle-footer{padding:6px 12px;padding-bottom:calc(6px + var(--safe-bottom, 0px))}
     .card-grid{grid-template-columns:repeat(3,80px);gap:5px}
     .shop-card,.deck-card{width:80px;height:120px}
     .shop-card-img,.deck-card-img{width:80px;height:120px}
@@ -309,7 +313,7 @@
     .card{width:86px;height:129px}
     .card-name{font-size:7px;padding:2px 3px}
     .card-overlay{height:58%;padding:24px 4px 6px}
-    .battle-header{padding:4px 6px;gap:3px}
+    .battle-header{padding:4px 12px}
     .battle-header .title{font-size:11px}
     .battle-header>div{gap:3px!important}
     .turn-indicator{font-size:7px;padding:1px 4px;letter-spacing:1px}
@@ -321,7 +325,7 @@
     .ability-panel .btn.small{padding:3px 5px;font-size:7px}
     .damage-number{font-size:15px}
     #endTurnBtn{font-size:10px;padding:8px 18px;letter-spacing:1px}
-    .battle-log{font-size:9px;max-height:60px;padding:6px}
+    .battle-log{font-size:9px;max-height:48px;padding:6px 12px}
     .battlefield{gap:14px;padding:4px 0}
     .atk-badge{font-size:7px;padding:1px 3px;top:3px;left:3px}
     .hp-text{font-size:6px;padding:1px 2px;top:3px;right:3px}
@@ -487,7 +491,7 @@ if(window.Telegram?.WebApp?.initData){
         <span class="user-badge-name" id="enemyNameDisplay">—</span>
       </span>
     </div>
-    <span class="title" style="font-family:'UnifrakturCook',cursive;font-size:24px;color:#c4a265;text-shadow:0 0 20px rgba(138,115,85,.2);">vs</span>
+    <span class="title">vs</span>
     <div style="display:flex;align-items:center;gap:12px">
       <span class="user-badge" id="battleUserBadge" style="display:none">
         <img class="user-badge-avatar" id="battleUserAvatar" src="" alt="">
@@ -502,9 +506,12 @@ if(window.Telegram?.WebApp?.initData){
     <div class="round-timer"><span class="round-timer-text" id="roundTimerText">20</span></div>
     <div class="action-hint" id="actionHint"><span class="key">Выберите юнита</span> — 1 действие за ход</div>
     <div class="card-row" id="playerRow"></div>
+    <button id="endTurnBtn" class="btn" onclick="endPlayerTurn()" style="display:block;">Завершить ход</button>
   </div>
-  <button id="endTurnBtn" class="btn" onclick="endPlayerTurn()" style="display:block;">Завершить ход</button>
   <div class="battle-log" id="battleLog"></div>
+  <div class="battle-footer">
+    <div class="shop-copyright">Triad Duel &copy; 2025</div>
+  </div>
 </div>
 <div id="resultOverlay">
   <div class="result-text" id="resultText"></div>
