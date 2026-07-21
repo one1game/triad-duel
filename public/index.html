@@ -52,6 +52,8 @@
   .screen{display:none;width:100%;max-width:900px;padding:24px;padding-top:calc(24px + var(--safe-top));position:relative;z-index:10;align-self:center}
   .screen.active{display:flex;flex-direction:column;align-items:center;gap:24px;animation:fadeIn .6s ease-out}
   @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes mmSpin{to{transform:rotate(360deg)}}
+  @keyframes premiumShimmer{0%,100%{box-shadow:0 0 8px rgba(220,40,40,.25),0 0 2px rgba(255,80,80,.1);border-color:rgba(220,40,40,.5)}50%{box-shadow:0 0 18px rgba(240,60,60,.45),0 0 6px rgba(255,60,60,.2);border-color:rgba(255,50,50,.8)}}
   .gold-display{display:inline-flex;align-items:center;gap:6px;font-family:'Cinzel',serif;font-size:16px;font-weight:600;color:var(--accent-gold-bright);text-shadow:0 0 20px rgba(240,214,138,.4);letter-spacing:1px}
   .gold-display img{width:18px;height:18px;object-fit:contain}
   .user-badge{display:inline-flex;align-items:center;gap:8px;padding:4px 12px 4px 4px;background:rgba(20,20,25,.5);border:1px solid var(--border-dim);border-radius:20px;transition:all .3s}
@@ -60,8 +62,7 @@
   .user-badge-name{font-size:11px;color:var(--text-dim);font-family:'Inter',sans-serif;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .enemy-badge{border-color:#5a1a1a}
   .enemy-badge .user-badge-name{color:#c06060;max-width:160px}
-  .premium-badge{border-color:#d42020!important;box-shadow:0 0 12px rgba(220,30,30,.35),0 0 4px rgba(255,60,60,.15)}
-  .premium-badge .user-badge-avatar{border-color:#e03030!important;box-shadow:0 0 8px rgba(240,60,60,.4)}
+  .premium-badge{border-color:rgba(220,40,40,.5)!important;animation:premiumShimmer 2.5s ease-in-out infinite}
   .premium-badge .user-badge-name{color:#ff5050!important;text-shadow:0 0 8px rgba(255,60,60,.5)}
   .btn{background:rgba(20,20,25,.6);border:1px solid var(--border-dim);color:var(--text-dim);font-family:'Cinzel',serif;padding:12px 28px;cursor:pointer;letter-spacing:2px;text-transform:uppercase;transition:all .35s cubic-bezier(.4,0,.2,1);font-size:12px;font-weight:600;position:relative;overflow:hidden}
   .btn::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.04),transparent);transition:left .6s cubic-bezier(.4,0,.2,1)}.btn:hover::before{left:100%}
@@ -1490,19 +1491,23 @@ function showMatchmakingOverlay(){
   if(!ov){
     ov=document.createElement('div');
     ov.id='mmOverlay';
-    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;gap:16px;font-size:18px';
-    ov.innerHTML='<div id="mmText">Поиск игрока…</div><div id="mmTip" style="font-size:13px;color:#999;max-width:320px;text-align:center;line-height:1.5;padding:0 20px"></div><button onclick="cancelMatchmaking()" style="padding:8px 20px;cursor:pointer">Отмена</button>';
+    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:40px';
+    ov.innerHTML=`
+      <div id="mmSpinner" style="width:40px;height:40px;border:2px solid rgba(255,255,255,.1);border-top-color:#d42020;border-radius:50%;animation:mmSpin 1s linear infinite"></div>
+      <div id="mmTip" style="font-size:15px;color:#ccc;max-width:340px;text-align:center;line-height:1.6;padding:0 24px;font-family:'Inter',sans-serif;transition:opacity .2s"></div>
+      <button onclick="cancelMatchmaking()" style="padding:10px 28px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#999;cursor:pointer;font-size:13px;letter-spacing:1px;border-radius:6px;transition:all .3s" onmouseenter="this.style.borderColor='#d44';this.style.color='#f66'" onmouseleave="this.style.borderColor='rgba(255,255,255,.12)';this.style.color='#999'">Отмена</button>
+    `;
     document.body.appendChild(ov);
   }
   ov.style.display='flex';
   mmTipIdx=Math.floor(Math.random()*classTips.length);
   const tipEl=document.getElementById('mmTip');
-  if(tipEl) tipEl.textContent='💡 '+classTips[mmTipIdx];
+  if(tipEl) tipEl.textContent=classTips[mmTipIdx];
   mmTipTimer=setInterval(()=>{
     mmTipIdx=(mmTipIdx+1)%classTips.length;
     const el=document.getElementById('mmTip');
-    if(el) el.textContent='💡 '+classTips[mmTipIdx];
-  },4000);
+    if(el){el.style.opacity='0';setTimeout(()=>{el.textContent=classTips[mmTipIdx];el.style.opacity='1'},200)}
+  },4500);
 }
 function hideMatchmakingOverlay(){
   const ov=document.getElementById('mmOverlay');
