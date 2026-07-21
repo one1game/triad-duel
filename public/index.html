@@ -556,16 +556,17 @@ const IMG_BASE='img/cards/',CARDS_PER_SIDE=3,SHOP_SIZE=12,MAX_MANA=10;
 // ═══ TELEGRAM MINI APP INIT ═══
 const isTelegramMiniApp=!!(window.Telegram?.WebApp?.initData);
 if(isTelegramMiniApp){
+  try{
   const tg=window.Telegram.WebApp;
   tg.ready();
   tg.expand();
-  // Полный экран — скрываем всё кроме игры
+  // Полный экран
   tg.setHeaderColor('#030304');
-  if(tg.setHeaderColor) tg.setHeaderColor({color:'#030304',secondary_color:'#030304'});
-  tg.BackButton?.hide();
-  tg.SettingsButton?.hide();
-  if(tg.disableVerticalSwipes) tg.disableVerticalSwipes();
-  if(tg.requestFullscreen) tg.requestFullscreen();
+  try{tg.setHeaderColor({color:'#030304',secondary_color:'#030304'})}catch(e){}
+  try{tg.BackButton?.hide()}catch(e){}
+  try{tg.SettingsButton?.hide()}catch(e){}
+  try{tg.disableVerticalSwipes?.()}catch(e){}
+  try{tg.requestFullscreen?.()}catch(e){}
   // Apply Telegram theme colors
   const tp=tg.themeParams;
   document.documentElement.style.setProperty('--tg-bg',tp.bg_color||'#030304');
@@ -579,6 +580,7 @@ if(isTelegramMiniApp){
   document.documentElement.style.setProperty('--safe-top',safeTop+'px');
   console.log('[miniapp] initialized, safe-top:',safeTop,'user:',tg.initDataUnsafe?.user?.username||tg.initDataUnsafe?.user?.first_name||'unknown');
   document.body.classList.add('miniapp');
+  }catch(e){console.error('[miniapp] init error:',e)}
 }
 // Хелпер для управления нативной кнопкой в Mini App
 function setBattleButton(visible,active){
