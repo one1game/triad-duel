@@ -22,7 +22,7 @@ const JWT_SECRET =
 // ═══ PREMIUM (Telegram Stars) ═══
 const PREMIUM_PRICE_STARS = 149; // цена в Telegram Stars (XTR)
 const PREMIUM_DURATION_DAYS = 7;
-const PREMIUM_TEST_MODE = true; // true = бесплатный премиум без оплаты (для тестов)
+const PREMIUM_TEST_MODE = false; // true = бесплатный премиум без оплаты (для тестов)
 
 function tgApiRequest(method, payload) {
 	return new Promise((resolve, reject) => {
