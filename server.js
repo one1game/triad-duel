@@ -1460,6 +1460,7 @@ IO.on("connection", (socket) => {
 		s.battle = null;
 		s.shopCards = eraDef();
 		socket.emit("stateUpdate", getSessionState(sessionId));
+		if (userId) savePlayerData(userId, s);
 	});
 
 	// ═══ PREMIUM ═══
@@ -1510,6 +1511,7 @@ IO.on("connection", (socket) => {
 		if (!s) return;
 		if (!s.shopCards.length) s.shopCards = eraDef();
 		socket.emit("stateUpdate", getSessionState(sessionId));
+		if (userId) savePlayerData(userId, s);
 	});
 
 	// ═══ BUY CARD ═══
@@ -1533,6 +1535,7 @@ IO.on("connection", (socket) => {
 		s.playerCollection.push(cardId);
 		socket.emit("sfx", "buy");
 		socket.emit("stateUpdate", getSessionState(sessionId));
+		if (userId) savePlayerData(userId, s);
 	});
 
 	// ═══ UPGRADE CARD ═══
@@ -1559,6 +1562,7 @@ IO.on("connection", (socket) => {
 		up[stat]++;
 		socket.emit("sfx", "upgrade");
 		socket.emit("stateUpdate", getSessionState(sessionId));
+		if (userId) savePlayerData(userId, s);
 	});
 
 	// ═══ UPDATE DECK ═══
@@ -1577,6 +1581,7 @@ IO.on("connection", (socket) => {
 			if (s.selectedDeck.length > CARDS_PER_SIDE) s.selectedDeck.shift();
 		}
 		socket.emit("stateUpdate", getSessionState(sessionId));
+		if (userId) savePlayerData(userId, s);
 	});
 
 	// ═══ MATCHMAKING ═══
