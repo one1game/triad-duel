@@ -42,7 +42,7 @@
   .btn.ability-btn:hover{border-color:#9a8aae;color:#d0c0e0;box-shadow:0 0 15px rgba(154,138,174,.3);background:rgba(154,138,174,.1)}
   #endTurnBtn{font-size:13px;padding:14px 40px;border-color:var(--accent-blood);color:#a05050;margin-top:12px;animation:pulse-blood 2.5s ease-in-out infinite;flex-shrink:0}
   @keyframes pulse-blood{0%,100%{box-shadow:0 0 8px rgba(90,26,26,.15);border-color:var(--accent-blood)}50%{box-shadow:0 0 25px rgba(138,42,42,.5);border-color:var(--accent-blood-bright);color:#c06060}}
-  #toBattleBtn{font-size:36px;padding:36px 128px;letter-spacing:4px}
+  #toBattleBtn{font-size:18px;padding:18px 64px;letter-spacing:3px}
   #menuScreen{justify-content:center;min-height:100vh}
   .menu-title{font-family:'UnifrakturCook',cursive;font-size:72px;color:var(--accent-gold-bright);text-shadow:0 0 40px rgba(196,162,101,.5),0 0 80px rgba(0,0,0,.8);letter-spacing:6px;text-align:center;margin-bottom:8px;filter:drop-shadow(0 4px 6px rgba(0,0,0,.5));animation:titleIdle 4s ease-in-out infinite}
   @keyframes titleIdle{0%,100%{text-shadow:0 0 40px rgba(196,162,101,.45),0 0 80px rgba(0,0,0,.8)}50%{text-shadow:0 0 70px rgba(196,162,101,.7),0 0 100px rgba(0,0,0,.9)}}
@@ -68,7 +68,7 @@
   .card-grid{display:grid;grid-template-columns:repeat(3,180px);gap:20px;justify-content:center;width:100%;contain:layout style}
   #shopGrid,#shopGridInv,#shopGridChaos{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;min-height:0;padding:12px 24px;scrollbar-width:thin;scrollbar-color:var(--border-glow) transparent}
   #shopGrid::-webkit-scrollbar,#shopGridInv::-webkit-scrollbar,#shopGridChaos::-webkit-scrollbar{width:4px}#shopGrid::-webkit-scrollbar-thumb,#shopGridInv::-webkit-scrollbar-thumb,#shopGridChaos::-webkit-scrollbar-thumb{background:var(--border-glow);border-radius:2px}
-  .shop-footer{flex-shrink:0;padding:12px 24px calc(12px + var(--safe-bottom));background:var(--bg-deep);border-top:1px solid var(--border-dim);display:flex;flex-direction:column;align-items:center;gap:8px;z-index:1001;position:relative}
+  .shop-footer{flex-shrink:0;padding:4px 24px calc(12px + var(--safe-bottom));background:var(--bg-deep);border-top:1px solid var(--border-dim);display:flex;flex-direction:column;align-items:center;gap:4px;z-index:1001;position:relative}
   .shop-copyright{font-size:9px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase}
   @keyframes cardFadeUp{from{opacity:0;transform:translateY(24px) scale(.92)}to{opacity:1;transform:translateY(0) scale(1)}}
   .shop-card{width:180px;height:270px;background:var(--bg-surface);border:1px solid var(--border-dim);transition:all .3s ease;position:relative;overflow:hidden;border-radius:4px}
