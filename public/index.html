@@ -973,7 +973,7 @@ function showShopTab(tab){
   el('tabShopBtn').classList.toggle('active',tab==='shop');el('tabInvBtn').classList.toggle('active',tab==='inv');el('tabChaosBtn').classList.toggle('active',tab==='chaos');
   el('shopTabTitle').textContent=tab==='shop'?'Склеп':tab==='inv'?'Варп':'Хаос';
   if(tab==='shop'||tab==='chaos'){setBattleButton(false,false);el('deckCount').style.display='none'}
-  else{setBattleButton(true,selectedDeck.length===3);el('deckCount').style.display='block';}
+  else{setBattleButton(true,selectedDeck.length===3);el('deckCount').style.display='block';el('deckCount').textContent='Выбрано: '+selectedDeck.length+' / 3';}
   el('bgClep').style.opacity=tab==='shop'?'0.4':'0';el('bgWarp').style.opacity=tab==='inv'?'0.4':'0';el('bgHaus').style.opacity=tab==='chaos'?'0.4':'0';
   el('shopScreen').querySelector('.shop-header').style.background=tab==='chaos'?'rgba(0,0,0,0.5)':'';
   el('shopGrid').style.display=tab==='shop'?'':'none';
@@ -1030,7 +1030,7 @@ function renderColGrid(){const g=el('shopGridInv');g.innerHTML='';
       ${statsBlockHTML(c,up)}<div class="card-overlay"><div class="card-name">${c.name}</div></div>`;
     div.addEventListener('click',()=>toggleDeckCard(c.id));g.appendChild(div);
   });
-  el('deckCount').style.display='block';setBattleButton(true,selectedDeck.length===3);
+  el('deckCount').style.display='block';el('deckCount').textContent='Выбрано: '+selectedDeck.length+' / 3';setBattleButton(true,selectedDeck.length===3);
 }
 function renderChaosGrid(){const g=el('shopGridChaos');g.innerHTML='';const owned=playerCollection.map(id=>{const b=byId(id);return b?{...b}:null}).filter(Boolean);
   if(!owned.length){g.innerHTML='<div class="deck-empty">Нет карт для прокачки</div>';return}
