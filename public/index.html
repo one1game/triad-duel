@@ -30,6 +30,14 @@
   .btn:hover{border-color:var(--accent-gold);color:var(--accent-gold-bright);box-shadow:0 0 25px rgba(138,115,85,.12);transform:translateY(-1px)}.btn:active{transform:scale(.96);transition:transform .1s ease}
   .btn.gold-btn{border-color:var(--accent-gold);color:var(--accent-gold-bright);background:rgba(138,115,85,.05);transition:all .35s cubic-bezier(.4,0,.2,1)}.btn.gold-btn:hover{background:rgba(138,115,85,.15);box-shadow:0 0 30px rgba(138,115,85,.25);transform:translateY(-2px)}.btn.small{padding:6px 16px;font-size:10px;letter-spacing:1.5px}.btn.surrender-btn{border-color:#6a1a1a;color:#d44;background:rgba(106,26,26,.1);transition:all .35s cubic-bezier(.4,0,.2,1)}.btn.surrender-btn:hover{background:rgba(106,26,26,.25);box-shadow:0 0 30px rgba(180,30,30,.3);border-color:#a22}
   .btn:disabled{opacity:.2;pointer-events:none;border-color:var(--border-dim);color:var(--text-dim)}
+  /* ═══ PRELOADER ═══ */
+  #preloader{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg-deep);z-index:10000;display:flex;justify-content:center;align-items:center;transition:opacity .6s ease-out}
+  #preloader.done{opacity:0;pointer-events:none}
+  .preloader-inner{display:flex;flex-direction:column;align-items:center;gap:24px}
+  .preloader-title{font-family:'UnifrakturCook',cursive;font-size:48px;color:var(--accent-gold-bright);text-shadow:0 0 30px rgba(196,162,101,.5);letter-spacing:4px;animation:titleIdle 4s ease-in-out infinite}
+  .preloader-bar-track{width:260px;height:3px;background:#1a1a1f;border-radius:2px;overflow:hidden}
+  .preloader-bar-fill{width:0%;height:100%;background:linear-gradient(90deg,var(--accent-gold),var(--accent-gold-bright));border-radius:2px;transition:width .35s ease;box-shadow:0 0 10px rgba(196,162,101,.4)}
+  .preloader-text{font-family:'Inter',sans-serif;font-size:11px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase}
   .btn.ability-btn{border-color:#5a4a6a;color:#b8a8c8;font-family:'Inter',sans-serif;font-weight:600;font-size:11px;padding:8px 16px;letter-spacing:.5px;text-transform:none}
   .btn.ability-btn:hover{border-color:#9a8aae;color:#d0c0e0;box-shadow:0 0 15px rgba(154,138,174,.3);background:rgba(154,138,174,.1)}
   #endTurnBtn{font-size:13px;padding:14px 40px;border-color:var(--accent-blood);color:#a05050;margin-top:12px;animation:pulse-blood 2.5s ease-in-out infinite}
@@ -349,6 +357,13 @@
 </style>
 </head>
 <body>
+<div id="preloader">
+  <div class="preloader-inner">
+    <div class="preloader-title">Triad Duel</div>
+    <div class="preloader-bar-track"><div class="preloader-bar-fill" id="preloaderBar"></div></div>
+    <div class="preloader-text" id="preloaderText">Загрузка...</div>
+  </div>
+</div>
 <canvas id="particlesCanvas"></canvas>
 <div class="screen-flash" id="screenFlash"></div>
 <div class="screen active" id="menuScreen">
@@ -491,6 +506,50 @@ window.isLocal=!window.SERVER_URL;
 const ALL_CARDS=[{id:'mage_01',name:'Библиарий Кассиан',atk:6,hp:11,price:650,type:'mage',variance:.10,passive:'Эрудит',passiveDesc:'Фаербол стоит 2 маны. Раскол: 5% шанс 1-3 урона соседним',lore:'Хранитель запретных знаний из библиотек Некрона.'},{id:'mage_02',name:'Малекит Проклятый',atk:7,hp:9,price:450,type:'mage',variance:.25,passive:'Проклятие',passiveDesc:'Фаербол снижает ATK врага на 1. Раскол: 5% шанс 1-3 урона соседним',lore:'Когда-то был светлым магом, но проклятие Хаоса извратило его дар.'},{id:'mage_03',name:'Азатот Посвящённый',atk:5,hp:14,price:500,type:'mage',variance:.15,passive:'Жертва',passiveDesc:'Фаербол лечит мага на 2 HP. Раскол: 5% шанс 1-3 урона соседним',lore:'Служитель культа Азатота.'},{id:'mage_04',name:'Гнилоуст Проповедник',atk:7,hp:10,price:500,type:'mage',variance:.20,passive:'Чума',passiveDesc:'Фаербол = 1 урон/ход на 2 хода. Раскол: 5% шанс 1-3 урона соседним',lore:'Уста его источают чумные миазмы.'},{id:'mage_05',name:'Иландра Хранительница Рун',atk:6,hp:12,price:750,type:'mage',variance:.10,passive:'Рунный щит',passiveDesc:'Получает на 1 урона меньше. Раскол: 5% шанс 1-3 урона соседним',lore:'Последняя из ордена Рунных Стражей.'},{id:'mage_06',name:'Ксаль\'Торот',atk:7,hp:9,price:550,type:'mage',variance:.20,passive:'Искажение',passiveDesc:'30% шанс: фаербол возвращает 1 ману. Раскол: 5% шанс 1-3 урона соседним',lore:'Бессмертный зодчий Первородного Хаоса.'},{id:'mage_07',name:'Ксар\'лот',atk:6,hp:12,price:600,type:'mage',variance:.15,passive:'Скверна',passiveDesc:'Фаербол +1 урона танкам. Раскол: 5% шанс 1-3 урона соседним',lore:'Древний маг, искажённый скверной Бездны.'},{id:'mage_08',name:'Каэр\'Тал',atk:7,hp:10,price:600,type:'mage',variance:.25,passive:'Пожиратель',passiveDesc:'Фаербол крадёт 1 ману у врага. Раскол: 5% шанс 1-3 урона соседним',lore:'Пророк Варпа.'},{id:'mage_09',name:'Кадавр',atk:5,hp:14,price:500,type:'mage',variance:.15,passive:'Сбор душ',passiveDesc:'Убийство фаерболом: +2 HP и +1 маны. Раскол: 5% шанс 1-3 урона соседним',lore:'Отрекшийся магистр смерти.'},{id:'mage_10',name:'Каэлис Векс',atk:8,hp:8,price:700,type:'mage',variance:.20,passive:'Псай-шторм',passiveDesc:'Фаербол +2 урона при HP<50%. Раскол: 5% шанс 1-3 урона соседним',lore:'Беглый псайкер.'},{id:'mage_11',name:'Слепая Оракул',atk:6,hp:12,price:650,type:'mage',variance:.10,passive:'Оракул',passiveDesc:'40% шанс: фаербол стоит 1 ману. Раскол: 5% шанс 1-3 урона соседним',lore:'Её глаза закрыты, но она видит всё.'},{id:'tank_01',name:'Железный Дредноут',atk:4,hp:20,price:650,type:'tank',variance:.15,passive:'Броня',passiveDesc:'Провокация: -1 вх. урона. Прикрытие: 5% шанс забрать атаку с соседа без урона',lore:'Живая крепость, закованная в адамантий.'},{id:'tank_02',name:'Чумной Гигант',atk:3,hp:24,price:800,type:'tank',variance:.20,passive:'Гнилая кровь',passiveDesc:'Провокация: отражает 1 урон. Прикрытие: 5% шанс забрать атаку с соседа без урона',lore:'Порождение гнилых садов Нургла.'},{id:'tank_03',name:'Страж Некрона',atk:4,hp:18,price:700,type:'tank',variance:.10,passive:'Ярость мёртвых',passiveDesc:'HP<50%: +2 ATK. Прикрытие: 5% шанс забрать атаку с соседа без урона',lore:'Пробуждённый от вечного сна воин.'},{id:'tank_04',name:'Каменный Страж',atk:3,hp:22,price:850,type:'tank',variance:.10,passive:'Каменная кожа',passiveDesc:'Всегда -1 вх. урона. Прикрытие: 5% шанс забрать атаку с соседа без урона',lore:'Голем, высеченный из горного хребта.'},{id:'tank_05',name:'Шоггот-Брут',atk:4,hp:21,price:650,type:'tank',variance:.25,passive:'Регенерация',passiveDesc:'Провокация лечит 2 HP. Прикрытие: 5% шанс забрать атаку с соседа без урона',lore:'Бесформенная тварь из глубин Иннсмута.'},{id:'assa_01',name:'Ночной Клинок',atk:8,hp:8,price:500,type:'assa',variance:.15,passive:'Теневой шаг',passiveDesc:'30% шанс: крит стоит 1 ману. Кровопускание: 5% шанс нанести половину урона соседу',lore:'Тень, скользящая между мирами.'},{id:'assa_02',name:'Теневой Убийца',atk:9,hp:6,price:750,type:'assa',variance:.10,passive:'Добивание',passiveDesc:'+2 урона целям с HP<50%. Кровопускание: 5% шанс нанести половину урона соседу',lore:'Мастер добивания.'},{id:'assa_03',name:'Варп-Сталкер',atk:7,hp:10,price:650,type:'assa',variance:.20,passive:'Фазовый сдвиг',passiveDesc:'Крит игнорирует провокацию. Кровопускание: 5% шанс нанести половину урона соседу',lore:'Ходок через Варп.'},{id:'assa_04',name:'Глубинный Хищник',atk:9,hp:7,price:750,type:'assa',variance:.15,passive:'Хищник',passiveDesc:'Убийство даёт +2 маны. Кровопускание: 5% шанс нанести половину урона соседу',lore:'Вышел из Марианской впадины.'},{id:'assa_05',name:'Жнец Снов',atk:9,hp:7,price:700,type:'assa',variance:.25,passive:'Кошмар',passiveDesc:'Крит наносит x2.5 урона. Кровопускание: 5% шанс нанести половину урона соседу',lore:'Посланник Кошмара.'}];
 const IMG_BASE='img/cards/',CARDS_PER_SIDE=3,SHOP_SIZE=12,MAX_MANA=10;
 
+// ═══ PRELOADER ═══
+(function(){
+  const assets=[];
+  // Карты
+  ALL_CARDS.forEach(c=>assets.push(`${IMG_BASE}${c.id}.webp`));
+  assets.push(`${IMG_BASE}default.webp`);
+  // Аватарки ботов
+  ['zinoviy.png','ilanmaks.png','ronaldo.png','gary.png','maratustra.png'].forEach(f=>assets.push(`img/ava-bot/${f}`));
+  // Иконки
+  assets.push('img/game/Remains_icon.webp');
+  assets.push('img/game/sklep.png');
+  assets.push('img/game/warp.png');
+  assets.push('img/game/chaos.png');
+  assets.push('img/game/upg_hp.png');
+  assets.push('img/game/upg_atk.png');
+  assets.push('img/game/upg_mana.png');
+
+  const total=assets.length;
+  let loaded=0;
+  const bar=document.getElementById('preloaderBar');
+  const text=document.getElementById('preloaderText');
+
+  function tick(){
+    loaded++;
+    const pct=Math.round((loaded/total)*100);
+    bar.style.width=pct+'%';
+    text.textContent=`Загрузка... ${pct}%`;
+    if(loaded>=total){
+      setTimeout(()=>{
+        const pl=document.getElementById('preloader');
+        if(pl)pl.classList.add('done');
+        setTimeout(()=>{const pl=document.getElementById('preloader');if(pl)pl.remove()},650);
+      },300);
+    }
+  }
+
+  assets.forEach(url=>{
+    const img=new Image();
+    img.onload=tick;
+    img.onerror=tick;
+    img.src=url;
+  });
+})();
+
 // ═══ TELEGRAM MINI APP INIT ═══
 const isTelegramMiniApp=!!(window.Telegram?.WebApp?.initData);
 if(isTelegramMiniApp){
@@ -507,19 +566,10 @@ if(isTelegramMiniApp){
   document.documentElement.style.setProperty('--tg-button-text',tp.button_text_color||'#030304');
   // Fullscreen
   if(tg.requestFullscreen) tg.requestFullscreen();
-  // Нативный MainButton для «В бой!»
-  tg.MainButton.setParams({color:'#8a7355',text_color:'#f0d68a',is_active:true,is_visible:false});
-  tg.MainButton.onClick(()=>startBattle());
   console.log('[miniapp] initialized, user:',tg.initDataUnsafe?.user?.username||tg.initDataUnsafe?.user?.first_name||'unknown');
 }
 // Хелпер для управления нативной кнопкой в Mini App
 function setBattleButton(visible,active){
-  if(isTelegramMiniApp){
-    const mb=window.Telegram.WebApp.MainButton;
-    if(visible){mb.setText('В бой!').show()}else{mb.hide()}
-    active?mb.enable():mb.disable();
-  }
-  // Веб-кнопка (для обычного браузера)
   el('toBattleBtn').style.display=visible?'inline-block':'none';
   if(!visible)el('toBattleBtn').disabled=true;else el('toBattleBtn').disabled=!active;
 }
