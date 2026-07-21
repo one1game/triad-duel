@@ -333,6 +333,7 @@ socket.on('init',(state)=>{
 socket.on('stateUpdate',(state)=>{
   gameState=state;
   hideLoading();
+  if(state.battle) hideMatchmakingOverlay();
   if((state.battle && state.battle.gameEnd || state.battle) && !state.error){
     if(!document.getElementById('battleScreen').classList.contains('active') && state.battle){
       showScreen('battle');el('battleLog').innerHTML='';battleCardsReady=false;battleGen++;
@@ -360,6 +361,11 @@ socket.on('stateUpdate',(state)=>{
 });
 
 socket.on('sfx',(name)=>{playSound(name)});
+socket.on('matchmakingStatus', ({status}) => {
+  const t = document.getElementById('mmText');
+  if (status === 'searching' && t) t.textContent = 'Поиск игрока…';
+  if (status === 'cancelled') hideMatchmakingOverlay();
+});
 socket.on('error',(msg)=>{
   showToast(msg||'Ошибка сервера');
   el('authError').textContent=msg||'';
@@ -846,7 +852,7 @@ function doAttack(aIdx,dIdx){
   if(aE)aE.classList.add('attacking');
   if(dE)dE.classList.add('taking-damage');
   setTimeout(()=>{if(aE)aE.classList.remove('attacking');if(dE)dE.classList.remove('taking-damage')},450);
-  socket.emit('playerAction',{type:'attack',attackerIdx:aIdx,defenderIdx:dIdx});
+  sendBattleAction({type:'attack',attackerIdx:aIdx,defenderIdx:dIdx});
 }
 
 function doCrit(aIdx,dIdx){
@@ -857,7 +863,7 @@ function doCrit(aIdx,dIdx){
   const dE=el('enemyRow').querySelector(`[data-idx="${dIdx}"]`);
   if(aE)aE.classList.add('attacking');if(dE)dE.classList.add('taking-damage');
   setTimeout(()=>{if(aE)aE.classList.remove('attacking');if(dE)dE.classList.remove('taking-damage')},450);
-  socket.emit('playerAction',{type:'crit',attackerIdx:aIdx,defenderIdx:dIdx});
+  sendBattleAction({type:'crit',attackerIdx:aIdx,defenderIdx:dIdx});
 }
 
 function doFireball(aIdx,dIdx){
@@ -869,7 +875,7 @@ function doFireball(aIdx,dIdx){
   if(aE)aE.classList.add('attacking');if(dE)dE.classList.add('taking-damage');
   fireballActive=false;
   setTimeout(()=>{if(aE)aE.classList.remove('attacking');if(dE)dE.classList.remove('taking-damage')},450);
-  socket.emit('playerAction',{type:'fireball',attackerIdx:aIdx,defenderIdx:dIdx});
+  sendBattleAction({type:'fireball',attackerIdx:aIdx,defenderIdx:dIdx});
 }
 
 function useTaunt(){
@@ -879,31 +885,58 @@ function useTaunt(){
   stopRoundTimer();updUI();
   el('endTurnBtn').style.display='none';
   el('actionHint').innerHTML='<span class="key">Провокация!</span> Ход завершается...';
-  socket.emit('playerAction',{type:'taunt',attackerIdx:activeIdx});
+  sendBattleAction({type:'taunt',attackerIdx:activeIdx});
 }
 
 function useCrit(){
   if(activeIdx<0||!isPlayerTurn||gameOver||turnLocked||firstTurn)return;
   critActivated=true;waitingForCritTarget=activeIdx;
   flash('radial-gradient(rgba(192,128,48,.1),transparent)');updUI();
-  socket.emit('playerAction',{type:'crit',attackerIdx:activeIdx});
+  sendBattleAction({type:'crit',attackerIdx:activeIdx});
 }
 
 function useFireball(){
   if(activeIdx<0||!isPlayerTurn||gameOver||firstTurn||turnLocked)return;
   fireballActive=true;
   flash('radial-gradient(rgba(138,74,26,.1),transparent)');updUI();
-  socket.emit('playerAction',{type:'fireball',attackerIdx:activeIdx});
+  sendBattleAction({type:'fireball',attackerIdx:activeIdx});
 }
 
 function endPlayerTurn(){
   if(gameOver||!isPlayerTurn)return;
   fireballActive=false;
   stopRoundTimer();turnLocked=true;updUI();
-  el('endTurnBtn').style.display='none';socket.emit('playerAction',{type:'endTurn'});
+  el('endTurnBtn').style.display='none';sendBattleAction({type:'endTurn'});
 }
 
-function startBattle(){stopRoundTimer();battleGen++;el('battleLog').innerHTML='';saveGameState({playerGold,playerCollection,selectedDeck,cardUpgrades,shopCards,battle:{}}, 'battle');socket.emit('startBattle')}
+function sendBattleAction(action){
+  socket.emit(gameState?.battle?.isPvp ? 'pvpAction' : 'playerAction', action);
+}
+
+function startBattle(){
+  stopRoundTimer();battleGen++;el('battleLog').innerHTML='';
+  saveGameState({playerGold,playerCollection,selectedDeck,cardUpgrades,shopCards,battle:{}}, 'battle');
+  showMatchmakingOverlay();
+  socket.emit('findMatch');
+}
+
+function cancelMatchmaking(){ socket.emit('cancelMatch'); hideMatchmakingOverlay(); }
+
+function showMatchmakingOverlay(){
+  let ov=document.getElementById('mmOverlay');
+  if(!ov){
+    ov=document.createElement('div');
+    ov.id='mmOverlay';
+    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;gap:16px;font-size:18px';
+    ov.innerHTML='<div id="mmText">Поиск игрока…</div><button onclick="cancelMatchmaking()" style="padding:8px 20px;cursor:pointer">Отмена</button>';
+    document.body.appendChild(ov);
+  }
+  ov.style.display='flex';
+}
+function hideMatchmakingOverlay(){
+  const ov=document.getElementById('mmOverlay');
+  if(ov) ov.style.display='none';
+}
 
 function surrenderBattle(){
   if(!battleGen||gameOver)return;

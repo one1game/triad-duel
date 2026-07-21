@@ -78,6 +78,11 @@ const _SHOP_SIZE = 12;
 const MAX_MANA = 10;
 const BASE_REWARD = 50;
 const FIRST_TURN_MANA = 2;
+const MATCHMAKING_TIMEOUT_WITH_PLAYERS_MS = 30000;
+const MATCHMAKING_MIN_NO_PLAYERS_MS = 3000;
+const MATCHMAKING_MAX_NO_PLAYERS_MS = 10000;
+const PVP_TURN_TIMEOUT_MS = 45000;
+const PVP_RECONNECT_GRACE_MS = 30000;
 
 const ALL_CARDS = [
 	{
@@ -458,6 +463,7 @@ function createBlankCard(cardId) {
 	const base = byId(cardId);
 	return {
 		id: base.id,
+		name: base.name,
 		type: base.type,
 		atk: base.atk,
 		hp: base.hp,
@@ -475,19 +481,7 @@ function _copyCard(c) {
 	return { ...c };
 }
 function seedBattle(playerDeckIds, enemyDeckIds, cardUpgrades) {
-	const playerCards = playerDeckIds.map((id) => {
-		const _base = byId(id);
-		const c = createBlankCard(id);
-		const up = cardUpgrades[id] || {};
-		if (up.hp) {
-			c.hp += up.hp;
-			c.maxHp += up.hp;
-		}
-		if (up.atk) c.atk += up.atk;
-		c.mana = FIRST_TURN_MANA + (up.mana || 0);
-		c.mana = Math.min(c.mana, getManaCap(id, cardUpgrades));
-		return c;
-	});
+	const playerCards = buildDeckCards(playerDeckIds, cardUpgrades);
 	// AI scaling: player's total upgrade points = AI gets same amount, randomly distributed
 	const playerUpgradeTotal = Object.values(cardUpgrades).reduce(
 		(sum, up) => sum + (up.atk || 0) + (up.hp || 0) + (up.mana || 0),
@@ -530,6 +524,537 @@ function seedBattle(playerDeckIds, enemyDeckIds, cardUpgrades) {
 function getManaCap(cardId, cardUpgrades) {
 	const up = cardUpgrades[cardId] || {};
 	return Math.min(MAX_MANA + (up.mana || 0), 10);
+}
+
+function buildDeckCards(deckIds, cardUpgrades) {
+	return deckIds.map((id) => {
+		const c = createBlankCard(id);
+		const up = cardUpgrades[id] || {};
+		if (up.hp) {
+			c.hp += up.hp;
+			c.maxHp += up.hp;
+		}
+		if (up.atk) c.atk += up.atk;
+		c.mana = FIRST_TURN_MANA + (up.mana || 0);
+		c.mana = Math.min(c.mana, getManaCap(id, cardUpgrades));
+		return c;
+	});
+}
+
+// ═══ PVE BATTLE ═══
+function beginPveBattle(s, socket, sessionId) {
+	if (s.selectedDeck.length !== CARDS_PER_SIDE) {
+		socket.emit("error", "Выберите ровно 3 карты");
+		return;
+	}
+	const npcPool = ALL_CARDS.filter((c) => !s.selectedDeck.includes(c.id));
+	const enemyDeck = shuffle(npcPool)
+		.slice(0, CARDS_PER_SIDE)
+		.map((c) => c.id);
+	s.battle = seedBattle(s.selectedDeck, enemyDeck, s.cardUpgrades);
+	s.battle.battleLog.push(
+		'<span class="log-ability">⚔ Битва начинается!</span>',
+	);
+	socket.emit("stateUpdate", getSessionState(sessionId));
+
+	if (!s.battle.isPlayerTurn) {
+		const aiThinkMs = 3000 + Math.floor(Math.random() * 5000);
+		setTimeout(() => {
+			const battle = s.battle;
+			if (!battle || battle.gameOver) return;
+			try {
+				executeAiTurn(battle, s.cardUpgrades);
+			} catch (e) {
+				console.error("[ai] first turn crashed:", e.message);
+				battle.aiAction = null;
+			}
+			if (
+				battle.enemyCards.every((c) => c.hp <= 0) ||
+				battle.playerCards.every((c) => c.hp <= 0)
+			) {
+				endGame(
+					battle,
+					battle.enemyCards.every((c) => c.hp <= 0),
+					s,
+					socket,
+					sessionId,
+					s.userId,
+				);
+				return;
+			}
+			battle.isPlayerTurn = true;
+			battle.turnLocked = false;
+			battle.abilitiesUsedThisTurn = [];
+			battle.firstTurn = false;
+			battle.activeIdx = -1;
+			for (const c of battle.playerCards) c.tauntActive = false;
+			for (const c of battle.enemyCards) c.tauntActive = false;
+			battle.battleLog.push(
+				'<span class="log-ability">— Новый ход —</span>',
+			);
+			battle.aiAction = null;
+			socket.emit("stateUpdate", getSessionState(sessionId));
+		}, aiThinkMs);
+	}
+}
+
+// ═══ PVP ═══
+const pvpRooms = {};
+const matchQueue = [];
+
+function seedPvpBattle(deckA, upgA, deckB, upgB) {
+	return {
+		cardsA: buildDeckCards(deckA, upgA),
+		cardsB: buildDeckCards(deckB, upgB),
+		playerCards: null,
+		enemyCards: null,
+		turnOwner: Math.random() < 0.5 ? "A" : "B",
+		activeIdx: -1,
+		gameOver: false,
+		turnLocked: false,
+		critActivated: false,
+		fireballActive: false,
+		waitingForCritTarget: null,
+		firstTurn: true,
+		turnCount: 0,
+		abilitiesUsedThisTurn: [],
+		battleLog: [],
+		deckIdsA: deckA,
+		deckIdsB: deckB,
+		playerAction: null,
+		aiAction: null,
+		gameEnd: null,
+	};
+}
+
+function syncPvpSide(battle) {
+	if (battle.turnOwner === "A") {
+		battle.playerCards = battle.cardsA;
+		battle.enemyCards = battle.cardsB;
+	} else {
+		battle.playerCards = battle.cardsB;
+		battle.enemyCards = battle.cardsA;
+	}
+}
+
+function getSessionShellState(sessionId) {
+	const s = sessions[sessionId];
+	if (!s) return {};
+	return {
+		playerGold: s.playerGold,
+		playerCollection: s.playerCollection,
+		cardUpgrades: s.cardUpgrades,
+		selectedDeck: s.selectedDeck,
+		shopCards: s.shopCards.map((c) => ({ id: c.id, price: c.price })),
+	};
+}
+
+function emitPvpState(roomId) {
+	const room = pvpRooms[roomId];
+	if (!room) return;
+	const b = room.battle;
+	const shared = {
+		activeIdx: b.activeIdx,
+		gameOver: b.gameOver,
+		turnLocked: b.turnLocked,
+		critActivated: b.critActivated,
+		fireballActive: b.fireballActive,
+		waitingForCritTarget: b.waitingForCritTarget,
+		firstTurn: b.firstTurn,
+		abilitiesUsedThisTurn: b.abilitiesUsedThisTurn,
+		log: [...b.battleLog],
+		playerAction: b.playerAction,
+		aiAction: null,
+		gameEnd: b.gameEnd,
+		isPvp: true,
+	};
+	if (room.sideA.socket.connected) {
+		room.sideA.socket.emit("stateUpdate", {
+			...getSessionShellState(room.sideA.sessionId),
+			battle: {
+				...shared,
+				playerCards: b.cardsA,
+				enemyCards: b.cardsB,
+				isPlayerTurn: b.turnOwner === "A",
+			},
+		});
+	}
+	if (room.sideB.socket.connected) {
+		room.sideB.socket.emit("stateUpdate", {
+			...getSessionShellState(room.sideB.sessionId),
+			battle: {
+				...shared,
+				playerCards: b.cardsB,
+				enemyCards: b.cardsA,
+				isPlayerTurn: b.turnOwner === "B",
+			},
+		});
+	}
+}
+
+function armTurnTimer(roomId) {
+	const room = pvpRooms[roomId];
+	if (!room) return;
+	clearTimeout(room.turnTimer);
+	room.turnTimer = setTimeout(() => {
+		if (!pvpRooms[roomId] || room.battle.gameOver) return;
+		room.battle.battleLog.push(
+			'<span class="log-ability">⏱ Ход пропущен по таймауту.</span>',
+		);
+		endPvpTurn(roomId);
+	}, PVP_TURN_TIMEOUT_MS);
+}
+
+function endPvpTurn(roomId) {
+	const room = pvpRooms[roomId];
+	if (!room) return;
+	const battle = room.battle;
+	if (battle.gameOver) return;
+
+	battle.turnLocked = true;
+	battle.critActivated = false;
+	battle.fireballActive = false;
+	battle.waitingForCritTarget = null;
+	battle.turnCount++;
+
+	for (const c of battle.enemyCards) {
+		if (c.dotTurns > 0) {
+			c.hp = Math.max(0, c.hp - 1);
+			c.dotTurns--;
+			battle.battleLog.push(
+				`<span class="log-enemy">${c.name}</span> получает <span class="log-dmg">1</span> урона от чумы`,
+			);
+		}
+	}
+
+	if (battle.enemyCards.every((c) => c.hp <= 0)) {
+		endPvpGame(roomId, battle.turnOwner, "victory");
+		return;
+	}
+	if (battle.playerCards.every((c) => c.hp <= 0)) {
+		endPvpGame(roomId, battle.turnOwner === "A" ? "B" : "A", "victory");
+		return;
+	}
+
+	battle.turnOwner = battle.turnOwner === "A" ? "B" : "A";
+	syncPvpSide(battle);
+	battle.turnLocked = false;
+	battle.abilitiesUsedThisTurn = [];
+	battle.firstTurn = false;
+	battle.activeIdx = -1;
+	battle.playerAction = null;
+	battle.aiAction = null;
+
+	for (const c of battle.cardsA) c.tauntActive = false;
+	for (const c of battle.cardsB) c.tauntActive = false;
+	for (const c of battle.playerCards) {
+		if (c.type === "assa" && c.mana >= 2) c.critReady = true;
+	}
+
+	battle.battleLog.push('<span class="log-ability">— Новый ход —</span>');
+	emitPvpState(roomId);
+	armTurnTimer(roomId);
+}
+
+function endPvpGame(roomId, winnerSide, reason) {
+	const room = pvpRooms[roomId];
+	if (!room) return;
+	const battle = room.battle;
+	if (battle.gameOver) return;
+	battle.gameOver = true;
+	clearTimeout(room.turnTimer);
+	clearTimeout(room.disconnectTimer);
+
+	const reward =
+		BASE_REWARD + Math.floor(Math.random() * 30) + battle.turnCount * 2;
+	const sides = { A: room.sideA, B: room.sideB };
+
+	for (const side of ["A", "B"]) {
+		const p = sides[side];
+		const sess = sessions[p.sessionId];
+		const won = side === winnerSide;
+		if (sess) {
+			sess.pvpRoomId = null;
+			if (won) {
+				sess.playerGold += reward;
+				sess.wins = (sess.wins || 0) + 1;
+			} else {
+				sess.losses = (sess.losses || 0) + 1;
+			}
+		}
+		if (p.userId) {
+			saveBattleResult(
+				p.userId,
+				won ? "win" : "loss",
+				won ? reward : 0,
+				side === "A" ? battle.deckIdsA : battle.deckIdsB,
+				side === "A" ? battle.deckIdsB : battle.deckIdsA,
+				battle.turnCount,
+				battle.battleLog,
+			).catch((e) => console.error("PvP save error:", e.message));
+			if (sess)
+				savePlayerData(p.userId, sess).catch((e) =>
+					console.error("Player save error:", e.message),
+				);
+		}
+	}
+
+	battle.battleLog.push(
+		reason === "opponent_disconnected"
+			? '<span class="log-victory">Соперник отключился — техпобеда!</span>'
+			: '<span class="log-victory">Бой окончен!</span>',
+	);
+
+	const shared = {
+		activeIdx: battle.activeIdx,
+		gameOver: true,
+		turnLocked: true,
+		critActivated: false,
+		fireballActive: false,
+		waitingForCritTarget: null,
+		firstTurn: battle.firstTurn,
+		abilitiesUsedThisTurn: battle.abilitiesUsedThisTurn,
+		log: [...battle.battleLog],
+		playerAction: null,
+		aiAction: null,
+		isPlayerTurn: false,
+		isPvp: true,
+	};
+	if (room.sideA.socket.connected) {
+		room.sideA.socket.emit("stateUpdate", {
+			...getSessionShellState(room.sideA.sessionId),
+			battle: {
+				...shared,
+				playerCards: battle.cardsA,
+				enemyCards: battle.cardsB,
+				gameEnd: {
+					victory: winnerSide === "A",
+					reward: winnerSide === "A" ? reward : 0,
+					reason,
+				},
+			},
+		});
+	}
+	if (room.sideB.socket.connected) {
+		room.sideB.socket.emit("stateUpdate", {
+			...getSessionShellState(room.sideB.sessionId),
+			battle: {
+				...shared,
+				playerCards: battle.cardsB,
+				enemyCards: battle.cardsA,
+				gameEnd: {
+					victory: winnerSide === "B",
+					reward: winnerSide === "B" ? reward : 0,
+					reason,
+				},
+			},
+		});
+	}
+
+	for (const p of [room.sideA, room.sideB]) {
+		const sess = sessions[p.sessionId];
+		if (sess) {
+			sess.battle = null;
+			sess.selectedDeck = [];
+			sess.shopCards = eraDef();
+		}
+	}
+	delete pvpRooms[roomId];
+}
+
+function createPvpRoom(p1, p2) {
+	const roomId = crypto.randomBytes(8).toString("hex");
+	const battle = seedPvpBattle(
+		p1.deckIds,
+		p1.cardUpgrades,
+		p2.deckIds,
+		p2.cardUpgrades,
+	);
+	syncPvpSide(battle);
+	pvpRooms[roomId] = {
+		battle,
+		sideA: p1,
+		sideB: p2,
+		turnTimer: null,
+		disconnectTimer: null,
+	};
+	if (sessions[p1.sessionId]) sessions[p1.sessionId].pvpRoomId = roomId;
+	if (sessions[p2.sessionId]) sessions[p2.sessionId].pvpRoomId = roomId;
+	battle.battleLog.push('<span class="log-ability">⚔ Битва начинается!</span>');
+	emitPvpState(roomId);
+	armTurnTimer(roomId);
+}
+
+function countOnlinePlayers(excludeUserId) {
+	const ids = new Set();
+	for (const key of Object.keys(sessions)) {
+		const sess = sessions[key];
+		if (!sess.userId || sess.userId === excludeUserId) continue;
+		const sock = IO.sockets.sockets.get(key);
+		if (sock && sock.connected) ids.add(sess.userId);
+	}
+	return ids.size;
+}
+
+function tryMatch() {
+	console.log(`[match] tryMatch queue=${matchQueue.length}`);
+	while (matchQueue.length >= 2) {
+		// Пропускаем мёртвые записи (сокет отключился до матча)
+		while (matchQueue.length && !matchQueue[0].socket.connected)
+			matchQueue.shift();
+		if (matchQueue.length < 2) break;
+		const p1 = matchQueue.shift();
+		if (!p1.socket.connected) continue;
+		const p2 = matchQueue.shift();
+		if (!p2.socket.connected) {
+			matchQueue.unshift(p1);
+			continue;
+		}
+		console.log(`[match] matched ${p1.sessionId} vs ${p2.sessionId}`);
+		if (sessions[p1.sessionId])
+			clearTimeout(sessions[p1.sessionId].matchmakingTimer);
+		if (sessions[p2.sessionId])
+			clearTimeout(sessions[p2.sessionId].matchmakingTimer);
+		createPvpRoom(p1, p2);
+		console.log(`[match] PvP room created`);
+	}
+}
+
+function fallbackToBot(s, socket, sessionId) {
+	const idx = matchQueue.findIndex((q) => q.sessionId === sessionId);
+	if (idx === -1) return;
+	matchQueue.splice(idx, 1);
+	beginPveBattle(s, socket, sessionId);
+}
+
+function handlePvpAction(roomId, sessionId, action) {
+	const room = pvpRooms[roomId];
+	if (!room) return;
+	const battle = room.battle;
+	if (battle.gameOver) return;
+	const side =
+		room.sideA.sessionId === sessionId
+			? "A"
+			: room.sideB.sessionId === sessionId
+				? "B"
+				: null;
+	if (!side || battle.turnOwner !== side) return;
+
+	clearTimeout(room.turnTimer);
+	battle.aiAction = null;
+	const { type, attackerIdx, defenderIdx } = action;
+
+	if (type === "endTurn") {
+		endPvpTurn(roomId);
+		return;
+	}
+
+	const attacker = battle.playerCards[attackerIdx];
+	if (!attacker || attacker.hp <= 0) {
+		armTurnTimer(roomId);
+		return;
+	}
+
+	let actionResult = null;
+	const cardUpgrades = (side === "A" ? room.sideA : room.sideB).cardUpgrades;
+
+	if (type === "attack") {
+		actionResult = executeAttack(battle, attackerIdx, defenderIdx, true);
+	} else if (type === "crit") {
+		if (attacker.type !== "assa" || attacker.mana < 2) {
+			armTurnTimer(roomId);
+			return;
+		}
+		if (battle.firstTurn) {
+			armTurnTimer(roomId);
+			return;
+		}
+		if (battle.abilitiesUsedThisTurn.includes(attackerIdx)) {
+			armTurnTimer(roomId);
+			return;
+		}
+		if (defenderIdx !== undefined) {
+			const ignoreTaunt = attacker.baseId === "assa_03";
+			if (!ignoreTaunt) {
+				const taunter = battle.enemyCards.find(
+					(e) => e.tauntActive && e.hp > 0,
+				);
+				if (taunter && defenderIdx !== battle.enemyCards.indexOf(taunter)) {
+					armTurnTimer(roomId);
+					return;
+				}
+			}
+		}
+		actionResult = executeCrit(battle, attackerIdx, defenderIdx);
+	} else if (type === "fireball") {
+		if (attacker.type !== "mage") {
+			armTurnTimer(roomId);
+			return;
+		}
+		if (battle.firstTurn) {
+			armTurnTimer(roomId);
+			return;
+		}
+		if (battle.abilitiesUsedThisTurn.includes(attackerIdx)) {
+			armTurnTimer(roomId);
+			return;
+		}
+		if (defenderIdx !== undefined) {
+			const taunter = battle.enemyCards.find((e) => e.tauntActive && e.hp > 0);
+			if (taunter && defenderIdx !== battle.enemyCards.indexOf(taunter)) {
+				armTurnTimer(roomId);
+				return;
+			}
+		}
+		const cost = attacker.baseId === "mage_01" ? 2 : 3;
+		if (attacker.mana < cost) {
+			armTurnTimer(roomId);
+			return;
+		}
+		actionResult = executeFireball(
+			battle,
+			attackerIdx,
+			defenderIdx,
+			cardUpgrades,
+		);
+	} else if (type === "taunt") {
+		if (attacker.type !== "tank" || attacker.mana < 2) {
+			armTurnTimer(roomId);
+			return;
+		}
+		if (battle.firstTurn) {
+			armTurnTimer(roomId);
+			return;
+		}
+		if (battle.abilitiesUsedThisTurn.includes(attackerIdx)) {
+			armTurnTimer(roomId);
+			return;
+		}
+		executeTaunt(battle, attackerIdx, cardUpgrades);
+		battle.abilitiesUsedThisTurn.push(attackerIdx);
+		battle.playerAction = {
+			type: "taunt",
+			attackerIdx,
+			attackerName: attacker.name,
+			hpHealed: attacker.baseId === "tank_05" ? 2 : 0,
+		};
+		endPvpTurn(roomId);
+		return;
+	}
+
+	if (actionResult) battle.playerAction = actionResult;
+
+	if (
+		actionResult &&
+		(actionResult.type === "crit_ready" ||
+			actionResult.type === "fireball_ready")
+	) {
+		emitPvpState(roomId);
+		armTurnTimer(roomId);
+		return;
+	}
+
+	endPvpTurn(roomId);
 }
 
 // ═══ AUTH ENDPOINTS ═══
@@ -638,6 +1163,24 @@ IO.on("connection", (socket) => {
 				sessions[sessionId].shopCards = eraDef();
 			}
 
+			// Реконнект в разгар PvP-боя — перепривязываем сокет к комнате
+			if (sessions[sessionId].pvpRoomId) {
+				const room = pvpRooms[sessions[sessionId].pvpRoomId];
+				if (room) {
+					clearTimeout(room.disconnectTimer);
+					if (room.sideA.userId === userId) {
+						room.sideA.sessionId = sessionId;
+						room.sideA.socket = socket;
+					} else if (room.sideB.userId === userId) {
+						room.sideB.sessionId = sessionId;
+						room.sideB.socket = socket;
+					}
+					emitPvpState(sessions[sessionId].pvpRoomId);
+				} else {
+					sessions[sessionId].pvpRoomId = null;
+				}
+			}
+
 			console.log(`[auth] tg${decoded.telegram_id} -> ${sessionId}`);
 			socket.emit("init", getSessionState(sessionId));
 		} catch (e) {
@@ -734,64 +1277,65 @@ IO.on("connection", (socket) => {
 		socket.emit("stateUpdate", getSessionState(sessionId));
 	});
 
-	// ═══ START BATTLE ═══
+	// ═══ MATCHMAKING ═══
 	socket.on("startBattle", () => {
 		const s = sessions[sessionId];
 		if (!s) return;
-		if (s.selectedDeck.length !== CARDS_PER_SIDE) {
+		beginPveBattle(s, socket, sessionId);
+	});
+
+	socket.on("findMatch", () => {
+		const s = sessions[sessionId];
+		console.log(`[match] findMatch sessionId=${sessionId} deck=${s?.selectedDeck?.length} queue=${matchQueue.length}`);
+		if (!s || s.selectedDeck.length !== CARDS_PER_SIDE) {
 			socket.emit("error", "Выберите ровно 3 карты");
 			return;
 		}
-		// Generate enemy deck from NPC pool
-		const npcPool = ALL_CARDS.filter((c) => !s.selectedDeck.includes(c.id));
-		const enemyDeck = shuffle(npcPool)
-			.slice(0, CARDS_PER_SIDE)
-			.map((c) => c.id);
-		s.battle = seedBattle(s.selectedDeck, enemyDeck, s.cardUpgrades);
-		s.battle.battleLog.push(
-			'<span class="log-ability">⚔ Битва начинается!</span>',
-		);
-		socket.emit("stateUpdate", getSessionState(sessionId));
+		if (s.pvpRoomId || matchQueue.find((q) => q.sessionId === sessionId))
+			return;
 
-		// If AI goes first, trigger its turn with thinking delay
-		if (!s.battle.isPlayerTurn) {
-			const aiThinkMs = 3000 + Math.floor(Math.random() * 5000);
-			console.log(`[ai] first turn, thinking for ${aiThinkMs}ms...`);
-			setTimeout(() => {
-				const battle = s.battle;
-				if (!battle || battle.gameOver) return;
-				try {
-					executeAiTurn(battle, s.cardUpgrades);
-				} catch (e) {
-					console.error("[ai] first turn crashed:", e.message);
-					battle.aiAction = null;
-				}
-				if (
-					battle.enemyCards.every((c) => c.hp <= 0) ||
-					battle.playerCards.every((c) => c.hp <= 0)
-				) {
-					endGame(
-						battle,
-						battle.enemyCards.every((c) => c.hp <= 0),
-						s,
-						socket,
-						sessionId,
-						s.userId,
-					);
-					return;
-				}
-				battle.isPlayerTurn = true;
-				battle.turnLocked = false;
-				battle.abilitiesUsedThisTurn = [];
-				battle.firstTurn = false;
-				battle.activeIdx = -1;
-				for (const c of battle.playerCards) c.tauntActive = false;
-				for (const c of battle.enemyCards) c.tauntActive = false;
-				battle.battleLog.push('<span class="log-ability">— Новый ход —</span>');
-				battle.aiAction = null;
-				socket.emit("stateUpdate", getSessionState(sessionId));
-			}, aiThinkMs);
-		}
+		matchQueue.push({
+			sessionId,
+			userId,
+			socket,
+			deckIds: [...s.selectedDeck],
+			cardUpgrades: s.cardUpgrades,
+		});
+		socket.emit("matchmakingStatus", { status: "searching" });
+		tryMatch();
+
+		if (s.pvpRoomId) return; // заматчились сразу
+
+		const othersOnline = countOnlinePlayers(userId) > 0;
+		const waitMs = othersOnline
+			? MATCHMAKING_TIMEOUT_WITH_PLAYERS_MS
+			: MATCHMAKING_MIN_NO_PLAYERS_MS +
+				Math.floor(
+					Math.random() *
+						(MATCHMAKING_MAX_NO_PLAYERS_MS -
+							MATCHMAKING_MIN_NO_PLAYERS_MS),
+				);
+		console.log(
+			`[match] othersOnline=${othersOnline} waitMs=${waitMs}`,
+		);
+		s.matchmakingTimer = setTimeout(
+			() => fallbackToBot(s, socket, sessionId),
+			waitMs,
+		);
+	});
+
+	socket.on("cancelMatch", () => {
+		const idx = matchQueue.findIndex((q) => q.sessionId === sessionId);
+		if (idx >= 0) matchQueue.splice(idx, 1);
+		const s = sessions[sessionId];
+		if (s) clearTimeout(s.matchmakingTimer);
+		socket.emit("matchmakingStatus", { status: "cancelled" });
+	});
+
+	socket.on("pvpAction", (action) => {
+		const s = sessions[sessionId];
+		if (!s?.pvpRoomId) return;
+		handlePvpAction(s.pvpRoomId, sessionId, action);
 	});
 
 	// ═══ PLAYER ACTION ═══
@@ -809,6 +1353,7 @@ IO.on("connection", (socket) => {
 			console.log("[action] no session");
 			return;
 		}
+		if (s.pvpRoomId) return; // PvP использует событие pvpAction
 		const battle = s.battle;
 		if (!battle || battle.gameOver || !battle.isPlayerTurn) {
 			console.log(
@@ -958,6 +1503,14 @@ IO.on("connection", (socket) => {
 	socket.on("surrender", () => {
 		const s = sessions[sessionId];
 		if (!s) return;
+		if (s.pvpRoomId) {
+			const room = pvpRooms[s.pvpRoomId];
+			if (room && !room.battle.gameOver) {
+				const side = room.sideA.sessionId === sessionId ? "A" : "B";
+				endPvpGame(s.pvpRoomId, side === "A" ? "B" : "A", "surrender");
+			}
+			return;
+		}
 		const battle = s.battle;
 		if (!battle || battle.gameOver) return;
 
@@ -999,8 +1552,27 @@ IO.on("connection", (socket) => {
 	// ═══ DISCONNECT ═══
 	socket.on("disconnect", async () => {
 		console.log(`[disconnect] ${sessionId}`);
-		if (userId && sessions[sessionId]) {
-			const s = sessions[sessionId];
+		// Чистим очередь матчмейкинга — иначе мёртвый сокет останется и сломает подбор
+		const qIdx = matchQueue.findIndex((q) => q.sessionId === sessionId);
+		if (qIdx >= 0) matchQueue.splice(qIdx, 1);
+		const s = sessions[sessionId];
+		if (s) clearTimeout(s.matchmakingTimer);
+		if (s?.pvpRoomId) {
+			const room = pvpRooms[s.pvpRoomId];
+			if (room && !room.battle.gameOver) {
+				const side = room.sideA.sessionId === sessionId ? "A" : "B";
+				room.disconnectTimer = setTimeout(() => {
+					if (pvpRooms[s.pvpRoomId] && !room.battle.gameOver) {
+						endPvpGame(
+							s.pvpRoomId,
+							side === "A" ? "B" : "A",
+							"opponent_disconnected",
+						);
+					}
+				}, PVP_RECONNECT_GRACE_MS);
+			}
+		}
+		if (s && userId) {
 			await savePlayerData(userId, s);
 			// Держим сессию 2 минуты на случай реконнекта (F5)
 			setTimeout(() => {
