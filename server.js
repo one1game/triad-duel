@@ -60,16 +60,16 @@ function generateAuthCode() {
 	}
 	return code;
 }
-function resolveAuthCode(code, telegramId) {
+function resolveAuthCode(code, telegramId, tgUser) {
 	if (!authCodes.has(code)) return false;
-	authCodes.set(code, { telegramId, createdAt: Date.now() });
+	authCodes.set(code, { telegramId, tgUser, createdAt: Date.now() });
 	return true;
 }
-function getAuthCodeTelegramId(code) {
+function getAuthCodeInfo(code) {
 	const entry = authCodes.get(code);
 	if (!entry?.telegramId) return null;
 	authCodes.delete(code);
-	return entry.telegramId;
+	return { telegramId: entry.telegramId, tgUser: entry.tgUser };
 }
 
 // ═══ CONSTANTS ═══
@@ -83,6 +83,15 @@ const MATCHMAKING_MIN_NO_PLAYERS_MS = 3000;
 const MATCHMAKING_MAX_NO_PLAYERS_MS = 10000;
 const PVP_TURN_TIMEOUT_MS = 45000;
 const PVP_RECONNECT_GRACE_MS = 30000;
+
+// ═══ BOT POOL ═══
+const BOT_POOL = [
+	{ name: "Зиновий", avatar: "img/ava-bot/zinoviy.png" },
+	{ name: "ИланМакс", avatar: "img/ava-bot/ilanmaks.png" },
+	{ name: "Рональдо", avatar: "img/ava-bot/ronaldo.png" },
+	{ name: "ГрязныйГари", avatar: "img/ava-bot/gary.png" },
+	{ name: "Маратустра", avatar: "img/ava-bot/maratustra.png" },
+];
 
 const ALL_CARDS = [
 	{
@@ -551,9 +560,12 @@ function beginPveBattle(s, socket, sessionId) {
 	const enemyDeck = shuffle(npcPool)
 		.slice(0, CARDS_PER_SIDE)
 		.map((c) => c.id);
+	const bot = BOT_POOL[Math.floor(Math.random() * BOT_POOL.length)];
 	s.battle = seedBattle(s.selectedDeck, enemyDeck, s.cardUpgrades);
+	s.battle.enemyName = bot.name;
+	s.battle.enemyAvatar = bot.avatar;
 	s.battle.battleLog.push(
-		'<span class="log-ability">⚔ Битва начинается!</span>',
+		`<span class="log-ability">⚔ Битва против <b>${bot.name}</b>!</span>`,
 	);
 	socket.emit("stateUpdate", getSessionState(sessionId));
 
@@ -646,6 +658,7 @@ function getSessionShellState(sessionId) {
 		cardUpgrades: s.cardUpgrades,
 		selectedDeck: s.selectedDeck,
 		shopCards: s.shopCards.map((c) => ({ id: c.id, price: c.price })),
+		tgUser: s.tgUser || null,
 	};
 }
 
@@ -1069,20 +1082,34 @@ APP.get("/auth/bot/start", (_req, res) => {
 APP.get("/auth/bot/poll", async (req, res) => {
 	const { code } = req.query;
 	if (!code) return res.status(400).json({ error: "code required" });
-	const telegramId = getAuthCodeTelegramId(code);
-	if (!telegramId) return res.json({ ready: false });
+	const info = getAuthCodeInfo(code);
+	if (!info) return res.json({ ready: false });
+	const telegramId = info.telegramId;
+	const tgUser = info.tgUser || { firstName: `tg${telegramId}` };
 	const player = await getOrCreatePlayer(telegramId, {
-		username: `tg${telegramId}`,
+		username: tgUser.firstName || tgUser.username || `tg${telegramId}`,
 	});
 	const token = signJWT({
 		sub: player.id,
 		telegram_id: telegramId,
 		username: player.username,
+		tgUser: {
+			id: telegramId,
+			firstName: tgUser.firstName,
+			lastName: tgUser.lastName || null,
+			username: tgUser.username || null,
+		},
 	});
 	res.json({
 		ready: true,
 		token,
 		user: { id: player.id, username: player.username },
+		tgUser: {
+			id: telegramId,
+			firstName: tgUser.firstName,
+			lastName: tgUser.lastName || null,
+			username: tgUser.username || null,
+		},
 	});
 });
 
@@ -1095,7 +1122,12 @@ APP.post("/bot/webhook", express.json(), async (req, res) => {
 		const telegramId = msg.from.id;
 		if (text.startsWith("/start ")) {
 			const code = text.replace("/start ", "").trim();
-			if (resolveAuthCode(code, telegramId)) {
+			const tgUser = {
+				firstName: msg.from.first_name || null,
+				lastName: msg.from.last_name || null,
+				username: msg.from.username || null,
+			};
+			if (resolveAuthCode(code, telegramId, tgUser)) {
 				console.log(
 					`[bot] auth code ${code.substring(0, 8)}... → tg${telegramId}`,
 				);
@@ -1158,6 +1190,10 @@ IO.on("connection", (socket) => {
 			sessions[sessionId].selectedDeck = dbPlayer.selected_deck || [];
 			sessions[sessionId].wins = dbPlayer.wins || 0;
 			sessions[sessionId].losses = dbPlayer.losses || 0;
+			sessions[sessionId].tgUser = decoded.tgUser || {
+				id: decoded.telegram_id,
+				firstName: decoded.username,
+			};
 			// shopCards не перезаписываем при реконнекте — сохраняем текущий магазин
 			if (!isReconnect) {
 				sessions[sessionId].shopCards = eraDef();
@@ -1595,6 +1631,7 @@ function getSessionState(sessionId) {
 		selectedDeck: s.selectedDeck,
 		shopCards: s.shopCards.map((c) => ({ id: c.id, price: c.price })),
 		battle: s.battle ? getBattleState(s.battle) : null,
+		tgUser: s.tgUser || null,
 	};
 }
 
@@ -1602,6 +1639,8 @@ function getBattleState(b) {
 	return {
 		playerCards: b.playerCards.map((c) => ({ ...c })),
 		enemyCards: b.enemyCards.map((c) => ({ ...c })),
+		enemyName: b.enemyName || null,
+		enemyAvatar: b.enemyAvatar || null,
 		activeIdx: b.activeIdx,
 		isPlayerTurn: b.isPlayerTurn,
 		gameOver: b.gameOver,

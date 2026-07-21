@@ -18,6 +18,12 @@
   @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
   .gold-display{display:inline-flex;align-items:center;gap:6px;font-family:'Cinzel',serif;font-size:16px;font-weight:600;color:var(--accent-gold-bright);text-shadow:0 0 20px rgba(240,214,138,.4);letter-spacing:1px}
   .gold-display img{width:18px;height:18px;object-fit:contain}
+  .user-badge{display:inline-flex;align-items:center;gap:8px;padding:4px 12px 4px 4px;background:rgba(20,20,25,.5);border:1px solid var(--border-dim);border-radius:20px;transition:all .3s}
+  .user-badge:hover{border-color:var(--border-glow)}
+  .user-badge-avatar{width:26px;height:26px;border-radius:50%;object-fit:cover;border:1px solid var(--border-glow);flex-shrink:0}
+  .user-badge-name{font-size:11px;color:var(--text-dim);font-family:'Inter',sans-serif;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .enemy-badge{border-color:#5a1a1a}
+  .enemy-badge .user-badge-name{color:#c06060}
   .btn{background:rgba(20,20,25,.6);border:1px solid var(--border-dim);color:var(--text-dim);font-family:'Cinzel',serif;padding:12px 28px;cursor:pointer;letter-spacing:2px;text-transform:uppercase;transition:all .35s cubic-bezier(.4,0,.2,1);font-size:12px;font-weight:600;position:relative;overflow:hidden}
   .btn::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.04),transparent);transition:left .6s cubic-bezier(.4,0,.2,1)}.btn:hover::before{left:100%}
   .btn:hover{border-color:var(--accent-gold);color:var(--accent-gold-bright);box-shadow:0 0 25px rgba(138,115,85,.12);transform:translateY(-1px)}.btn:active{transform:scale(.96);transition:transform .1s ease}
@@ -97,7 +103,7 @@
   @keyframes pulse-enemy{0%,100%{opacity:1}50%{opacity:.6}}
   .battlefield{display:flex;flex-direction:column;gap:32px;width:100%;padding:20px 0;position:relative}
   .battlefield::before{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.05),transparent);transform:translateY(-50%)}
-  .card-row{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;position:relative;z-index:2}
+  .card-row{display:flex;justify-content:center;gap:24px;flex-wrap:nowrap;position:relative;z-index:2}
   .card-row.waiting .card{filter:brightness(.45) saturate(.5);transition:filter .5s ease}.card-row.waiting .card.selected{filter:brightness(.6) saturate(.5)}
   .card-row.active .card{filter:brightness(1) saturate(1);transition:filter .5s ease}.card-row.active .card.selected{filter:brightness(1.15) saturate(1.1)}
   .card{width:180px;height:270px;position:relative;cursor:pointer;transition:transform .35s cubic-bezier(.2,.8,.2,1),border-color .3s ease,box-shadow .35s ease;border-radius:4px;overflow:hidden;border:1px solid var(--border-dim);background:var(--bg-surface);box-shadow:0 15px 35px rgba(0,0,0,.7);will-change:transform;contain:layout style paint}
@@ -154,6 +160,32 @@
   .auth-switch{font-size:11px;color:var(--text-dim);text-align:center;font-family:'Inter',sans-serif}.auth-switch a{color:var(--accent-gold-bright);cursor:pointer;text-decoration:none;font-weight:600;transition:color .2s}.auth-switch a:hover{color:#f0d68a}
   .auth-info{font-size:10px;color:#4a4a50;text-align:center;font-family:'Inter',sans-serif;line-height:1.5}
   #usernameRow{display:none}
+  @media(max-width:600px){
+    .card-row{gap:8px}
+    .card{width:105px;height:158px;font-size:7px}
+    .card-name{font-size:9px;margin-bottom:2px}
+    .card-stats{font-size:8px;gap:4px;margin-bottom:2px}
+    .card-type-badge{font-size:6px;padding:1px 4px}
+    .card-text{font-size:6px;padding:2px 4px;line-height:1.2}
+    .card-passive{font-size:6px;line-height:1.2;margin-bottom:2px}
+    .card-hp-bar{height:3px;margin-top:2px}
+    .card-status-zone{font-size:7px;padding:1px 3px;gap:2px}
+    .mana-orb{width:5px;height:5px}.mana-orbs{bottom:4px;left:4px;gap:2px}
+    .battle-header{padding:6px 8px;flex-wrap:nowrap;gap:4px}
+    .battle-header .title{font-size:14px;flex-shrink:0}
+    .battle-header>div{gap:4px!important}
+    .turn-indicator{font-size:8px;padding:2px 6px}
+    .battle-header .btn.small{padding:4px 8px;font-size:8px}
+    .user-badge-name{max-width:50px;font-size:8px}.user-badge{padding:2px 6px 2px 2px;gap:3px}
+    .user-badge-avatar{width:18px;height:18px}
+    .ability-panel{gap:6px;flex-wrap:nowrap;overflow-x:auto}
+    .ability-panel .btn{padding:6px 10px;font-size:9px;white-space:nowrap}
+    .ability-panel .btn.small{padding:4px 8px;font-size:8px}
+    .damage-number{font-size:18px}
+    .screen{padding:8px}
+    #endTurnBtn{font-size:11px;padding:10px 24px}
+    .battle-log{font-size:10px;max-height:80px;padding:8px}
+  }
 </style>
 </head>
 <body>
@@ -206,7 +238,13 @@
   <div class="shop-header">
     <button class="btn small" onclick="backToMenu()">◂ Меню</button>
     <span class="section-title" id="shopTabTitle">Склеп</span>
-    <span class="gold-display" id="shopGold"><img src="img/game/Remains_icon.webp" alt=""> <span id="shopGoldAmt">100</span></span>
+    <div style="display:flex;align-items:center;gap:16px">
+      <span class="user-badge" id="shopUserBadge" style="display:none">
+        <img class="user-badge-avatar" id="shopUserAvatar" src="" alt="">
+        <span class="user-badge-name" id="shopUserName">—</span>
+      </span>
+      <span class="gold-display" id="shopGold"><img src="img/game/Remains_icon.webp" alt=""> <span id="shopGoldAmt">100</span></span>
+    </div>
   </div>
   <div class="shop-tabs">
     <button class="shop-tab shop-tab-sklep active" id="tabShopBtn" onclick="showShopTab('shop')"><div class="shop-tab-bg"></div><div class="shop-tab-title">Склеп</div></button>
@@ -243,9 +281,21 @@
 </div>
 <div class="screen" id="battleScreen">
   <div class="battle-header">
-    <button class="btn small surrender-btn" onclick="surrenderBattle()">🏳 Сдаться</button>
-    <span class="title" style="font-family:'UnifrakturCook',cursive;font-size:24px;color:#c4a265;text-shadow:0 0 20px rgba(138,115,85,.2);">Битва</span>
-    <span class="turn-indicator" id="turnIndicator">Ваш ход</span>
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="btn small surrender-btn" onclick="surrenderBattle()">🏳 Сдаться</button>
+      <span class="user-badge enemy-badge" id="enemyBadge" style="display:none">
+        <img class="user-badge-avatar" id="enemyAvatar" src="" alt="">
+        <span class="user-badge-name" id="enemyNameDisplay">—</span>
+      </span>
+    </div>
+    <span class="title" style="font-family:'UnifrakturCook',cursive;font-size:24px;color:#c4a265;text-shadow:0 0 20px rgba(138,115,85,.2);">vs</span>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span class="user-badge" id="battleUserBadge" style="display:none">
+        <img class="user-badge-avatar" id="battleUserAvatar" src="" alt="">
+        <span class="user-badge-name" id="battleUserName">—</span>
+      </span>
+      <span class="turn-indicator" id="turnIndicator">Ваш ход</span>
+    </div>
   </div>
   <div class="battlefield">
     <div class="card-row" id="enemyRow"></div>
@@ -294,6 +344,12 @@ socket.on('connect',()=>{
 socket.on('disconnect',()=>{console.log('[socket] disconnected')});
 
 let pendingInit=null;
+
+// Восстанавливаем tgUser из localStorage (на случай старого JWT без tgUser)
+try{
+  const savedTgUser=JSON.parse(localStorage.getItem('td_tgUser'));
+  if(savedTgUser?.id) updateUserBadge(savedTgUser);
+}catch(e){}
 
 socket.on('init',(state)=>{
   if(!accessToken){
@@ -462,6 +518,7 @@ function toggleBGM(){
 // ═══ GLOBAL STATE ═══
 let playerGold=100,playerCollection=['mage_01','tank_01','assa_01'],selectedDeck=[];
 let playerCards=[],enemyCards=[],activeIdx=-1,isPlayerTurn=true,gameOver=false;
+let enemyName=null,enemyAvatar=null;
 let abilitiesUsedThisTurn=new Set();
 let cardUpgrades={};
 let shopCards=[];
@@ -480,7 +537,39 @@ function applyFullState(state){
   selectedDeck=state.selectedDeck||[];
   cardUpgrades=state.cardUpgrades||{};
   shopCards=(state.shopCards||[]).map(c=>enrichCard(c));
+  if(state.tgUser) updateUserBadge(state.tgUser);
   if(state.battle)applyBattleState(state);
+}
+
+function updateUserBadge(tgUser){
+  if(!tgUser) return;
+  const hasValidId=tgUser.id && tgUser.id > 0;
+  const avatarUrl=hasValidId?`https://t.me/i/userpic/320/${tgUser.id}.jpg`:'';
+  const name=(tgUser.firstName||'')+(tgUser.lastName?' '+tgUser.lastName:'');
+  const displayName=name||tgUser.username||'Игрок';
+  ['shop','battle'].forEach(prefix=>{
+    const badge=el(prefix+'UserBadge');
+    const avatar=el(prefix+'UserAvatar');
+    const nameEl=el(prefix+'UserName');
+    if(!badge) return;
+    badge.style.display='';
+    if(avatar){avatar.src=avatarUrl;avatar.onerror=()=>{avatar.style.display='none'}}
+    if(nameEl) nameEl.textContent=displayName;
+  });
+}
+
+function updateEnemyBadge(){
+  const badge=el('enemyBadge');
+  const avatar=el('enemyAvatar');
+  const nameEl=el('enemyNameDisplay');
+  if(!badge) return;
+  if(!enemyName){
+    badge.style.display='none';
+    return;
+  }
+  badge.style.display='';
+  if(avatar){avatar.src=enemyAvatar||'';avatar.onerror=()=>{avatar.style.display='none'}}
+  if(nameEl) nameEl.textContent=enemyName;
 }
 
 function applyBattleState(data){
@@ -489,8 +578,12 @@ function applyBattleState(data){
   playerCollection=data.playerCollection||playerCollection;
   selectedDeck=data.selectedDeck||selectedDeck;
   cardUpgrades=data.cardUpgrades||cardUpgrades;
+  if(data.tgUser) updateUserBadge(data.tgUser);
   playerCards=enrichCards(b.playerCards);
   enemyCards=enrichCards(b.enemyCards);
+  enemyName=b.enemyName||null;
+  enemyAvatar=b.enemyAvatar||null;
+  updateEnemyBadge();
   activeIdx=b.activeIdx>=0?b.activeIdx:activeIdx;isPlayerTurn=b.isPlayerTurn;gameOver=b.gameOver;
   turnLocked=b.turnLocked||false;critActivated=b.critActivated||false;fireballActive=b.fireballActive||false;
   waitingForCritTarget=b.waitingForCritTarget!==undefined?b.waitingForCritTarget:null;
@@ -1115,6 +1208,7 @@ function pollForAuth(code){
         clearInterval(pollTimer);
         accessToken=data.token;
         localStorage.setItem('td_access_token',accessToken);
+        if(data.tgUser){localStorage.setItem('td_tgUser',JSON.stringify(data.tgUser));updateUserBadge(data.tgUser);}
         socket.emit('auth',{access_token:accessToken});
         if(pendingInit){
           gameState=pendingInit;
