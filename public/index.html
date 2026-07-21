@@ -118,7 +118,7 @@
   .battle-header>div:last-child{justify-self:end}
   .turn-indicator{font-family:'Cinzel',serif;font-size:12px;padding:8px 20px;border:1px solid var(--border-dim);color:var(--text-dim);text-transform:uppercase;letter-spacing:3px;transition:all .4s;background:rgba(0,0,0,.3)}.turn-indicator.enemy-turn{border-color:var(--accent-blood-bright);color:#c06060;box-shadow:0 0 15px rgba(138,42,42,.2);animation:pulse-enemy 2s infinite}
   @keyframes pulse-enemy{0%,100%{opacity:1}50%{opacity:.6}}
-  .battlefield{display:flex;flex-direction:column;gap:32px;width:100%;padding:20px 0;position:relative;flex:1;min-height:0;overflow-y:auto}
+  .battlefield{display:flex;flex-direction:column;justify-content:center;gap:32px;width:100%;padding:20px 0;position:relative;flex:1;min-height:0;overflow-y:auto}
   .battlefield::before{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.05),transparent);transform:translateY(-50%)}
   .card-row{display:flex;justify-content:center;gap:24px;flex-wrap:nowrap;position:relative;z-index:2}
   .card-row.waiting .card{filter:brightness(.45) saturate(.5);transition:filter .5s ease}.card-row.waiting .card.selected{filter:brightness(.6) saturate(.5)}
