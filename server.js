@@ -58,7 +58,10 @@ function verifyMiniAppInitData(initData) {
 			.update(checkString)
 			.digest("hex");
 
-		if (calculatedHash !== hash) return null;
+		const hashBuffer = Buffer.from(hash, "hex");
+		const calculatedBuffer = Buffer.from(calculatedHash, "hex");
+		if (hashBuffer.length !== calculatedBuffer.length) return null;
+		if (!crypto.timingSafeEqual(hashBuffer, calculatedBuffer)) return null;
 
 		// Parse user JSON from initData
 		const userStr = params.get("user");
@@ -408,7 +411,15 @@ const ALL_CARDS = [
 const APP = express();
 const SERVER = http.createServer(APP);
 const IO = new Server(SERVER, {
-	cors: { origin: "*", methods: ["GET", "POST"] },
+	cors: {
+			origin: [
+				"http://localhost:3000",
+				"http://127.0.0.1:3000",
+				"https://triad-duel.pages.dev",
+				"https://traekart1cdn.vercel.app",
+			],
+			methods: ["GET", "POST"],
+		},
 });
 
 APP.use(express.static(path.join(__dirname, "public")));
