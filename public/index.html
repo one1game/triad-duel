@@ -568,12 +568,12 @@ if(isTelegramMiniApp){
 
   // Пересчёт отступа под шторку/крестик TG — только ПОСЛЕ fullscreen
   function updateSafeArea(){
-    const content=tg.contentSafeAreaInset?.top||0;
-    const device=tg.safeAreaInset?.top||0;
-    const top=content+device;
+    // contentSafeAreaInset уже включает вырез устройства + место под крестик/меню TG
+    // safeAreaInset НЕ прибавляем — иначе отступ дублируется
+    const top=tg.contentSafeAreaInset?.top||0;
     document.documentElement.style.setProperty('--safe-top',top+'px');
     console.log('[miniapp] safe-top updated:',top);
-  }
+   }
 
   try{tg.onEvent('fullscreenChanged',updateSafeArea)}catch(e){}
   try{tg.onEvent('safeAreaChanged',updateSafeArea)}catch(e){}
