@@ -1322,7 +1322,7 @@ IO.on("connection", (socket) => {
 				socket.emit("error", "Токен недействителен");
 				return;
 			}
-			userId = decoded.sub;
+			userId = decoded.telegram_id;
 
 			// Если у этого userId уже есть активная сессия — шарим объект между вкладками
 			const existingKey = Object.keys(sessions).find(
