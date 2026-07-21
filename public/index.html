@@ -373,7 +373,7 @@
   <h1 class="menu-title">Triad Duel</h1>
   <p class="menu-subtitle">Триада Дуэли</p>
   <div class="menu-buttons">
-    <button class="btn gold-btn" id="newCampaignBtn" onclick="newCampaign()" disabled>Новая кампания</button>
+    <button class="btn gold-btn" onclick="newCampaign()">Новая кампания</button>
     <button class="btn" onclick="openSettings()">Настройки</button>
   </div>
 </div>
@@ -653,7 +653,6 @@ socket.on('init',(state)=>{
     showScreen('menu');
     saveGameState(state,'menu');
   }
-  el('newCampaignBtn').disabled = false;
 });
 
 socket.on('stateUpdate',(state)=>{
