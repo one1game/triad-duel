@@ -1578,11 +1578,11 @@ function processBattleUpdate(state){
   }
 
   if(b.aiAction){
+    applyBattleState(state);
     turnLocked=true;isPlayerTurn=false;updUI();
     el('turnIndicator').textContent='Враг атакует!';el('turnIndicator').classList.add('enemy-turn');
     el('endTurnBtn').style.display='none';updateRowStates();startRoundTimer();
     const gen=battleGen;
-    applyBattleState(state);
     animateAiAction(b.aiAction);
     setTimeout(()=>{
       if(battleGen!==gen)return;
