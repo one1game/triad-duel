@@ -68,7 +68,7 @@
   .card-grid{display:grid;grid-template-columns:repeat(3,180px);gap:20px;justify-content:center;width:100%;contain:layout style}
   #shopGrid,#shopGridInv,#shopGridChaos{flex:0 0 auto;max-height:1050px;overflow-y:auto;min-height:0;padding:12px 24px;scrollbar-width:thin;scrollbar-color:var(--border-glow) transparent}
   #shopGrid::-webkit-scrollbar,#shopGridInv::-webkit-scrollbar,#shopGridChaos::-webkit-scrollbar{width:4px}#shopGrid::-webkit-scrollbar-thumb,#shopGridInv::-webkit-scrollbar-thumb,#shopGridChaos::-webkit-scrollbar-thumb{background:var(--border-glow);border-radius:2px}
-  .shop-footer{flex-shrink:0;margin-top:auto;background:transparent;padding:8px 24px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;z-index:5}
+  .shop-footer{flex-shrink:0;margin-top:auto;background:transparent;padding:4px 24px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;z-index:5}
   @keyframes cardFadeUp{from{opacity:0;transform:translateY(24px) scale(.92)}to{opacity:1;transform:translateY(0) scale(1)}}
   .shop-card{width:180px;height:270px;background:var(--bg-surface);border:1px solid var(--border-dim);transition:all .3s ease;position:relative;overflow:hidden;border-radius:4px}
   .shop-card:hover{border-color:var(--accent-gold);transform:translateY(-6px) scale(1.02);box-shadow:0 20px 40px rgba(0,0,0,.7),0 0 25px rgba(138,115,85,.15)}
@@ -659,7 +659,7 @@ socket.on('init',(state)=>{
   }else if(saved&&saved.screen==='shop'){
     showScreen('shop');currentTab='shop';
     el('tabShopBtn').classList.add('active');el('tabInvBtn').classList.remove('active');el('tabChaosBtn').classList.remove('active');
-    el('shopTabTitle').textContent='Склеп';el('deckCount').textContent='Склеп — покупай карты';setBattleButton(false,false);
+    el('shopTabTitle').textContent='Склеп';el('deckCount').style.display='none';setBattleButton(false,false);
     renderShop();socket.emit('getShop');
     saveGameState(saved,'shop');
   }else{
@@ -689,7 +689,7 @@ socket.on('stateUpdate',(state)=>{
       if(!document.getElementById('shopScreen').classList.contains('active')){
         showScreen('shop');currentTab='shop';
         el('tabShopBtn').classList.add('active');el('tabInvBtn').classList.remove('active');el('tabChaosBtn').classList.remove('active');
-        el('shopTabTitle').textContent='Склеп';el('deckCount').textContent='Склеп — покупай карты';setBattleButton(false,false);
+        el('shopTabTitle').textContent='Склеп';el('deckCount').style.display='none';setBattleButton(false,false);
         socket.emit('getShop');
       }
       renderShop();
@@ -951,9 +951,10 @@ function showShopTab(tab){
   currentTab=tab;
   el('tabShopBtn').classList.toggle('active',tab==='shop');el('tabInvBtn').classList.toggle('active',tab==='inv');el('tabChaosBtn').classList.toggle('active',tab==='chaos');
   el('shopTabTitle').textContent=tab==='shop'?'Склеп':tab==='inv'?'Варп':'Хаос';
-  if(tab==='shop'){el('deckCount').textContent='Склеп — покупай карты';setBattleButton(false,false)}
-  else if(tab==='chaos'){el('deckCount').textContent='Хаос — улучшай карты';setBattleButton(false,false)}
-  // inv: renderColGrid sets deckCount + button
+  if(tab==='shop'){setBattleButton(false,false)}
+  else if(tab==='chaos'){setBattleButton(false,false)}
+  else{setBattleButton(true,selectedDeck.length===3);}
+  el('deckCount').style.display='none';
   el('bgClep').style.opacity=tab==='shop'?'0.4':'0';el('bgWarp').style.opacity=tab==='inv'?'0.4':'0';el('bgHaus').style.opacity=tab==='chaos'?'0.4':'0';
   el('shopScreen').querySelector('.shop-header').style.background=tab==='chaos'?'rgba(0,0,0,0.5)':'';
   el('shopGrid').style.display=tab==='shop'?'':'none';
@@ -1001,7 +1002,7 @@ function renderShopGrid(){
 }
 function renderColGrid(){const g=el('shopGridInv');g.innerHTML='';
   const owned=playerCollection.map(id=>{const b=byId(id);return b?{...b}:null}).filter(Boolean);
-  if(!owned.length){g.innerHTML='<div class="deck-empty">Коллекция пуста</div>';el('deckCount').textContent='Выбрано: 0 / 3';setBattleButton(false,false);return}
+  if(!owned.length){g.innerHTML='<div class="deck-empty">Коллекция пуста</div>';el('deckCount').style.display='none';setBattleButton(false,false);return}
   owned.forEach(c=>{
     const inDeck=selectedDeck.includes(c.id);const up=getUp(c.id);
     const div=document.createElement('div');div.className='deck-card'+(inDeck?' selected-deck':'');
@@ -1010,7 +1011,7 @@ function renderColGrid(){const g=el('shopGridInv');g.innerHTML='';
       ${statsBlockHTML(c,up)}<div class="card-overlay"><div class="card-name">${c.name}</div></div>`;
     div.addEventListener('click',()=>toggleDeckCard(c.id));g.appendChild(div);
   });
-  el('deckCount').textContent='Выбрано: '+selectedDeck.length+' / 3';setBattleButton(true,selectedDeck.length===3);
+  el('deckCount').style.display='none';setBattleButton(true,selectedDeck.length===3);
 }
 function renderChaosGrid(){const g=el('shopGridChaos');g.innerHTML='';const owned=playerCollection.map(id=>{const b=byId(id);return b?{...b}:null}).filter(Boolean);
   if(!owned.length){g.innerHTML='<div class="deck-empty">Нет карт для прокачки</div>';return}
@@ -1448,7 +1449,7 @@ function showGameEnd(gameEnd){
 // ═══ NAVIGATION ═══
 function backToShop(){stopRoundTimer();showScreen('shop');currentTab='shop';
   el('tabShopBtn').classList.add('active');el('tabInvBtn').classList.remove('active');el('tabChaosBtn').classList.remove('active');
-  el('shopTabTitle').textContent='Склеп';el('deckCount').textContent='Склеп — покупай карты';setBattleButton(false,false);
+  el('shopTabTitle').textContent='Склеп';el('deckCount').style.display='none';setBattleButton(false,false);
   socket.emit('getShop');}
 function backToShopFromResult(){el('resultOverlay').classList.remove('show');backToShop()}
 
@@ -1513,7 +1514,7 @@ function pollForAuth(code){
           if(saved&&saved.screen==='shop'){
             showScreen('shop');currentTab='shop';
             el('tabShopBtn').classList.add('active');el('tabInvBtn').classList.remove('active');el('tabChaosBtn').classList.remove('active');
-            el('shopTabTitle').textContent='Склеп';el('deckCount').textContent='Склеп — покупай карты';setBattleButton(false,false);
+            el('shopTabTitle').textContent='Склеп';el('deckCount').style.display='none';setBattleButton(false,false);
             renderShop();socket.emit('getShop');
           }else if(saved&&saved.screen==='battle'){
             showScreen('battle');el('battleLog').innerHTML='';battleCardsReady=false;battleGen++;
