@@ -373,7 +373,7 @@
   <h1 class="menu-title">Triad Duel</h1>
   <p class="menu-subtitle">Триада Дуэли</p>
   <div class="menu-buttons">
-    <button class="btn gold-btn" onclick="newCampaign()">Новая кампания</button>
+    <button class="btn gold-btn" id="newCampaignBtn" onclick="newCampaign()" disabled>Новая кампания</button>
     <button class="btn" onclick="openSettings()">Настройки</button>
   </div>
 </div>
@@ -594,6 +594,7 @@ socket.on('connect',()=>{
   console.log('[socket] connected:',socket.id);
   if(isTelegramMiniApp){
     // Auto-auth via Telegram initData
+    accessToken='tg_'+socket.id; // Mini App auth bypass — initData replaces JWT
     const initData=window.Telegram.WebApp.initData;
     console.log('[miniapp] sending auth_miniapp...');
     socket.emit('auth_miniapp',{initData});
@@ -652,6 +653,7 @@ socket.on('init',(state)=>{
     showScreen('menu');
     saveGameState(state,'menu');
   }
+  el('newCampaignBtn').disabled = false;
 });
 
 socket.on('stateUpdate',(state)=>{
@@ -923,7 +925,13 @@ function byId(id){return ALL_CARDS.find(c=>c.id===id)||{}}
 function getEffAtk(c){return Math.max(0,(c.atk||0)-(c.atkDebuff||0))}
 
 // ═══ MENU ═══
-function newCampaign(){showLoading('Создаём кампанию...');saveGameState({playerGold,playerCollection,selectedDeck,cardUpgrades,shopCards,battle:null},'shop');socket.emit('newCampaign')}
+function newCampaign(){
+  if(!socket.connected){showToast('Нет соединения с сервером. Подождите...');return}
+  if(!gameState){showToast('Идёт загрузка данных...');return}
+  showLoading('Создаём кампанию...');
+  saveGameState({playerGold,playerCollection,selectedDeck,cardUpgrades,shopCards,battle:null},'shop');
+  socket.emit('newCampaign')
+}
 function backToMenu(){Object.values(scr).forEach(s=>s.classList.remove('active'));scr.menu.classList.add('active');saveGameState({playerGold,playerCollection,selectedDeck,cardUpgrades,shopCards,battle:null},'menu')}
 
 // ═══ SHOP ═══
