@@ -432,9 +432,10 @@
   <h1 class="menu-title">Triad Duel</h1>
   <p class="menu-subtitle">Триада Дуэли</p>
   <div class="menu-buttons">
-    <button class="btn gold-btn" id="premiumMenuBtn" onclick="openPremium()">👑 Премиум</button>
-    <button class="btn gold-btn" onclick="newCampaign()">Новая кампания</button>
+    <button class="btn" onclick="newCampaign()">ИГРАТЬ</button>
     <button class="btn" onclick="openSettings()">Настройки</button>
+    <div style="height:16px"></div>
+    <button class="btn" id="premiumMenuBtn" onclick="openPremium()">Премиум</button>
   </div>
 </div>
 <div id="settingsOverlay">
@@ -1035,7 +1036,7 @@ function isPremiumActiveClient(){return premiumUntil && new Date(premiumUntil).g
 
 function updatePremiumUI(){
   const btn=el('premiumMenuBtn');
-  if(btn) btn.textContent = isPremiumActiveClient() ? '👑 Премиум активен' : '👑 Премиум';
+  if(btn) btn.textContent = isPremiumActiveClient() ? 'Премиум активен' : 'Премиум';
   const statusEl=el('premiumStatusText');
   if(!statusEl) return;
   if(isPremiumActiveClient()){
