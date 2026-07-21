@@ -84,6 +84,15 @@
   .menu-subtitle{font-family:'Cinzel',serif;font-size:13px;color:var(--text-dim);letter-spacing:6px;margin-bottom:48px;text-transform:uppercase;border-top:1px solid var(--border-dim);border-bottom:1px solid var(--border-dim);padding:12px 0;width:100%;max-width:400px;text-align:center}
   .menu-buttons{display:flex;flex-direction:column;gap:16px;align-items:center;width:100%;max-width:320px}.menu-buttons .btn{width:100%;text-align:center;padding:16px;font-size:14px}
   #settingsOverlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(3,3,4,.95);backdrop-filter:blur(10px);z-index:1000;justify-content:center;align-items:center;flex-direction:column;gap:32px;padding-top:var(--safe-top)}#settingsOverlay.show{display:flex;animation:fadeIn .3s ease-out}
+  #premiumOverlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(3,3,4,.95);backdrop-filter:blur(10px);z-index:1000;justify-content:center;align-items:center;flex-direction:column;gap:20px;padding:24px;padding-top:calc(24px + var(--safe-top))}#premiumOverlay.show{display:flex;animation:fadeIn .3s ease-out}
+  .premium-card{max-width:380px;width:100%;background:rgba(20,16,10,.6);border:1px solid var(--accent-gold);border-radius:8px;padding:28px 24px;display:flex;flex-direction:column;align-items:center;gap:18px;box-shadow:0 0 40px rgba(196,162,101,.15)}
+  .premium-crown{font-size:40px;filter:drop-shadow(0 0 12px rgba(240,214,138,.6))}
+  .premium-title{font-family:'Cinzel',serif;font-size:22px;color:var(--accent-gold-bright);letter-spacing:3px;text-transform:uppercase;text-align:center}
+  .premium-desc{font-family:'Inter',sans-serif;font-size:13px;color:var(--text-dim);text-align:center;line-height:1.6}
+  .premium-desc b{color:var(--accent-gold-bright);font-weight:600}
+  .premium-price{font-family:'Cinzel',serif;font-size:18px;color:var(--accent-gold-bright);display:flex;align-items:center;gap:6px}
+  .premium-status{font-family:'Inter',sans-serif;font-size:12px;color:#8ab860;text-align:center}
+  .premium-error{font-family:'Inter',sans-serif;font-size:12px;color:#c06060;text-align:center;min-height:16px}
   .settings-title{font-family:'Cinzel',serif;font-size:24px;color:var(--accent-gold-bright);letter-spacing:4px;text-transform:uppercase}.setting-row{display:flex;align-items:center;gap:20px;font-size:14px;color:var(--text-primary);letter-spacing:1px}
   .toggle{width:56px;height:28px;background:#1a1a1f;border-radius:14px;cursor:pointer;position:relative;transition:background .3s;border:1px solid var(--border-dim)}.toggle.on{background:#2a3a20;border-color:#4a6a30}
   .toggle::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;background:#4a4a50;border-radius:50%;transition:all .3s cubic-bezier(.68,-.55,.27,1.55);box-shadow:0 2px 4px rgba(0,0,0,.5)}.toggle.on::after{left:31px;background:#8ab860}
@@ -423,6 +432,7 @@
   <h1 class="menu-title">Triad Duel</h1>
   <p class="menu-subtitle">Триада Дуэли</p>
   <div class="menu-buttons">
+    <button class="btn gold-btn" id="premiumMenuBtn" onclick="openPremium()">👑 Премиум</button>
     <button class="btn gold-btn" onclick="newCampaign()">Новая кампания</button>
     <button class="btn" onclick="openSettings()">Настройки</button>
   </div>
@@ -449,6 +459,18 @@
     </div>
   </div>
   <button class="btn gold-btn" id="settingsMainBack" onclick="closeSettings()">Назад</button>
+</div>
+<div id="premiumOverlay">
+  <div class="premium-card">
+    <div class="premium-crown">👑</div>
+    <div class="premium-title">Премиум-аккаунт</div>
+    <div class="premium-desc">Даёт <b>x2 золота (Remains)</b> за каждую победу в бою — в PvE и PvP — сроком на <b>7 дней</b>.<br>Действие продлевается, если купить повторно до истечения срока.</div>
+    <div class="premium-price" id="premiumPriceRow">⭐ <span id="premiumPriceVal">149</span> Stars</div>
+    <div class="premium-status" id="premiumStatusText" style="display:none"></div>
+    <div class="premium-error" id="premiumError"></div>
+    <button class="btn gold-btn" id="premiumBuyBtn" onclick="buyPremium()" style="width:100%;padding:14px">Купить премиум</button>
+    <button class="btn" onclick="closePremium()" style="width:100%">Назад</button>
+  </div>
 </div>
 <div id="authOverlay" class="show">
   <div class="auth-form">
@@ -755,6 +777,40 @@ socket.on('stateUpdate',(state)=>{
 });
 
 socket.on('sfx',(name)=>{playSound(name)});
+socket.on('invoiceLink',(url)=>{
+  const btn=el('premiumBuyBtn');
+  if(btn){btn.disabled=false;btn.textContent='Купить премиум'}
+  if(window.Telegram?.WebApp?.openInvoiceLink){
+    window.Telegram.WebApp.openInvoiceLink(url,(status)=>{
+      if(status==='paid'){
+        el('premiumError').textContent='';
+        el('premiumStatusText').style.display='';
+        el('premiumStatusText').textContent='Оплата прошла, обновляю статус…';
+        checkPremiumStatusRetry(3);
+      }else if(status==='cancelled'){
+        // пользователь закрыл счёт — ничего не делаем
+      }else if(status==='failed'){
+        el('premiumError').textContent='Оплата не прошла. Попробуйте ещё раз.';
+      }
+    });
+  }else{
+    window.open(url,'_blank');
+  }
+});
+socket.on('premiumStatus',({premiumUntil:pu,active})=>{
+  premiumUntil=pu;
+  updatePremiumUI();
+  if(active){
+    el('premiumError').textContent='';
+    el('premiumStatusText').style.display='';
+    el('premiumStatusText').textContent='Премиум активен до '+new Date(pu).toLocaleString('ru-RU');
+  }
+});
+socket.on('premiumError',(msg)=>{
+  const btn=el('premiumBuyBtn');
+  if(btn){btn.disabled=false;btn.textContent='Купить премиум'}
+  el('premiumError').textContent=msg||'Ошибка покупки премиума';
+});
 socket.on('matchmakingStatus', ({status}) => {
   const t = document.getElementById('mmText');
   if (status === 'searching' && t) t.textContent = 'Поиск игрока…';
@@ -859,6 +915,7 @@ let playerCards=[],enemyCards=[],activeIdx=-1,isPlayerTurn=true,gameOver=false;
 let enemyName=null,enemyAvatar=null;
 let abilitiesUsedThisTurn=new Set();
 let cardUpgrades={};
+let premiumUntil=null;
 let shopCards=[];
 let currentTab='shop';
 const gridRendered={shop:false,inv:false,chaos:false};
@@ -875,6 +932,7 @@ function applyFullState(state){
   selectedDeck=state.selectedDeck||[];
   cardUpgrades=state.cardUpgrades||{};
   shopCards=(state.shopCards||[]).map(c=>enrichCard(c));
+  if(state.premiumUntil!==undefined){premiumUntil=state.premiumUntil;updatePremiumUI()}
   if(state.tgUser) updateUserBadge(state.tgUser);
   if(state.battle)applyBattleState(state);
 }
@@ -972,6 +1030,43 @@ function switchSettingsTab(tab){
 }
 function openSettings(){el('settingsOverlay').classList.add('show')}
 function closeSettings(){el('settingsOverlay').classList.remove('show')}
+
+function isPremiumActiveClient(){return premiumUntil && new Date(premiumUntil).getTime() > Date.now()}
+
+function updatePremiumUI(){
+  const btn=el('premiumMenuBtn');
+  if(btn) btn.textContent = isPremiumActiveClient() ? '👑 Премиум активен' : '👑 Премиум';
+  const statusEl=el('premiumStatusText');
+  if(!statusEl) return;
+  if(isPremiumActiveClient()){
+    statusEl.style.display='';
+    statusEl.textContent='Премиум активен до '+new Date(premiumUntil).toLocaleString('ru-RU');
+  }else{
+    statusEl.style.display='none';
+  }
+}
+
+function openPremium(){
+  el('premiumError').textContent='';
+  updatePremiumUI();
+  socket.emit('getPremiumStatus');
+  el('premiumOverlay').classList.add('show');
+}
+function closePremium(){el('premiumOverlay').classList.remove('show')}
+
+function buyPremium(){
+  const btn=el('premiumBuyBtn');
+  el('premiumError').textContent='';
+  btn.disabled=true;btn.textContent='Создаю счёт…';
+  socket.emit('buyPremium');
+}
+
+function checkPremiumStatusRetry(attemptsLeft){
+  socket.emit('getPremiumStatus');
+  if(attemptsLeft>0){
+    setTimeout(()=>checkPremiumStatusRetry(attemptsLeft-1),2000);
+  }
+}
 
 // ═══ PARTICLES ═══
 let pCanvas,pCtx,particles=[];
@@ -1493,7 +1588,7 @@ function showGameEnd(gameEnd){
   if(gameEnd.reward < 0){
     el('resultGold').textContent=`Вы сдались! -${Math.abs(gameEnd.reward)} Remains`;
   }else{
-    el('resultGold').textContent=isWin?`+${gameEnd.reward||0} Remains завоёвано`:'Все ваши воины пали...';
+    el('resultGold').textContent=isWin?`+${gameEnd.reward||0} Remains завоёвано${gameEnd.premium?' (x2 Премиум)':''}`:'Все ваши воины пали...';
   }
   el('resultOverlay').classList.add('show');
   if(isWin){playSound('victory');playerGold+=gameEnd.reward||0}else{playSound('defeat')}
