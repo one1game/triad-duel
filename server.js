@@ -31,6 +31,44 @@ function verifyJWT(token) {
 	}
 }
 
+// ═══ MINI APP AUTH ═══
+function verifyMiniAppInitData(initData) {
+	if (!TELEGRAM_BOT_TOKEN || !initData) return null;
+	try {
+		const params = new URLSearchParams(initData);
+		const hash = params.get("hash");
+		if (!hash) return null;
+		params.delete("hash");
+
+		// Build data-check-string (sorted alphabetically by key)
+		const checkString = Array.from(params.entries())
+			.sort(([a], [b]) => a.localeCompare(b))
+			.map(([k, v]) => `${k}=${v}`)
+			.join("\n");
+
+		// Secret = HMAC-SHA256("WebAppData", bot_token)
+		const secret = crypto
+			.createHmac("sha256", "WebAppData")
+			.update(TELEGRAM_BOT_TOKEN)
+			.digest();
+
+		// Hash = HMAC-SHA256(secret, checkString)
+		const calculatedHash = crypto
+			.createHmac("sha256", secret)
+			.update(checkString)
+			.digest("hex");
+
+		if (calculatedHash !== hash) return null;
+
+		// Parse user JSON from initData
+		const userStr = params.get("user");
+		if (!userStr) return null;
+		return JSON.parse(userStr);
+	} catch {
+		return null;
+	}
+}
+
 function _verifyTelegramHash(data) {
 	if (!TELEGRAM_BOT_TOKEN) return false;
 	const { hash, ...rest } = data;
@@ -758,8 +796,8 @@ function endPvpTurn(roomId) {
 	battle.playerAction = null;
 	battle.aiAction = null;
 
-	for (const c of battle.cardsA) c.tauntActive = false;
-	for (const c of battle.cardsB) c.tauntActive = false;
+	// Clear taunt from the side whose turn is about to start (their taunt already lasted a full round)
+	for (const c of battle.playerCards) c.tauntActive = false;
 	for (const c of battle.playerCards) {
 		if (c.type === "assa" && c.mana >= 2) c.critReady = true;
 	}
@@ -1222,6 +1260,71 @@ IO.on("connection", (socket) => {
 		} catch (e) {
 			console.error("[auth error]", e.message);
 			socket.emit("error", "Ошибка авторизации");
+		}
+	});
+
+	// ═══ TELEGRAM MINI APP AUTH ═══
+	socket.on("auth_miniapp", async ({ initData }) => {
+		try {
+			const tgUser = verifyMiniAppInitData(initData);
+			if (!tgUser) {
+				socket.emit("error", "Неверная подпись Telegram");
+				return;
+			}
+
+			const telegramId = tgUser.id.toString();
+			userId = telegramId;
+
+			const existingKey = Object.keys(sessions).find(
+				(k) => sessions[k].userId === userId && k !== sessionId,
+			);
+			const isReconnect = !!existingKey;
+			if (isReconnect) {
+				sessions[sessionId] = sessions[existingKey];
+			}
+
+			const dbPlayer = await getOrCreatePlayer(telegramId, {
+				first_name: tgUser.first_name,
+				username: tgUser.username,
+			});
+			_playerData = dbPlayer;
+			sessions[sessionId].userId = userId;
+			sessions[sessionId].playerGold = dbPlayer.gold;
+			sessions[sessionId].playerCollection = dbPlayer.collection || [];
+			sessions[sessionId].cardUpgrades = dbPlayer.card_upgrades || {};
+			sessions[sessionId].selectedDeck = dbPlayer.selected_deck || [];
+			sessions[sessionId].wins = dbPlayer.wins || 0;
+			sessions[sessionId].losses = dbPlayer.losses || 0;
+			sessions[sessionId].tgUser = {
+				id: parseInt(telegramId),
+				firstName: tgUser.first_name,
+				lastName: tgUser.last_name || null,
+				username: tgUser.username || null,
+			};
+
+			// PvP reconnect
+			if (sessions[sessionId].pvpRoomId) {
+				const room = pvpRooms[sessions[sessionId].pvpRoomId];
+				if (room) {
+					clearTimeout(room.disconnectTimer);
+					if (room.sideA.userId === userId) {
+						room.sideA.sessionId = sessionId;
+						room.sideA.socket = socket;
+					} else if (room.sideB.userId === userId) {
+						room.sideB.sessionId = sessionId;
+						room.sideB.socket = socket;
+					}
+					emitPvpState(sessions[sessionId].pvpRoomId);
+				} else {
+					sessions[sessionId].pvpRoomId = null;
+				}
+			}
+
+			console.log(`[auth:miniapp] tg${telegramId} -> ${sessionId}`);
+			socket.emit("init", getSessionState(sessionId));
+		} catch (e) {
+			console.error("[auth:miniapp error]", e.message);
+			socket.emit("error", "Ошибка авторизации Mini App");
 		}
 	});
 
@@ -2097,6 +2200,11 @@ function executePlayerEndTurn(s, socket, userId) {
 	battle.waitingForCritTarget = null;
 	battle.turnCount++;
 
+	// Clear enemy taunt (expires when the opponent's turn is over)
+	battle.enemyCards.forEach((c) => {
+		c.tauntActive = false;
+	});
+
 	// DOT and debuff tick (player DOTs tick on enemy cards only)
 	battle.enemyCards.forEach((c) => {
 		if (c.dotTurns > 0) {
@@ -2160,13 +2268,11 @@ function executePlayerEndTurn(s, socket, userId) {
 		battle.firstTurn = false;
 		battle.activeIdx = -1;
 
-		// Clear taunts
+		// Clear player's own taunt (expires after player's next turn begins)
 		battle.playerCards.forEach((c) => {
 			c.tauntActive = false;
 		});
-		battle.enemyCards.forEach((c) => {
-			c.tauntActive = false;
-		});
+		// NOTE: Enemy taunt persists through the player's turn — cleared in executePlayerEndTurn
 
 		// Update crit ready flags
 		battle.playerCards.forEach((c) => {

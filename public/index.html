@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Triad Duel — Триада Дуэли</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Nosifer&family=Cinzel:wght@400;600;800&family=Inter:wght@300;400;600&display=swap');
   :root{--bg-deep:#030304;--bg-surface:#0c0c0f;--bg-panel:rgba(12,12,15,.85);--border-dim:#1a1a1f;--border-glow:#2a2a30;--accent-gold:#c4a265;--accent-gold-bright:#f0d68a;--accent-blood:#5a1a1a;--accent-blood-bright:#8a2a2a;--text-primary:#e8e4dc;--text-dim:#9a9a94;--mana-dim:#2a2530;--mana-glow:#9a8aae}
@@ -390,6 +391,13 @@
     <div class="auth-info" id="authStatus">Без паролей — просто открой бота</div>
   </div>
 </div>
+<script>
+// Hide auth overlay and footer in Telegram Mini App (auto-auth via initData)
+if(window.Telegram?.WebApp?.initData){
+  document.getElementById('authOverlay').classList.remove('show');
+  document.querySelector('.footer')&&(document.querySelector('.footer').style.display='none');
+}
+</script>
 <div class="screen" id="shopScreen">
   <video id="bgClep" class="shop-bg-video" autoplay muted loop playsinline><source src="img/game/fonsclep.mp4" type="video/mp4"></video>
   <video id="bgWarp" class="shop-bg-video" autoplay muted loop playsinline style="opacity:0"><source src="img/game/warp.mp4" type="video/mp4"></video>
@@ -483,13 +491,52 @@ window.isLocal=!window.SERVER_URL;
 const ALL_CARDS=[{id:'mage_01',name:'Библиарий Кассиан',atk:6,hp:11,price:650,type:'mage',variance:.10,passive:'Эрудит',passiveDesc:'Фаербол стоит 2 маны. Раскол: 5% шанс 1-3 урона соседним',lore:'Хранитель запретных знаний из библиотек Некрона.'},{id:'mage_02',name:'Малекит Проклятый',atk:7,hp:9,price:450,type:'mage',variance:.25,passive:'Проклятие',passiveDesc:'Фаербол снижает ATK врага на 1. Раскол: 5% шанс 1-3 урона соседним',lore:'Когда-то был светлым магом, но проклятие Хаоса извратило его дар.'},{id:'mage_03',name:'Азатот Посвящённый',atk:5,hp:14,price:500,type:'mage',variance:.15,passive:'Жертва',passiveDesc:'Фаербол лечит мага на 2 HP. Раскол: 5% шанс 1-3 урона соседним',lore:'Служитель культа Азатота.'},{id:'mage_04',name:'Гнилоуст Проповедник',atk:7,hp:10,price:500,type:'mage',variance:.20,passive:'Чума',passiveDesc:'Фаербол = 1 урон/ход на 2 хода. Раскол: 5% шанс 1-3 урона соседним',lore:'Уста его источают чумные миазмы.'},{id:'mage_05',name:'Иландра Хранительница Рун',atk:6,hp:12,price:750,type:'mage',variance:.10,passive:'Рунный щит',passiveDesc:'Получает на 1 урона меньше. Раскол: 5% шанс 1-3 урона соседним',lore:'Последняя из ордена Рунных Стражей.'},{id:'mage_06',name:'Ксаль\'Торот',atk:7,hp:9,price:550,type:'mage',variance:.20,passive:'Искажение',passiveDesc:'30% шанс: фаербол возвращает 1 ману. Раскол: 5% шанс 1-3 урона соседним',lore:'Бессмертный зодчий Первородного Хаоса.'},{id:'mage_07',name:'Ксар\'лот',atk:6,hp:12,price:600,type:'mage',variance:.15,passive:'Скверна',passiveDesc:'Фаербол +1 урона танкам. Раскол: 5% шанс 1-3 урона соседним',lore:'Древний маг, искажённый скверной Бездны.'},{id:'mage_08',name:'Каэр\'Тал',atk:7,hp:10,price:600,type:'mage',variance:.25,passive:'Пожиратель',passiveDesc:'Фаербол крадёт 1 ману у врага. Раскол: 5% шанс 1-3 урона соседним',lore:'Пророк Варпа.'},{id:'mage_09',name:'Кадавр',atk:5,hp:14,price:500,type:'mage',variance:.15,passive:'Сбор душ',passiveDesc:'Убийство фаерболом: +2 HP и +1 маны. Раскол: 5% шанс 1-3 урона соседним',lore:'Отрекшийся магистр смерти.'},{id:'mage_10',name:'Каэлис Векс',atk:8,hp:8,price:700,type:'mage',variance:.20,passive:'Псай-шторм',passiveDesc:'Фаербол +2 урона при HP<50%. Раскол: 5% шанс 1-3 урона соседним',lore:'Беглый псайкер.'},{id:'mage_11',name:'Слепая Оракул',atk:6,hp:12,price:650,type:'mage',variance:.10,passive:'Оракул',passiveDesc:'40% шанс: фаербол стоит 1 ману. Раскол: 5% шанс 1-3 урона соседним',lore:'Её глаза закрыты, но она видит всё.'},{id:'tank_01',name:'Железный Дредноут',atk:4,hp:20,price:650,type:'tank',variance:.15,passive:'Броня',passiveDesc:'Провокация: -1 вх. урона. Прикрытие: 5% шанс забрать атаку с соседа без урона',lore:'Живая крепость, закованная в адамантий.'},{id:'tank_02',name:'Чумной Гигант',atk:3,hp:24,price:800,type:'tank',variance:.20,passive:'Гнилая кровь',passiveDesc:'Провокация: отражает 1 урон. Прикрытие: 5% шанс забрать атаку с соседа без урона',lore:'Порождение гнилых садов Нургла.'},{id:'tank_03',name:'Страж Некрона',atk:4,hp:18,price:700,type:'tank',variance:.10,passive:'Ярость мёртвых',passiveDesc:'HP<50%: +2 ATK. Прикрытие: 5% шанс забрать атаку с соседа без урона',lore:'Пробуждённый от вечного сна воин.'},{id:'tank_04',name:'Каменный Страж',atk:3,hp:22,price:850,type:'tank',variance:.10,passive:'Каменная кожа',passiveDesc:'Всегда -1 вх. урона. Прикрытие: 5% шанс забрать атаку с соседа без урона',lore:'Голем, высеченный из горного хребта.'},{id:'tank_05',name:'Шоггот-Брут',atk:4,hp:21,price:650,type:'tank',variance:.25,passive:'Регенерация',passiveDesc:'Провокация лечит 2 HP. Прикрытие: 5% шанс забрать атаку с соседа без урона',lore:'Бесформенная тварь из глубин Иннсмута.'},{id:'assa_01',name:'Ночной Клинок',atk:8,hp:8,price:500,type:'assa',variance:.15,passive:'Теневой шаг',passiveDesc:'30% шанс: крит стоит 1 ману. Кровопускание: 5% шанс нанести половину урона соседу',lore:'Тень, скользящая между мирами.'},{id:'assa_02',name:'Теневой Убийца',atk:9,hp:6,price:750,type:'assa',variance:.10,passive:'Добивание',passiveDesc:'+2 урона целям с HP<50%. Кровопускание: 5% шанс нанести половину урона соседу',lore:'Мастер добивания.'},{id:'assa_03',name:'Варп-Сталкер',atk:7,hp:10,price:650,type:'assa',variance:.20,passive:'Фазовый сдвиг',passiveDesc:'Крит игнорирует провокацию. Кровопускание: 5% шанс нанести половину урона соседу',lore:'Ходок через Варп.'},{id:'assa_04',name:'Глубинный Хищник',atk:9,hp:7,price:750,type:'assa',variance:.15,passive:'Хищник',passiveDesc:'Убийство даёт +2 маны. Кровопускание: 5% шанс нанести половину урона соседу',lore:'Вышел из Марианской впадины.'},{id:'assa_05',name:'Жнец Снов',atk:9,hp:7,price:700,type:'assa',variance:.25,passive:'Кошмар',passiveDesc:'Крит наносит x2.5 урона. Кровопускание: 5% шанс нанести половину урона соседу',lore:'Посланник Кошмара.'}];
 const IMG_BASE='img/cards/',CARDS_PER_SIDE=3,SHOP_SIZE=12,MAX_MANA=10;
 
+// ═══ TELEGRAM MINI APP INIT ═══
+const isTelegramMiniApp=!!(window.Telegram?.WebApp?.initData);
+if(isTelegramMiniApp){
+  const tg=window.Telegram.WebApp;
+  tg.ready();
+  tg.expand();
+  // Apply Telegram theme colors
+  const tp=tg.themeParams;
+  document.documentElement.style.setProperty('--tg-bg',tp.bg_color||'#030304');
+  document.documentElement.style.setProperty('--tg-text',tp.text_color||'#e8e4dc');
+  document.documentElement.style.setProperty('--tg-hint',tp.hint_color||'#9a9a94');
+  document.documentElement.style.setProperty('--tg-link',tp.link_color||'#c4a265');
+  document.documentElement.style.setProperty('--tg-button',tp.button_color||'#c4a265');
+  document.documentElement.style.setProperty('--tg-button-text',tp.button_text_color||'#030304');
+  // Fullscreen
+  if(tg.requestFullscreen) tg.requestFullscreen();
+  // Нативный MainButton для «В бой!»
+  tg.MainButton.setParams({color:'#8a7355',text_color:'#f0d68a',is_active:true,is_visible:false});
+  tg.MainButton.onClick(()=>startBattle());
+  console.log('[miniapp] initialized, user:',tg.initDataUnsafe?.user?.username||tg.initDataUnsafe?.user?.first_name||'unknown');
+}
+// Хелпер для управления нативной кнопкой в Mini App
+function setBattleButton(visible,active){
+  if(isTelegramMiniApp){
+    const mb=window.Telegram.WebApp.MainButton;
+    if(visible){mb.setText('В бой!').show()}else{mb.hide()}
+    active?mb.enable():mb.disable();
+  }
+  // Веб-кнопка (для обычного браузера)
+  el('toBattleBtn').style.display=visible?'inline-block':'none';
+  if(!visible)el('toBattleBtn').disabled=true;else el('toBattleBtn').disabled=!active;
+}
+
 // ═══ SOCKET.IO ═══
 const socket=io(window.SERVER_URL);
 let gameState=null;
 
 socket.on('connect',()=>{
   console.log('[socket] connected:',socket.id);
-  if(accessToken){
+  if(isTelegramMiniApp){
+    // Auto-auth via Telegram initData
+    const initData=window.Telegram.WebApp.initData;
+    console.log('[miniapp] sending auth_miniapp...');
+    socket.emit('auth_miniapp',{initData});
+    el('authOverlay').classList.remove('show');
+  }else if(accessToken){
     socket.emit('auth',{access_token:accessToken});
   }else if(isLocal){
     // Dev mode: auto-auth without Telegram
@@ -536,7 +583,7 @@ socket.on('init',(state)=>{
   }else if(saved&&saved.screen==='shop'){
     showScreen('shop');currentTab='shop';
     el('tabShopBtn').classList.add('active');el('tabInvBtn').classList.remove('active');el('tabChaosBtn').classList.remove('active');
-    el('shopTabTitle').textContent='Склеп';el('deckCount').style.visibility='hidden';el('toBattleBtn').style.display='none';
+    el('shopTabTitle').textContent='Склеп';el('deckCount').style.visibility='hidden';setBattleButton(false,false);
     renderShop();socket.emit('getShop');
     saveGameState(saved,'shop');
   }else{
@@ -566,7 +613,7 @@ socket.on('stateUpdate',(state)=>{
       if(!document.getElementById('shopScreen').classList.contains('active')){
         showScreen('shop');currentTab='shop';
         el('tabShopBtn').classList.add('active');el('tabInvBtn').classList.remove('active');el('tabChaosBtn').classList.remove('active');
-        el('shopTabTitle').textContent='Склеп';el('deckCount').style.visibility='hidden';el('toBattleBtn').style.display='none';
+        el('shopTabTitle').textContent='Склеп';el('deckCount').style.visibility='hidden';setBattleButton(false,false);
         socket.emit('getShop');
       }
       renderShop();
@@ -819,7 +866,7 @@ function showShopTab(tab){
   currentTab=tab;
   el('tabShopBtn').classList.toggle('active',tab==='shop');el('tabInvBtn').classList.toggle('active',tab==='inv');el('tabChaosBtn').classList.toggle('active',tab==='chaos');
   el('shopTabTitle').textContent=tab==='shop'?'Склеп':tab==='inv'?'Варп':'Хаос';
-  el('deckCount').style.visibility=(tab==='inv')?'visible':'hidden';el('toBattleBtn').style.display=(tab==='inv')?'inline-block':'none';
+  el('deckCount').style.visibility=(tab==='inv')?'visible':'hidden';setBattleButton(tab==='inv',false);
   el('bgClep').style.opacity=tab==='shop'?'0.4':'0';el('bgWarp').style.opacity=tab==='inv'?'0.4':'0';el('bgHaus').style.opacity=tab==='chaos'?'0.4':'0';
   el('shopScreen').querySelector('.shop-header').style.background=tab==='chaos'?'rgba(0,0,0,0.5)':'';
   el('shopGrid').style.display=tab==='shop'?'':'none';
@@ -867,7 +914,7 @@ function renderShopGrid(){
 }
 function renderColGrid(){const g=el('shopGridInv');g.innerHTML='';
   const owned=playerCollection.map(id=>{const b=byId(id);return b?{...b}:null}).filter(Boolean);
-  if(!owned.length){g.innerHTML='<div class="deck-empty">Коллекция пуста</div>';el('deckCount').textContent='Выбрано: 0 / 3';el('toBattleBtn').disabled=true;return}
+  if(!owned.length){g.innerHTML='<div class="deck-empty">Коллекция пуста</div>';el('deckCount').textContent='Выбрано: 0 / 3';setBattleButton(false,false);return}
   owned.forEach(c=>{
     const inDeck=selectedDeck.includes(c.id);const up=getUp(c.id);
     const div=document.createElement('div');div.className='deck-card'+(inDeck?' selected-deck':'');
@@ -876,7 +923,7 @@ function renderColGrid(){const g=el('shopGridInv');g.innerHTML='';
       ${statsBlockHTML(c,up)}<div class="card-overlay"><div class="card-name">${c.name}</div></div>`;
     div.addEventListener('click',()=>toggleDeckCard(c.id));g.appendChild(div);
   });
-  el('deckCount').textContent='Выбрано: '+selectedDeck.length+' / 3';el('toBattleBtn').disabled=selectedDeck.length!==3;
+  el('deckCount').textContent='Выбрано: '+selectedDeck.length+' / 3';setBattleButton(true,selectedDeck.length===3);
 }
 function renderChaosGrid(){const g=el('shopGridChaos');g.innerHTML='';const owned=playerCollection.map(id=>{const b=byId(id);return b?{...b}:null}).filter(Boolean);
   if(!owned.length){g.innerHTML='<div class="deck-empty">Нет карт для прокачки</div>';return}
@@ -1314,7 +1361,7 @@ function showGameEnd(gameEnd){
 // ═══ NAVIGATION ═══
 function backToShop(){stopRoundTimer();showScreen('shop');currentTab='shop';
   el('tabShopBtn').classList.add('active');el('tabInvBtn').classList.remove('active');el('tabChaosBtn').classList.remove('active');
-  el('shopTabTitle').textContent='Склеп';el('deckCount').style.visibility='hidden';el('toBattleBtn').style.display='none';
+  el('shopTabTitle').textContent='Склеп';el('deckCount').style.visibility='hidden';setBattleButton(false,false);
   socket.emit('getShop');}
 function backToShopFromResult(){el('resultOverlay').classList.remove('show');backToShop()}
 
@@ -1379,7 +1426,7 @@ function pollForAuth(code){
           if(saved&&saved.screen==='shop'){
             showScreen('shop');currentTab='shop';
             el('tabShopBtn').classList.add('active');el('tabInvBtn').classList.remove('active');el('tabChaosBtn').classList.remove('active');
-            el('shopTabTitle').textContent='Склеп';el('deckCount').style.visibility='hidden';el('toBattleBtn').style.display='none';
+            el('shopTabTitle').textContent='Склеп';el('deckCount').style.visibility='hidden';setBattleButton(false,false);
             renderShop();socket.emit('getShop');
           }else if(saved&&saved.screen==='battle'){
             showScreen('battle');el('battleLog').innerHTML='';battleCardsReady=false;battleGen++;
