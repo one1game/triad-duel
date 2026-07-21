@@ -19,6 +19,84 @@ const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
 const JWT_SECRET =
 	process.env.JWT_SECRET || crypto.randomBytes(32).toString("hex");
 
+// ═══ PREMIUM (Telegram Stars) ═══
+const PREMIUM_PRICE_STARS = 149; // цена в Telegram Stars (XTR)
+const PREMIUM_DURATION_DAYS = 7;
+
+function tgApiRequest(method, payload) {
+	return new Promise((resolve, reject) => {
+		if (!TELEGRAM_BOT_TOKEN) return reject(new Error("no bot token"));
+		const https = require("node:https");
+		const body = JSON.stringify(payload);
+		const req = https.request(
+			{
+				hostname: "api.telegram.org",
+				path: `/bot${TELEGRAM_BOT_TOKEN}/${method}`,
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"Content-Length": Buffer.byteLength(body),
+				},
+			},
+			(res) => {
+				let raw = "";
+				res.on("data", (c) => (raw += c));
+				res.on("end", () => {
+					try {
+						resolve(JSON.parse(raw));
+					} catch (e) {
+						reject(e);
+					}
+				});
+			},
+		);
+		req.on("error", reject);
+		req.write(body);
+		req.end();
+	});
+}
+
+function isPremiumActive(s) {
+	return !!(
+		s &&
+		s.premiumUntil &&
+		new Date(s.premiumUntil).getTime() > Date.now()
+	);
+}
+
+// Начисляет премиум игроку по его Telegram ID (совпадает с kart_players.telegram_id).
+// Если премиум уже активен — продлевает от текущей даты окончания, иначе от "сейчас".
+async function grantPremium(telegramId) {
+	const { data } = await supabase
+		.from("kart_players")
+		.select("id, premium_until")
+		.eq("telegram_id", telegramId)
+		.single();
+	if (!data) return null;
+	const now = Date.now();
+	const currentUntil = data.premium_until
+		? new Date(data.premium_until).getTime()
+		: 0;
+	const base = currentUntil > now ? currentUntil : now;
+	const newUntil = new Date(
+		base + PREMIUM_DURATION_DAYS * 24 * 60 * 60 * 1000,
+	).toISOString();
+	await supabase
+		.from("kart_players")
+		.update({ premium_until: newUntil })
+		.eq("id", data.id);
+	// Обновляем все активные сессии этого игрока и уведомляем клиент(ы)
+	for (const key of Object.keys(sessions)) {
+		if (Number(sessions[key].tgUser?.id) !== Number(telegramId)) continue;
+		sessions[key].premiumUntil = newUntil;
+		const sock = IO.sockets.sockets.get(key);
+		if (sock && sock.connected) {
+			sock.emit("premiumStatus", { premiumUntil: newUntil, active: true });
+		}
+	}
+	return newUntil;
+}
+
 function signJWT(payload) {
 	return jwt.sign(payload, JWT_SECRET, { expiresIn: "30d" });
 }
@@ -468,6 +546,7 @@ async function getOrCreatePlayer(telegramId, userData) {
 		selected_deck: [],
 		wins: 0,
 		losses: 0,
+		premium_until: null,
 	};
 	const { error } = await supabase.from("kart_players").insert(defaults);
 	if (error) {
@@ -487,6 +566,7 @@ async function savePlayerData(userId, data) {
 			selected_deck: data.selectedDeck || [],
 			wins: data.wins || 0,
 			losses: data.losses || 0,
+			premium_until: data.premiumUntil || null,
 			updated_at: new Date().toISOString(),
 		})
 		.eq("telegram_id", userId);
@@ -709,6 +789,7 @@ function getSessionShellState(sessionId) {
 		selectedDeck: s.selectedDeck,
 		shopCards: s.shopCards.map((c) => ({ id: c.id, price: c.price })),
 		tgUser: s.tgUser || null,
+		premiumUntil: s.premiumUntil || null,
 	};
 }
 
@@ -828,14 +909,18 @@ function endPvpGame(roomId, winnerSide, reason) {
 	clearTimeout(room.turnTimer);
 	clearTimeout(room.disconnectTimer);
 
-	const reward =
+	const baseReward =
 		BASE_REWARD + Math.floor(Math.random() * 30) + battle.turnCount * 2;
 	const sides = { A: room.sideA, B: room.sideB };
+	const rewards = { A: 0, B: 0 };
 
 	for (const side of ["A", "B"]) {
 		const p = sides[side];
 		const sess = sessions[p.sessionId];
 		const won = side === winnerSide;
+		const reward =
+			won && isPremiumActive(sess) ? baseReward * 2 : won ? baseReward : 0;
+		rewards[side] = reward;
 		if (sess) {
 			sess.pvpRoomId = null;
 			if (won) {
@@ -892,7 +977,7 @@ function endPvpGame(roomId, winnerSide, reason) {
 				enemyCards: battle.cardsB,
 				gameEnd: {
 					victory: winnerSide === "A",
-					reward: winnerSide === "A" ? reward : 0,
+					reward: rewards.A,
 					reason,
 				},
 			},
@@ -907,7 +992,7 @@ function endPvpGame(roomId, winnerSide, reason) {
 				enemyCards: battle.cardsA,
 				gameEnd: {
 					victory: winnerSide === "B",
-					reward: winnerSide === "B" ? reward : 0,
+					reward: rewards.B,
 					reason,
 				},
 			},
@@ -1166,7 +1251,25 @@ APP.get("/auth/bot/poll", async (req, res) => {
 // Step 3: bot webhook — receives Telegram messages
 APP.post("/bot/webhook", express.json(), async (req, res) => {
 	try {
+		// Telegram Stars: подтверждение перед оплатой (обязателен ответ в течение 10 сек)
+		const preCheckout = req.body?.pre_checkout_query;
+		if (preCheckout) {
+			await tgApiRequest("answerPreCheckoutQuery", {
+				pre_checkout_query_id: preCheckout.id,
+				ok: true,
+			});
+			return res.sendStatus(200);
+		}
+
 		const msg = req.body?.message || req.body?.edited_message;
+
+		// Telegram Stars: платёж прошёл успешно — начисляем премиум
+		if (msg?.successful_payment && msg?.from?.id) {
+			await grantPremium(msg.from.id.toString());
+			console.log(`[premium] granted to tg${msg.from.id}`);
+			return res.sendStatus(200);
+		}
+
 		if (!msg?.text || !msg?.from?.id) return res.sendStatus(200);
 		const text = msg.text.trim();
 		const telegramId = msg.from.id;
@@ -1207,6 +1310,7 @@ IO.on("connection", (socket) => {
 		shopCards: eraDef(),
 		wins: 0,
 		losses: 0,
+		premiumUntil: null,
 	};
 
 	// ═══ AUTH ═══
@@ -1241,6 +1345,7 @@ IO.on("connection", (socket) => {
 			sessions[sessionId].selectedDeck = dbPlayer.selected_deck || [];
 			sessions[sessionId].wins = dbPlayer.wins || 0;
 			sessions[sessionId].losses = dbPlayer.losses || 0;
+			sessions[sessionId].premiumUntil = dbPlayer.premium_until || null;
 			sessions[sessionId].tgUser = decoded.tgUser || {
 				id: decoded.telegram_id,
 				firstName: decoded.username,
@@ -1309,6 +1414,7 @@ IO.on("connection", (socket) => {
 			sessions[sessionId].selectedDeck = dbPlayer.selected_deck || [];
 			sessions[sessionId].wins = dbPlayer.wins || 0;
 			sessions[sessionId].losses = dbPlayer.losses || 0;
+			sessions[sessionId].premiumUntil = dbPlayer.premium_until || null;
 			sessions[sessionId].tgUser = {
 				id: parseInt(telegramId),
 				firstName: tgUser.first_name,
@@ -1353,6 +1459,43 @@ IO.on("connection", (socket) => {
 		s.battle = null;
 		s.shopCards = eraDef();
 		socket.emit("stateUpdate", getSessionState(sessionId));
+	});
+
+	// ═══ PREMIUM ═══
+	socket.on("buyPremium", async () => {
+		const s = sessions[sessionId];
+		const telegramId = s?.tgUser?.id;
+		if (!s || !telegramId) {
+			socket.emit("premiumError", "Войдите через Telegram, чтобы купить премиум");
+			return;
+		}
+		try {
+			const invoice = await tgApiRequest("createInvoiceLink", {
+				title: "Премиум-аккаунт",
+				description: `x2 золота за каждую победу на ${PREMIUM_DURATION_DAYS} дней`,
+				payload: `premium_${telegramId}_${Date.now()}`,
+				currency: "XTR",
+				prices: [{ label: "Премиум на 7 дней", amount: PREMIUM_PRICE_STARS }],
+			});
+			if (invoice?.ok) {
+				socket.emit("invoiceLink", invoice.result);
+			} else {
+				console.error("[premium] createInvoiceLink failed:", invoice);
+				socket.emit("premiumError", "Не удалось создать счёт на оплату");
+			}
+		} catch (e) {
+			console.error("[premium] error:", e.message);
+			socket.emit("premiumError", "Ошибка сервера при создании счёта");
+		}
+	});
+
+	socket.on("getPremiumStatus", () => {
+		const s = sessions[sessionId];
+		if (!s) return;
+		socket.emit("premiumStatus", {
+			premiumUntil: s.premiumUntil || null,
+			active: isPremiumActive(s),
+		});
 	});
 
 	// ═══ GET SHOP ═══
@@ -1749,6 +1892,7 @@ function getSessionState(sessionId) {
 		shopCards: s.shopCards.map((c) => ({ id: c.id, price: c.price })),
 		battle: s.battle ? getBattleState(s.battle) : null,
 		tgUser: s.tgUser || null,
+		premiumUntil: s.premiumUntil || null,
 	};
 }
 
@@ -2682,14 +2826,16 @@ function endGame(battle, victory, s, socket, sessionId, userId) {
 	battle.gameOver = true;
 	battle.isPlayerTurn = false;
 
-	const reward = victory
+	let reward = victory
 		? BASE_REWARD + Math.floor(Math.random() * 30) + battle.turnCount * 2
 		: 0;
+	const premiumActive = isPremiumActive(s);
+	if (victory && premiumActive) reward *= 2;
 	if (victory) {
 		s.playerGold += reward;
 		s.wins = (s.wins || 0) + 1;
 		battle.battleLog.push(
-			`<span class="log-victory">ПОБЕДА! +${reward} Remains</span>`,
+			`<span class="log-victory">ПОБЕДА! +${reward} Remains${premiumActive ? " (x2 Премиум)" : ""}</span>`,
 		);
 	} else {
 		s.losses = (s.losses || 0) + 1;
@@ -2698,12 +2844,12 @@ function endGame(battle, victory, s, socket, sessionId, userId) {
 		);
 	}
 
-	battle.gameEnd = { victory, reward };
+	battle.gameEnd = { victory, reward, premium: premiumActive };
 
 	// Save battle result
-		if (userId) {
-			saveBattleResult(
-				s._dbPlayerId || userId,
+	if (userId) {
+		saveBattleResult(
+			s._dbPlayerId || userId,
 			victory ? "win" : "loss",
 			reward,
 			battle.playerDeckIds || s.selectedDeck,

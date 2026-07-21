@@ -122,8 +122,9 @@ switch (cmd) {
 	case "search": {
 		const results = db
 			.prepare(`
-      SELECT qualified_name, kind, file_path, line_start, signature
-      FROM nodes_fts WHERE nodes_fts MATCH ?
+      SELECT n.qualified_name, n.kind, n.file_path, n.line_start, n.signature
+      FROM nodes_fts JOIN nodes n ON n.rowid = nodes_fts.rowid
+      WHERE nodes_fts MATCH ?
       LIMIT 15
     `)
 			.all(arg);
