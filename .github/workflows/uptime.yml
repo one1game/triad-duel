@@ -2,7 +2,7 @@ name: Uptime Ping
 
 on:
   schedule:
-    - cron: '*/10 * * * *'
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -10,4 +10,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Keep Render awake
-        run: curl -s https://triad-duel-server.onrender.com/api/new-campaign -X POST || true
+        run: curl -sf --max-time 10 https://triad-duel-server.onrender.com/ || true
