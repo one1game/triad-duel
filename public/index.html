@@ -548,7 +548,6 @@ if(window.Telegram?.WebApp?.initData){
   </div>
 </div>
 <div class="screen" id="battleScreen">
-  <video id="bgBattle" class="shop-bg-video" autoplay muted loop playsinline style="opacity:0"><source src="img/game/fait.mp4" type="video/mp4"></video>
   <div class="battle-header">
     <button class="btn small bh-surrender" onclick="surrenderBattle()">Сдаться</button>
     <span class="user-badge enemy-badge" id="enemyBadge" style="display:none">
@@ -607,8 +606,6 @@ const IMG_BASE='img/cards/',CARDS_PER_SIDE=3,SHOP_SIZE=12,MAX_MANA=10;
   assets.push('img/game/upg_hp.png');
   assets.push('img/game/upg_atk.png');
   assets.push('img/game/upg_mana.png');
-  // Battle background
-  assets.push('img/game/fait.mp4');
 
   const total=assets.length;
   let loaded=0;
@@ -630,14 +627,10 @@ const IMG_BASE='img/cards/',CARDS_PER_SIDE=3,SHOP_SIZE=12,MAX_MANA=10;
   }
 
   assets.forEach(url=>{
-    if(url.endsWith('.mp4')){
-      fetch(url,{mode:'no-cors'}).then(tick).catch(tick);
-    }else{
-      const img=new Image();
-      img.onload=tick;
-      img.onerror=tick;
-      img.src=url;
-    }
+    const img=new Image();
+    img.onload=tick;
+    img.onerror=tick;
+    img.src=url;
   });
 })();
 
@@ -1007,7 +1000,7 @@ function enrichCards(arr){return(arr||[]).map(enrichCard)}
 // ═══ DOM ═══
 const scr={menu:el('menuScreen'),shop:el('shopScreen'),battle:el('battleScreen')};
 function el(id){return document.getElementById(id)}
-function showScreen(n){Object.values(scr).forEach(s=>s.classList.remove('active'));scr[n].classList.add('active');el('resultOverlay').classList.remove('show');if(n!=='battle'){el('bgClep').style.opacity='.4';el('bgWarp').style.opacity='0';el('bgHaus').style.opacity='0';el('bgBattle').style.opacity='0'}else{el('bgBattle').style.opacity='.35'}startBGM()}
+function showScreen(n){Object.values(scr).forEach(s=>s.classList.remove('active'));scr[n].classList.add('active');el('resultOverlay').classList.remove('show');if(n!=='battle'){el('bgClep').style.opacity='.4';el('bgWarp').style.opacity='0';el('bgHaus').style.opacity='0'}startBGM()}
 
 // ═══ LOADING ═══
 let _loadingTimer=null;
