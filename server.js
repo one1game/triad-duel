@@ -1661,9 +1661,6 @@ IO.on("connection", (socket) => {
 			socket.emit("error", "Сессия не найдена. Перезайдите в игру.");
 			return;
 		}
-		s.playerGold = 100;
-		s.playerCollection = ["mage_01", "tank_01", "assa_01"];
-		s.cardUpgrades = {};
 		s.selectedDeck = [];
 		s.battle = null;
 		s.shopCards = eraDef();
