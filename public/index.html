@@ -6,27 +6,51 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <!-- Цвет темы для браузерной строки и обертки Telegram -->
 <meta name="theme-color" content="#030304">
-<meta name="robots" content="index, follow">
+<!-- Mini App недоступен для краулеров — контент за authOverlay -->
+<meta name="robots" content="noindex, nofollow">
 
 <!-- SEO: Основные теги -->
 <title>Triad Duel — Триада Дуэли | Тактическая карточная RPG в Telegram</title>
 <meta name="description" content="Собирай колоду, сражайся в дуэлях и побеждай в хаосе склепа. Новая тактическая карточная RPG прямо в Telegram. Играй бесплатно!">
 <meta name="keywords" content="Triad Duel, Триада Дуэли, карточная игра, RPG, Telegram игра, мини апп, тактическая игра, PVP">
+<link rel="canonical" href="https://t.me/triad_duel_bot">
 
-<!-- Open Graph / Telegram Link Preview (Критически важно для шеринга!) -->
+<!-- Open Graph / Telegram Link Preview -->
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://t.me/your_bot_username"> <!-- ЗАМЕНИТЕ: Ссылка на вашего бота или сайт -->
+<meta property="og:url" content="https://t.me/triad_duel_bot">
 <meta property="og:title" content="Triad Duel — Триада Дуэли ⚔️">
 <meta property="og:description" content="Собирай колоду, управляй маной и одержи победу в Склепе! Новая кампания уже доступна.">
-<meta property="og:image" content="https://yourdomain.com/og-image.jpg"> <!-- ЗАМЕНИТЕ: Ссылка на яркий баннер игры (1200x630px) -->
+<meta property="og:image" content="https://triad-duel.pages.dev/img/baner-tg.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Triad Duel">
 <meta property="og:locale" content="ru_RU">
 
-<!-- Twitter Card (для совместимости с другими платформами) -->
+<!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Triad Duel — Триада Дуэли ⚔️">
 <meta name="twitter:description" content="Тактическая карточная RPG прямо в Telegram. Играй бесплатно!">
-<meta name="twitter:image" content="https://yourdomain.com/og-image.jpg"> <!-- ЗАМЕНИТЕ: Та же ссылка на баннер -->
+<meta name="twitter:image" content="https://triad-duel.pages.dev/img/baner-tg.png">
+
+<!-- Structured Data (schema.org) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Triad Duel — Триада Дуэли",
+  "url": "https://t.me/triad_duel_bot",
+  "description": "Тактическая карточная RPG в Telegram. Собирай колоду, сражайся в дуэлях и побеждай в хаосе склепа.",
+  "applicationCategory": "GameApplication",
+  "operatingSystem": "Telegram Mini App",
+  "genre": "Card Game",
+  "inLanguage": "ru",
+  "image": "https://triad-duel.pages.dev/img/baner-tg.png",
+  "author": {
+    "@type": "Organization",
+    "name": "One1Game"
+  }
+}
+</script>
 
 <!-- Favicon (замените на путь к вашей реальной иконке, если есть) -->
 <link rel="icon" type="image/png" href="img/game/favicon.png">
@@ -216,6 +240,9 @@
   @media(max-width:768px){body{align-items:flex-start;padding-top:calc(8px + var(--safe-top))}body::before{opacity:.6}body::after{opacity:.25}#particlesCanvas{opacity:.35}.screen{padding:10px;gap:16px;padding-top:calc(10px + var(--safe-top))}.screen.active{gap:16px}.menu-title{font-size:36px;letter-spacing:3px}.menu-subtitle{font-size:10px;letter-spacing:4px;margin-bottom:32px;padding:8px 0}.menu-buttons{gap:10px;max-width:260px}.menu-buttons .btn{padding:14px;font-size:12px}.section-title{font-size:14px;letter-spacing:2px}.shop-tabs{padding:12px 14px 8px}.shop-header{flex-wrap:wrap;gap:10px;padding:10px 20px}#shopGrid,#shopGridInv,#shopGridChaos{padding:10px 14px}.shop-footer{padding:8px 14px;padding-bottom:calc(8px + var(--safe-bottom, 0px))}.battle-footer{padding:8px 20px;padding-bottom:calc(8px + var(--safe-bottom, 0px))}.gold-display{font-size:13px}.card{width:130px;height:195px}.card-image{width:130px;height:195px}.atk-badge{font-size:11px;padding:2px 6px;top:5px;left:5px}.hp-text{font-size:9px;padding:1px 4px;top:5px;right:5px}.card-name{font-size:8px;padding:3px 4px}.card-role{font-size:6px;bottom:5px;right:6px}.card-overlay{height:55%;padding:30px 6px 8px}.mana-orbs{bottom:5px;left:5px;gap:3px}.mana-orb{width:5px;height:5px}.dot-status{font-size:7px!important;top:20px!important;left:5px!important}.card-grid{grid-template-columns:repeat(3,130px);gap:14px}.shop-card{width:130px;height:195px}.shop-card-img{width:130px;height:195px}.deck-card{width:130px;height:195px}.deck-card-img{width:130px;height:195px}.shop-card-name{font-size:8px;bottom:38px;padding:3px 5px}.shop-card-price{font-size:11px;bottom:8px;left:8px}.shop-card-passive{font-size:6px;bottom:26px;max-width:110px}.shop-card-buy{font-size:9px;padding:4px 10px;bottom:6px;right:6px}.deck-info-btn{width:18px;height:18px;font-size:10px;top:4px;right:4px}.shop-tab{font-size:11px;padding:8px 18px;letter-spacing:1.5px}.battle-header{padding:8px 20px;gap:10px}.bh-vs{font-size:14px}.battlefield{gap:24px}.card-row{gap:10px;justify-content:center}.battlefield{padding:8px 0}.btn{padding:10px 18px;font-size:10px;letter-spacing:1.5px;min-height:40px;display:inline-flex;align-items:center;justify-content:center}.btn.small{padding:6px 12px;font-size:9px}.btn.surrender-btn{padding:8px 14px;font-size:10px;min-height:38px}.btn.ability-btn{padding:8px 12px;font-size:10px;min-height:40px}#endTurnBtn{padding:12px 28px;font-size:11px}.ability-panel{flex-wrap:wrap;gap:8px;padding:6px}.action-hint{font-size:10px}.battle-log{max-height:72px;font-size:10px;padding:8px 20px}.battle-log .log-entry{padding:2px 0}.turn-indicator{font-size:12px}#settingsOverlay{gap:20px}.settings-title{font-size:18px}.setting-row{font-size:12px;gap:14px}.setting-slider{width:120px}.result-large-title{font-size:36px}.result-text{font-size:18px}.result-gold{font-size:15px}.card-detail{flex-direction:column;padding:20px;gap:16px;max-width:340px}.card-detail-img{width:120px;height:180px;align-self:center}.card-detail-name{font-size:15px}.card-detail-stat{font-size:11px}.card-detail-passive .passive-name{font-size:11px}.card-detail-passive .passive-desc{font-size:10px}.card-detail-lore{font-size:10px}.card-detail-close{width:28px;height:28px;font-size:14px;top:8px;right:8px}.card.attacking{animation:atkLungeM .35s cubic-bezier(.2,.8,.2,1)}@keyframes atkLungeM{0%{transform:translateX(0) translateY(-8px) scale(1.03)}40%{transform:translateX(15px) translateY(-10px) scale(1.05)}100%{transform:translateX(0) translateY(-8px) scale(1.03)}}.card.taking-damage{animation:dmgShakeM .35s ease}@keyframes dmgShakeM{0%,100%{transform:translateX(0) translateY(-6px) scale(1.02)}20%{transform:translateX(-5px) translateY(-6px) scale(1.02)}40%{transform:translateX(5px) translateY(-6px) scale(1.02)}60%{transform:translateX(-3px) translateY(-6px) scale(1.02)}}.card.selected{transform:translateY(-8px) scale(1.03)!important}.card:hover{transform:translateY(-6px) scale(1.02)}.card.enemy-targetable:hover{transform:translateY(-4px) scale(1.01)}.damage-number{font-size:20px}.chaos-card{width:130px}.chaos-card-frame{width:130px}.chaos-card-name{font-size:9px;bottom:38px}.chaos-upgrades{padding:6px 0 0}.chaos-upg-btn{font-size:8px;min-height:42px}.chaos-upg-icon{width:100%;height:100%}.chaos-upg-label{font-size:7px}.shop-card-name{font-size:9px;bottom:42px}.shop-card-price{font-size:11px;bottom:8px}.shop-card-passive{font-size:6px;bottom:30px}.shop-card-buy{font-size:8px;padding:3px 9px;bottom:6px}.deck-card-name{font-size:9px}.result-text{font-size:40px}.result-gold{font-size:14px}.round-timer-text{font-size:18px}.round-timer{padding:4px 0}.settings-title{font-size:16px}.setting-row{font-size:12px}}
 /* === КРИТИЧЕСКИЙ ФИКС ДЛЯ КНОПКИ "В БОЙ!" === */
 @media(max-width:768px){
+  body::after{display:none}
+  .btn::before{display:none}
+  @keyframes premiumShimmer{0%,100%{box-shadow:none;border-color:rgba(220,40,40,.3)}50%{box-shadow:none;border-color:rgba(220,40,40,.5)}}
   #shopScreen.active{height:calc(100vh - 120px)!important;max-height:calc(100dvh - 120px)!important}
   .shop-action-bar{padding-bottom:25px!important;margin-bottom:8px!important}
   #toBattleBtn{margin-bottom:8px!important}
@@ -718,7 +745,7 @@ socket.on('connect',()=>{
     });
   }
 });
-socket.on('disconnect',()=>{console.log('[socket] disconnected')});
+socket.on('disconnect',()=>{stopRoundTimer();console.log('[socket] disconnected')});
 
 let pendingInit=null;
 
@@ -741,7 +768,7 @@ socket.on('init',(state)=>{
   const saved=loadSavedState();
   if(saved&&saved.screen==='battle'){
     if(state.battle){
-      showScreen('battle');el('battleLog').innerHTML='';battleCardsReady=false;battleGen++;
+      showScreen('battle');el('battleLog').innerHTML='';battleCardsReady=false;_lastUiKey='';battleGen++;
       processBattleUpdate(state);
     } else if(state.selectedDeck && state.selectedDeck.length===3){
       showScreen('battle');el('battleLog').innerHTML='';battleCardsReady=false;battleGen++;
@@ -769,7 +796,7 @@ socket.on('stateUpdate',(state)=>{
   if(state.battle) hideMatchmakingOverlay();
   if((state.battle && state.battle.gameEnd || state.battle) && !state.error){
     if(!document.getElementById('battleScreen').classList.contains('active') && state.battle){
-      showScreen('battle');el('battleLog').innerHTML='';battleCardsReady=false;battleGen++;
+      showScreen('battle');el('battleLog').innerHTML='';battleCardsReady=false;_lastUiKey='';battleGen++;
       playSound('battle_start');
     }
     processBattleUpdate(state);
@@ -1303,6 +1330,8 @@ function rCard(card,isPlayer,idx){
   </div>`;
 }
 
+let _lastUiKey='';
+
 function updUI(){
   if(battleCardsReady){
     refreshBattleCards();
@@ -1312,51 +1341,56 @@ function updUI(){
     battleCardsReady=true;
   }
 
-  let abHTML='',hintHTML='';
-  if(activeIdx>=0&&playerCards[activeIdx]&&playerCards[activeIdx].hp>0&&isPlayerTurn&&!gameOver&&!turnLocked){
-    const c=playerCards[activeIdx];
-    if(critActivated){
-      abHTML='<span style="font-size:12px;color:#c08030;animation:pulse-enemy 1s infinite;font-family:Cinzel,serif;letter-spacing:1px;">⚡ КРИТ ГОТОВ — выберите врага!</span>';
-    }else if(fireballActive){
-      abHTML='<span style="font-size:12px;color:#e07830;animation:pulse-enemy 1s infinite;font-family:Cinzel,serif;letter-spacing:1px;">🔥 ОГНЕННЫЙ ШАР — выберите врага!</span>';
-    }else{
-      let btns='';
-      if(firstTurn){
-        btns+='<span style="font-size:11px;color:#8a6a3a;font-style:italic;">Первый ход: только базовая атака</span>';
+  const ace=activeIdx>=0?playerCards[activeIdx]:null;
+  const uiKey=`${activeIdx}|${critActivated}|${fireballActive}|${firstTurn}|${turnLocked}|${gameOver}|${isPlayerTurn}|${ace?.type}|${ace?.mana}|${abilitiesUsedThisTurn.has(activeIdx)}|${ace?.critReady}|${ace?.tauntActive}`;
+  if(_lastUiKey!==uiKey){
+    _lastUiKey=uiKey;
+
+    let abHTML='',hintHTML='';
+    if(activeIdx>=0&&ace&&ace.hp>0&&isPlayerTurn&&!gameOver&&!turnLocked){
+      if(critActivated){
+        abHTML='<span style="font-size:12px;color:#c08030;animation:pulse-enemy 1s infinite;font-family:Cinzel,serif;letter-spacing:1px;">⚡ КРИТ ГОТОВ — выберите врага!</span>';
+      }else if(fireballActive){
+        abHTML='<span style="font-size:12px;color:#e07830;animation:pulse-enemy 1s infinite;font-family:Cinzel,serif;letter-spacing:1px;">🔥 ОГНЕННЫЙ ШАР — выберите врага!</span>';
       }else{
-        if(c.type==='tank'&&c.mana>=2&&!abilitiesUsedThisTurn.has(activeIdx)){
-          btns+=`<button class="btn ability-btn" onclick="useTaunt()">🛡 Провокация (2 маны)</button>`;
+        let btns='';
+        if(firstTurn){
+          btns+='<span style="font-size:11px;color:#8a6a3a;font-style:italic;">Первый ход: только базовая атака</span>';
+        }else{
+          if(ace.type==='tank'&&ace.mana>=2&&!abilitiesUsedThisTurn.has(activeIdx)){
+            btns+=`<button class="btn ability-btn" onclick="useTaunt()">🛡 Провокация (2 маны)</button>`;
+          }
+          if(ace.type==='assa'&&ace.mana>=2&&!abilitiesUsedThisTurn.has(activeIdx)){
+            btns+=`<button class="btn ability-btn" onclick="useCrit()">⚔ Крит-удар (2 маны)</button>`;
+          }
+          const fbCost=ace.id==='mage_01'?2:3;
+          if(ace.type==='mage'&&ace.mana>=fbCost&&!abilitiesUsedThisTurn.has(activeIdx)){
+            btns+=`<button class="btn ability-btn" onclick="useFireball()">🔮 Огненный шар (${fbCost} ${ace.id==='mage_01'?'<span style="color:#8ab860">мана</span>':'маны'})</button>`;
+          }
+          if(ace.mana===0||abilitiesUsedThisTurn.has(activeIdx))btns+='<span style="font-size:11px;color:#6a5a70;font-style:italic;">Сила иссякла на этот ход</span>';
         }
-        if(c.type==='assa'&&c.mana>=2&&!abilitiesUsedThisTurn.has(activeIdx)){
-          btns+=`<button class="btn ability-btn" onclick="useCrit()">⚔ Крит-удар (2 маны)</button>`;
-        }
-        const fbCost=c.id==='mage_01'?2:3;
-        if(c.type==='mage'&&c.mana>=fbCost&&!abilitiesUsedThisTurn.has(activeIdx)){
-          btns+=`<button class="btn ability-btn" onclick="useFireball()">🔮 Огненный шар (${fbCost} ${c.id==='mage_01'?'<span style="color:#8ab860">мана</span>':'маны'})</button>`;
-        }
-        if(c.mana===0||abilitiesUsedThisTurn.has(activeIdx))btns+='<span style="font-size:11px;color:#6a5a70;font-style:italic;">Сила иссякла на этот ход</span>';
+        if(ace.type==='assa'&&ace.critReady&&!critActivated)btns+='<span style="font-size:11px;color:#c08030;font-weight:600;">⚡ Крит готов!</span>';
+        if(ace.type==='tank'&&ace.tauntActive)btns+='<span style="font-size:11px;color:#8a4a1a;font-weight:600;">🛡 Агр активен</span>';
+        abHTML=btns;
       }
-      if(c.type==='assa'&&c.critReady&&!critActivated)btns+='<span style="font-size:11px;color:#c08030;font-weight:600;">⚡ Крит готов!</span>';
-      if(c.type==='tank'&&c.tauntActive)btns+='<span style="font-size:11px;color:#8a4a1a;font-weight:600;">🛡 Агр активен</span>';
-      abHTML=btns;
+    }else if(isPlayerTurn&&!gameOver&&!turnLocked){
+      abHTML='<span style="font-size:11px;color:#6a5a70;font-style:italic;">Выберите юнита для действий</span>';
+    }else if(gameOver){
+      abHTML='<span style="font-size:11px;color:#6a5a70;font-style:italic;">Бой окончен</span>';
+    }else{
+      abHTML='<span style="font-size:11px;color:#6a5a70;font-style:italic;">Ожидание хода врага...</span>';
     }
-  }else if(isPlayerTurn&&!gameOver&&!turnLocked){
-    abHTML='<span style="font-size:11px;color:#6a5a70;font-style:italic;">Выберите юнита для действий</span>';
-  }else if(gameOver){
-    abHTML='<span style="font-size:11px;color:#6a5a70;font-style:italic;">Бой окончен</span>';
-  }else{
-    abHTML='<span style="font-size:11px;color:#6a5a70;font-style:italic;">Ожидание хода врага...</span>';
+
+    if(!isPlayerTurn||gameOver)hintHTML='Противник обдумывает свой ход...';
+    else if(turnLocked)hintHTML='Ход завершается...';
+    else if(activeIdx<0&&firstTurn)hintHTML='<span class="key">Выберите юнита</span> — первый ход: только базовая атака';
+    else if(activeIdx<0)hintHTML='<span class="key">Выберите юнита</span> — 1 действие за ход';
+    else if(firstTurn)hintHTML='<span class="key">Атакуйте врага</span> — способности недоступны в первом ходу';
+    else hintHTML='<span class="key">Атакуйте врага</span> или <span class="key">используйте способность</span>';
+
+    el('abilityPanel').innerHTML=abHTML;
+    el('actionHint').innerHTML=hintHTML;
   }
-
-  if(!isPlayerTurn||gameOver)hintHTML='Противник обдумывает свой ход...';
-  else if(turnLocked)hintHTML='Ход завершается...';
-  else if(activeIdx<0&&firstTurn)hintHTML='<span class="key">Выберите юнита</span> — первый ход: только базовая атака';
-  else if(activeIdx<0)hintHTML='<span class="key">Выберите юнита</span> — 1 действие за ход';
-  else if(firstTurn)hintHTML='<span class="key">Атакуйте врага</span> — способности недоступны в первом ходу';
-  else hintHTML='<span class="key">Атакуйте врага</span> или <span class="key">используйте способность</span>';
-
-  el('abilityPanel').innerHTML=abHTML;
-  el('actionHint').innerHTML=hintHTML;
   const row=el('playerRow');row.classList.remove('waiting','active');row.classList.add(turnLocked||!isPlayerTurn||gameOver?'waiting':'active');
 }
 
