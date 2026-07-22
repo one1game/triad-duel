@@ -1375,9 +1375,9 @@ function updUI(){
           if(ace.type==='assa'&&ace.mana>=2&&!abilitiesUsedThisTurn.has(activeIdx)){
             btns+=`<button class="btn ability-btn" onclick="useCrit()">⚔ Крит-удар (2 маны)</button>`;
           }
-          const fbCost=ace.id==='mage_01'?2:3;
+          const fbCost=2;
           if(ace.type==='mage'&&ace.mana>=fbCost&&!abilitiesUsedThisTurn.has(activeIdx)){
-            btns+=`<button class="btn ability-btn" onclick="useFireball()">🔮 Огненный шар (${fbCost} ${ace.id==='mage_01'?'<span style="color:#8ab860">мана</span>':'маны'})</button>`;
+            btns+=`<button class="btn ability-btn" onclick="useFireball()">🔮 Огненный шар (2 маны)</button>`;
           }
           if(ace.mana===0||abilitiesUsedThisTurn.has(activeIdx))btns+='<span style="font-size:11px;color:#6a5a70;font-style:italic;">Сила иссякла на этот ход</span>';
         }

@@ -846,7 +846,7 @@ function getManaCap(cardId, cardUpgrades) {
 }
 
 function getFireballCost(attacker) {
-	return attacker.baseId === "mage_01" ? 2 : 3;
+	return 2;
 }
 
 function buildDeckCards(deckIds, cardUpgrades) {
@@ -1337,7 +1337,7 @@ function handlePvpAction(roomId, sessionId, action) {
 				return;
 			}
 		}
-		const cost = attacker.baseId === "mage_01" ? 2 : 3;
+		const cost = 2;
 		if (attacker.mana < cost) {
 			armTurnTimer(roomId);
 			return;
@@ -2910,7 +2910,7 @@ function executeAiTurn(battle, _cardUpgrades) {
 				if (target)
 					actions.push({ actor, actorIdx, type: "crit", target, score });
 			} else if (actor.type === "mage") {
-				const cost = actor.baseId === "mage_01" ? 2 : 3;
+				const cost = 2;
 				if (actor.mana >= cost) {
 					const { target, score } = bestTargetFor(actor, "fireball");
 					if (target)
@@ -3002,7 +3002,7 @@ function executeAiTurn(battle, _cardUpgrades) {
 		let dmg = actor.atk + 2;
 		if (actor.baseId === "mage_10" && actor.hp < actor.maxHp * 0.5) dmg += 2;
 		if (actor.baseId === "mage_07" && target.type === "tank") dmg += 1;
-		const cost = actor.baseId === "mage_01" ? 2 : 3;
+		const cost = 2;
 		const coverName = checkCover(tIdx, battle.playerCards);
 		if (coverName) {
 			dmg = 0;
