@@ -695,9 +695,6 @@ function beginPveBattle(s, socket, sessionId) {
 	s.battle = seedBattle(s.selectedDeck, enemyDeck, s.cardUpgrades);
 	s.battle.enemyName = bot.name;
 	s.battle.enemyAvatar = bot.avatar;
-	s.battle.battleLog.push(
-		`<span class="log-ability">⚔ Битва против <b>${bot.name}</b>!</span>`,
-	);
 	socket.emit("stateUpdate", getSessionState(sessionId));
 
 	if (!s.battle.isPlayerTurn) {
@@ -732,9 +729,6 @@ function beginPveBattle(s, socket, sessionId) {
 			battle.activeIdx = -1;
 			for (const c of battle.playerCards) c.tauntActive = false;
 			for (const c of battle.enemyCards) c.tauntActive = false;
-			battle.battleLog.push(
-				'<span class="log-ability">— Новый ход —</span>',
-			);
 			battle.aiAction = null;
 			socket.emit("stateUpdate", getSessionState(sessionId));
 		}, aiThinkMs);
@@ -843,9 +837,6 @@ function armTurnTimer(roomId) {
 	clearTimeout(room.turnTimer);
 	room.turnTimer = setTimeout(() => {
 		if (!pvpRooms[roomId] || room.battle.gameOver) return;
-		room.battle.battleLog.push(
-			'<span class="log-ability">⏱ Ход пропущен по таймауту.</span>',
-		);
 		endPvpTurn(roomId);
 	}, PVP_TURN_TIMEOUT_MS);
 }
@@ -896,7 +887,6 @@ function endPvpTurn(roomId) {
 		if (c.type === "assa" && c.mana >= 2) c.critReady = true;
 	}
 
-	battle.battleLog.push('<span class="log-ability">— Новый ход —</span>');
 	emitPvpState(roomId);
 	armTurnTimer(roomId);
 }
@@ -1029,7 +1019,6 @@ function createPvpRoom(p1, p2) {
 	};
 	if (sessions[p1.sessionId]) sessions[p1.sessionId].pvpRoomId = roomId;
 	if (sessions[p2.sessionId]) sessions[p2.sessionId].pvpRoomId = roomId;
-	battle.battleLog.push('<span class="log-ability">⚔ Битва начинается!</span>');
 	emitPvpState(roomId);
 	armTurnTimer(roomId);
 }
@@ -2448,7 +2437,6 @@ function executePlayerEndTurn(s, socket, userId) {
 			if (c.type === "assa" && c.mana >= 2) c.critReady = true;
 		});
 
-		battle.battleLog.push('<span class="log-ability">— Новый ход —</span>');
 		socket.emit("stateUpdate", getSessionState(sessionId));
 	}, aiThinkMs);
 }
