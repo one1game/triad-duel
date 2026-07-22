@@ -89,6 +89,7 @@
   .menu-buttons{display:flex;flex-direction:column;gap:16px;align-items:center;width:100%;max-width:320px}.menu-buttons .btn{width:100%;text-align:center;padding:16px;font-size:14px}
   #settingsOverlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(3,3,4,.95);backdrop-filter:blur(10px);z-index:1000;justify-content:center;align-items:center;flex-direction:column;gap:32px;padding-top:var(--safe-top)}#settingsOverlay.show{display:flex;animation:fadeIn .3s ease-out}
   #premiumOverlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(3,3,4,.95);backdrop-filter:blur(10px);z-index:1000;justify-content:center;align-items:center;flex-direction:column;gap:20px;padding:24px;padding-top:calc(24px + var(--safe-top))}#premiumOverlay.show{display:flex;animation:fadeIn .3s ease-out}
+  #inviteOverlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(3,3,4,.95);backdrop-filter:blur(10px);z-index:1000;justify-content:center;align-items:center;flex-direction:column;gap:20px;padding:24px;padding-top:calc(24px + var(--safe-top))}#inviteOverlay.show{display:flex;animation:fadeIn .3s ease-out}
   .premium-card{max-width:380px;width:100%;background:rgba(20,16,10,.6);border:1px solid var(--accent-gold);border-radius:8px;padding:28px 24px;display:flex;flex-direction:column;align-items:center;gap:18px;box-shadow:0 0 40px rgba(196,162,101,.15)}
   .premium-crown{font-size:40px;filter:drop-shadow(0 0 12px rgba(240,214,138,.6))}
   .premium-title{font-family:'Cinzel',serif;font-size:22px;color:var(--accent-gold-bright);letter-spacing:3px;text-transform:uppercase;text-align:center}
@@ -443,6 +444,7 @@
     <button class="btn" onclick="openSettings()">Настройки</button>
     <div style="height:16px"></div>
     <button class="btn" id="premiumMenuBtn" onclick="openPremium()">Премиум</button>
+    <button class="btn gold-btn" id="inviteMenuBtn" onclick="openInvite()">🎁 Пригласить друга</button>
   </div>
 </div>
 <div id="settingsOverlay">
@@ -478,6 +480,17 @@
     <div class="premium-error" id="premiumError"></div>
     <button class="btn gold-btn" id="premiumBuyBtn" onclick="buyPremium()" style="width:100%;padding:14px">Купить премиум</button>
     <button class="btn" onclick="closePremium()" style="width:100%">Назад</button>
+  </div>
+</div>
+<div id="inviteOverlay">
+  <div class="premium-card">
+    <div class="premium-crown">🎁</div>
+    <div class="premium-title">Пригласи друга</div>
+    <div class="premium-desc">Ты и твой друг получите <b>по 100 Remains</b> каждый, как только он сыграет свой первый бой.</div>
+    <div class="premium-status" id="inviteStatsText" style="display:none"></div>
+    <div class="premium-error" id="inviteError"></div>
+    <button class="btn gold-btn" onclick="shareInviteLink()" style="width:100%;padding:14px">Поделиться ссылкой</button>
+    <button class="btn" onclick="closeInvite()" style="width:100%">Назад</button>
   </div>
 </div>
 <div id="authOverlay" class="show">
@@ -1065,6 +1078,46 @@ function openPremium(){
   el('premiumOverlay').classList.add('show');
 }
 function closePremium(){el('premiumOverlay').classList.remove('show')}
+
+// ═══ REFERRAL / ПРИГЛАСИТЬ ДРУГА ═══
+// TODO: замените APP_SHORT_NAME на короткое имя вашего Mini App из BotFather
+// (Bot Settings → Mini App → Short Name). Без него ссылка откроет бота, а не приложение.
+const BOT_USERNAME='triad_duel_bot';
+const APP_SHORT_NAME='triad_duel';
+
+function openInvite(){
+  el('inviteError').textContent='';
+  el('inviteStatsText').style.display='none';
+  socket.emit('getReferralStats');
+  el('inviteOverlay').classList.add('show');
+}
+function closeInvite(){el('inviteOverlay').classList.remove('show')}
+
+socket.on('referralStats',({invited,earned})=>{
+  const t=el('inviteStatsText');
+  t.style.display='';
+  t.textContent=`Приглашено друзей: ${invited} · Заработано: ${earned} Remains`;
+});
+
+socket.on('referralReward',({amount})=>{
+  showToast(`+${amount} Remains за приглашённого друга! 🎉`);
+});
+
+function shareInviteLink(){
+  const myId=gameState?.tgUser?.id;
+  if(!myId){
+    el('inviteError').textContent='Сначала нужно авторизоваться';
+    return;
+  }
+  const link=`https://t.me/${BOT_USERNAME}/${APP_SHORT_NAME}?startapp=ref${myId}`;
+  const text='Присоединяйся к Triad Duel — карточная PvP-битва! Получи бонусные Remains за первый бой 🔥';
+  const shareUrl=`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`;
+  if(window.Telegram?.WebApp?.openTelegramLink){
+    window.Telegram.WebApp.openTelegramLink(shareUrl);
+  }else{
+    window.open(shareUrl,'_blank');
+  }
+}
 
 function buyPremium(){
   const btn=el('premiumBuyBtn');

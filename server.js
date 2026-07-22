@@ -159,7 +159,10 @@ function verifyMiniAppInitData(initData) {
 		// Parse user JSON from initData
 		const userStr = params.get("user");
 		if (!userStr) return null;
-		return JSON.parse(userStr);
+		return {
+			user: JSON.parse(userStr),
+			startParam: params.get("start_param") || null,
+		};
 	} catch {
 		return null;
 	}
@@ -205,6 +208,10 @@ function getAuthCodeInfo(code) {
 	authCodes.delete(code);
 	return { telegramId: entry.telegramId, tgUser: entry.tgUser };
 }
+
+// ═══ REFERRALS ═══
+const REFERRAL_REWARD_GOLD = 100; // бонус и пригласившему, и приглашённому
+const REFERRAL_DAILY_CAP = 10; // макс. наград за 24ч на одного пригласившего (анти-фрод)
 
 // ═══ CONSTANTS ═══
 const CARDS_PER_SIDE = 3;
@@ -563,6 +570,7 @@ const RATE_LIMITED_EVENTS = new Set([
 	"findMatch",
 	"playerAction",
 	"pvpAction",
+	"getReferralStats",
 ]);
 
 // ═══ HELPERS ═══
@@ -589,7 +597,7 @@ async function getOrCreatePlayer(telegramId, userData) {
 		.select("*")
 		.eq("telegram_id", telegramId)
 		.single();
-	if (data) return data;
+	if (data) return { player: data, isNew: false };
 	// Create new player
 	const defaults = {
 		id: crypto.randomUUID(),
@@ -606,9 +614,88 @@ async function getOrCreatePlayer(telegramId, userData) {
 	const { error } = await supabase.from("kart_players").insert(defaults);
 	if (error) {
 		console.error("Failed to create player:", error.message);
-		return defaults;
+		return { player: defaults, isNew: true };
 	}
-	return defaults;
+	return { player: defaults, isNew: true };
+}
+
+// Записывает связь "пригласивший → приглашённый", если приглашённый действительно новый
+// и ещё никогда не был привязан ни к кому (unique constraint в БД подстрахует от гонки).
+async function recordReferralIfNew(inviterTelegramId, inviteeTelegramId) {
+	if (!inviterTelegramId || inviterTelegramId === inviteeTelegramId) return;
+	const { data: inviter } = await supabase
+		.from("kart_players")
+		.select("id")
+		.eq("telegram_id", inviterTelegramId)
+		.single();
+	if (!inviter) return; // ссылка на несуществующего/битого inviter'а — игнорируем
+	const { error } = await supabase.from("kart_referrals").insert({
+		inviter_telegram_id: inviterTelegramId,
+		invitee_telegram_id: inviteeTelegramId,
+	});
+	if (error && error.code !== "23505") {
+		// 23505 = unique_violation, т.е. этот invitee уже был кем-то привязан раньше — это нормально
+		console.error("[referral] insert error:", error.message);
+	} else if (!error) {
+		console.log(`[referral] tg${inviteeTelegramId} приглашён tg${inviterTelegramId}`);
+	}
+}
+
+// Начисляет золото игроку в БД и, если он сейчас онлайн, обновляет его активную сессию и шлёт событие в клиент
+async function creditGold(telegramId, amount) {
+	const { data } = await supabase
+		.from("kart_players")
+		.select("id, gold")
+		.eq("telegram_id", telegramId)
+		.single();
+	if (!data) return;
+	const newGold = (data.gold || 0) + amount;
+	await supabase.from("kart_players").update({ gold: newGold }).eq("id", data.id);
+
+	for (const key of Object.keys(sessions)) {
+		if (String(sessions[key].userId) !== String(telegramId)) continue;
+		sessions[key].playerGold = newGold;
+		const sock = IO.sockets.sockets.get(key);
+		if (sock && sock.connected) {
+			sock.emit("referralReward", { amount, gold: newGold });
+			sock.emit("stateUpdate", getSessionState(key));
+		}
+	}
+}
+
+// Проверяет, есть ли для этого игрока неоплаченная реферальная связь, и если да —
+// с учётом дневного лимита начисляет награду обоим (пригласившему и приглашённому)
+async function grantReferralRewardIfEligible(inviteeTelegramId) {
+	const { data: ref } = await supabase
+		.from("kart_referrals")
+		.select("*")
+		.eq("invitee_telegram_id", inviteeTelegramId)
+		.eq("rewarded", false)
+		.single();
+	if (!ref) return null;
+
+	const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+	const { count } = await supabase
+		.from("kart_referrals")
+		.select("id", { count: "exact", head: true })
+		.eq("inviter_telegram_id", ref.inviter_telegram_id)
+		.eq("rewarded", true)
+		.gte("rewarded_at", since);
+	if ((count || 0) >= REFERRAL_DAILY_CAP) {
+		console.warn(`[referral] дневной лимит наград исчерпан для tg${ref.inviter_telegram_id}`);
+		return null;
+	}
+
+	await supabase
+		.from("kart_referrals")
+		.update({ rewarded: true, rewarded_at: new Date().toISOString() })
+		.eq("id", ref.id);
+
+	await creditGold(ref.inviter_telegram_id, REFERRAL_REWARD_GOLD);
+	await creditGold(inviteeTelegramId, REFERRAL_REWARD_GOLD);
+	console.log(`[referral] награда выдана: tg${ref.inviter_telegram_id} <-> tg${inviteeTelegramId}`);
+
+	return { inviterTelegramId: ref.inviter_telegram_id };
 }
 
 async function savePlayerData(userId, data) {
@@ -1268,7 +1355,7 @@ APP.get("/auth/bot/poll", async (req, res) => {
 	if (!info) return res.json({ ready: false });
 	const telegramId = info.telegramId;
 	const tgUser = info.tgUser || { firstName: `tg${telegramId}` };
-	const player = await getOrCreatePlayer(telegramId, {
+	const { player } = await getOrCreatePlayer(telegramId, {
 		username: tgUser.firstName || tgUser.username || `tg${telegramId}`,
 	});
 	const token = signJWT({
@@ -1420,7 +1507,7 @@ IO.on("connection", (socket) => {
 				// Не удаляем старый ключ — обе вкладки ссылаются на один объект
 			}
 
-			const dbPlayer = await getOrCreatePlayer(decoded.telegram_id, {
+			const { player: dbPlayer } = await getOrCreatePlayer(decoded.telegram_id, {
 				username: decoded.username,
 			});
 			_playerData = dbPlayer;
@@ -1471,11 +1558,12 @@ IO.on("connection", (socket) => {
 	// ═══ TELEGRAM MINI APP AUTH ═══
 	socket.on("auth_miniapp", async ({ initData }) => {
 		try {
-			const tgUser = verifyMiniAppInitData(initData);
-			if (!tgUser) {
+			const verified = verifyMiniAppInitData(initData);
+			if (!verified) {
 				socket.emit("error", "Неверная подпись Telegram");
 				return;
 			}
+			const { user: tgUser, startParam } = verified;
 
 			const telegramId = tgUser.id.toString();
 			userId = telegramId;
@@ -1488,11 +1576,21 @@ IO.on("connection", (socket) => {
 				sessions[sessionId] = sessions[existingKey];
 			}
 
-			const dbPlayer = await getOrCreatePlayer(telegramId, {
+			const { player: dbPlayer, isNew } = await getOrCreatePlayer(telegramId, {
 				first_name: tgUser.first_name,
 				username: tgUser.username,
 			});
 			_playerData = dbPlayer;
+
+			// Реферал привязывается только у по-настоящему новых игроков —
+			// нельзя "переприкрепить" уже существующего игрока по чужой ссылке.
+			if (isNew && startParam && startParam.startsWith("ref")) {
+				const inviterTelegramId = startParam.slice(3);
+				recordReferralIfNew(inviterTelegramId, telegramId).catch((e) =>
+					console.error("[referral] record error:", e.message),
+				);
+			}
+
 			sessions[sessionId]._dbPlayerId = dbPlayer.id;
 			sessions[sessionId].userId = userId;
 			sessions[sessionId].playerGold = dbPlayer.gold;
@@ -1589,6 +1687,24 @@ IO.on("connection", (socket) => {
 			premiumUntil: s.premiumUntil || null,
 			active: isPremiumActive(s),
 		});
+	});
+
+	// ═══ REFERRAL STATS ═══
+	socket.on("getReferralStats", async () => {
+		if (!userId) return;
+		try {
+			const { count } = await supabase
+				.from("kart_referrals")
+				.select("id", { count: "exact", head: true })
+				.eq("inviter_telegram_id", userId)
+				.eq("rewarded", true);
+			socket.emit("referralStats", {
+				invited: count || 0,
+				earned: (count || 0) * REFERRAL_REWARD_GOLD,
+			});
+		} catch (e) {
+			console.error("[referral] stats error:", e.message);
+		}
 	});
 
 	// ═══ GET SHOP ═══
@@ -2941,6 +3057,15 @@ function endGame(battle, victory, s, socket, sessionId, userId) {
 	}
 
 	battle.gameEnd = { victory, reward, premium: premiumActive };
+
+	// Реферальная награда: срабатывает строго на первом бою в жизни игрока
+	// (wins+losses стало равно 1 именно на этом бою), чтобы нельзя было
+	// зафармить бонус, просто установив приложение и не сыграв ни разу.
+	if (userId && (s.wins || 0) + (s.losses || 0) === 1) {
+		grantReferralRewardIfEligible(userId).catch((e) =>
+			console.error("[referral] grant error:", e.message),
+		);
+	}
 
 	// Save battle result
 	if (userId) {
