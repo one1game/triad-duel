@@ -79,6 +79,31 @@ function isPremiumActive(s) {
 	);
 }
 
+// ═══ MMR (уровень игрока для матчмейкинга) ═══
+function calcMMR(s) {
+	if (!s) return 0;
+	const upgradesTotal = Object.values(s.cardUpgrades || {}).reduce(
+		(sum, up) => sum + (up.hp || 0) + (up.atk || 0) + (up.mana || 0),
+		0,
+	);
+	const collectionCount = (s.playerCollection || []).length;
+	const combatPower =
+		(s.wins || 0) * 100 +
+		(s.losses || 0) * 20 +
+		Math.max(0, collectionCount - 3) * 25 +
+		upgradesTotal * 40;
+	const premiumMult = isPremiumActive(s) ? 1.5 : 1.0;
+	const score = combatPower * premiumMult;
+	return Math.floor(Math.sqrt(score / 100));
+}
+
+function getMMRRange(mmr) {
+	if (mmr <= 3) return 1;
+	if (mmr <= 9) return 2;
+	if (mmr <= 19) return 4;
+	return 6;
+}
+
 // Начисляет премиум игроку по его Telegram ID (совпадает с kart_players.telegram_id).
 // Если премиум уже активен — продлевает от текущей даты окончания, иначе от "сейчас".
 async function grantPremium(telegramId) {
@@ -943,6 +968,7 @@ function getSessionShellState(sessionId) {
 		shopCards: s.shopCards.map((c) => ({ id: c.id, price: c.price })),
 		tgUser: s.tgUser || null,
 		premiumUntil: s.premiumUntil || null,
+		mmr: calcMMR(s),
 	};
 }
 
@@ -1199,14 +1225,22 @@ function tryMatch() {
 		while (matchQueue.length && !matchQueue[0].socket.connected)
 			matchQueue.shift();
 		if (matchQueue.length < 2) break;
-		const p1 = matchQueue.shift();
-		if (!p1.socket.connected) continue;
-		const p2 = matchQueue.shift();
-		if (!p2.socket.connected) {
-			matchQueue.unshift(p1);
-			continue;
+
+		const p1 = matchQueue[0];
+		const range = getMMRRange(p1.mmr);
+		// Ищем первого совместимого по MMR
+		let p2Idx = -1;
+		for (let i = 1; i < matchQueue.length; i++) {
+			const p = matchQueue[i];
+			if (!p.socket.connected) { matchQueue.splice(i, 1); i--; continue; }
+			if (Math.abs(p1.mmr - p.mmr) <= range) { p2Idx = i; break; }
 		}
-		console.log(`[match] matched ${p1.sessionId} vs ${p2.sessionId}`);
+		if (p2Idx < 0) break; // нет совместимых — ждём расширения или таймаута
+		
+		const p2 = matchQueue.splice(p2Idx, 1)[0];
+		matchQueue.shift(); // убираем p1
+		
+		console.log(`[match] matched ${p1.sessionId}(mmr=${p1.mmr}) vs ${p2.sessionId}(mmr=${p2.mmr})`);
 		if (sessions[p1.sessionId])
 			clearTimeout(sessions[p1.sessionId].matchmakingTimer);
 		if (sessions[p2.sessionId])
@@ -1220,6 +1254,7 @@ function fallbackToBot(s, socket, sessionId) {
 	const idx = matchQueue.findIndex((q) => q.sessionId === sessionId);
 	if (idx === -1) return;
 	matchQueue.splice(idx, 1);
+	tryMatch(); // перезапускаем подбор для оставшихся в очереди
 	beginPveBattle(s, socket, sessionId);
 }
 
@@ -1851,6 +1886,7 @@ IO.on("connection", (socket) => {
 			socket,
 			deckIds: [...s.selectedDeck],
 			cardUpgrades: s.cardUpgrades,
+			mmr: calcMMR(s),
 		});
 		socket.emit("matchmakingStatus", { status: "searching" });
 		tryMatch();
@@ -1877,7 +1913,7 @@ IO.on("connection", (socket) => {
 
 	socket.on("cancelMatch", () => {
 		const idx = matchQueue.findIndex((q) => q.sessionId === sessionId);
-		if (idx >= 0) matchQueue.splice(idx, 1);
+		if (idx >= 0) { matchQueue.splice(idx, 1); tryMatch(); }
 		const s = sessions[sessionId];
 		if (s) clearTimeout(s.matchmakingTimer);
 		socket.emit("matchmakingStatus", { status: "cancelled" });
@@ -2110,7 +2146,7 @@ IO.on("connection", (socket) => {
 		console.log(`[disconnect] ${sessionId}`);
 		// Чистим очередь матчмейкинга — иначе мёртвый сокет останется и сломает подбор
 		const qIdx = matchQueue.findIndex((q) => q.sessionId === sessionId);
-		if (qIdx >= 0) matchQueue.splice(qIdx, 1);
+		if (qIdx >= 0) { matchQueue.splice(qIdx, 1); tryMatch(); }
 		const s = sessions[sessionId];
 		if (s) clearTimeout(s.matchmakingTimer);
 		if (s?.pvpRoomId) {
@@ -2153,6 +2189,7 @@ function getSessionState(sessionId) {
 		battle: s.battle ? getBattleState(s.battle) : null,
 		tgUser: s.tgUser || null,
 		premiumUntil: s.premiumUntil || null,
+		mmr: calcMMR(s),
 	};
 }
 

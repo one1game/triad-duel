@@ -84,6 +84,7 @@
   .user-badge:hover{border-color:var(--border-glow)}
   .user-badge-avatar{width:26px;height:26px;border-radius:50%;object-fit:cover;border:1px solid var(--border-glow);flex-shrink:0}
   .user-badge-name{font-size:11px;color:var(--text-dim);font-family:'Inter',sans-serif;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .user-badge-lvl{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:rgba(196,162,101,.15);border:1px solid rgba(196,162,101,.3);color:#c4a265;font-size:9px;font-weight:700;font-family:'Inter',sans-serif;flex-shrink:0;margin-left:2px}
   .enemy-badge{border-color:#5a1a1a}
   .enemy-badge .user-badge-name{color:#c06060;max-width:160px}
   .premium-badge{border-color:rgba(220,40,40,.5)!important;animation:premiumShimmer 2.5s ease-in-out infinite}
@@ -312,6 +313,7 @@
     .turn-indicator{font-size:8px;padding:2px 6px}
     .user-badge-name{max-width:50px;font-size:8px}.enemy-badge .user-badge-name{max-width:80px}.user-badge{padding:2px 6px 2px 2px;gap:3px}
     .user-badge-avatar{width:18px;height:18px}
+    .user-badge-lvl{width:14px;height:14px;font-size:7px}
     .ability-panel{gap:6px;flex-wrap:nowrap;overflow-x:auto}
     .ability-panel .btn{padding:6px 10px;font-size:9px;white-space:nowrap}
     .ability-panel .btn.small{padding:4px 8px;font-size:8px}
@@ -399,6 +401,7 @@
     .turn-indicator{font-size:7px;padding:1px 4px;letter-spacing:1px}
     .user-badge-name{max-width:36px;font-size:7px}.enemy-badge .user-badge-name{max-width:55px}.user-badge{padding:1px 4px 1px 1px;gap:2px}
     .user-badge-avatar{width:15px;height:15px}
+    .user-badge-lvl{width:12px;height:12px;font-size:6px}
     .ability-panel{gap:4px;padding:4px;min-height:36px}
     .ability-panel .btn{padding:4px 7px;font-size:8px}
     .ability-panel .btn.small{padding:3px 5px;font-size:7px}
@@ -547,6 +550,7 @@ if(window.Telegram?.WebApp?.initData){
       <span class="user-badge" id="shopUserBadge" style="display:none">
         <img class="user-badge-avatar" id="shopUserAvatar" src="" alt="">
         <span class="user-badge-name" id="shopUserName">—</span>
+        <span class="user-badge-lvl" style="display:none">0</span>
       </span>
       <span class="gold-display" id="shopGold"><img src="img/game/Remains_icon.webp" alt=""> <span id="shopGoldAmt">100</span></span>
     </div>
@@ -598,6 +602,7 @@ if(window.Telegram?.WebApp?.initData){
     <span class="user-badge" id="battleUserBadge" style="display:none">
       <img class="user-badge-avatar" id="battleUserAvatar" src="" alt="">
       <span class="user-badge-name" id="battleUserName">—</span>
+      <span class="user-badge-lvl" style="display:none">0</span>
     </span>
     <span class="turn-indicator" id="turnIndicator">Ваш ход</span>
   </div>
@@ -960,6 +965,7 @@ let playerCards=[],enemyCards=[],activeIdx=-1,isPlayerTurn=true,gameOver=false;
 let enemyName=null,enemyAvatar=null;
 let abilitiesUsedThisTurn=new Set();
 let cardUpgrades={};
+let playerMMR=0;
 let premiumUntil=null;
 let shopCards=[];
 let currentTab='shop';
@@ -976,6 +982,7 @@ function applyFullState(state){
   playerCollection=state.playerCollection||[];
   selectedDeck=state.selectedDeck||[];
   cardUpgrades=state.cardUpgrades||{};
+  playerMMR=state.mmr!=null?state.mmr:0;
   shopCards=(state.shopCards||[]).map(c=>enrichCard(c));
   if(state.premiumUntil!==undefined){premiumUntil=state.premiumUntil;updatePremiumUI()}
   if(state.tgUser) updateUserBadge(state.tgUser);
@@ -999,6 +1006,9 @@ function updateUserBadge(tgUser){
     if(avatar){avatar.src=avatarUrl;avatar.onerror=()=>{avatar.style.display='none'}}
     if(nameEl) nameEl.textContent=displayName;
   });
+  // MMR level indicator
+  const lvlEls=document.querySelectorAll('.user-badge-lvl');
+  lvlEls.forEach(el=>{ el.textContent=playerMMR; el.style.display='' });
 }
 
 function updateEnemyBadge(){
@@ -1021,6 +1031,7 @@ function applyBattleState(data){
   playerCollection=data.playerCollection||playerCollection;
   selectedDeck=data.selectedDeck||selectedDeck;
   cardUpgrades=data.cardUpgrades||cardUpgrades;
+  playerMMR=data.mmr!=null?data.mmr:playerMMR;
   if(data.tgUser) updateUserBadge(data.tgUser);
   playerCards=enrichCards(b.playerCards);
   enemyCards=enrichCards(b.enemyCards);
@@ -1644,6 +1655,7 @@ function animateAiAction(action){
 // ═══ PROCESS BATTLE UPDATE ═══
 function processBattleUpdate(state){
   const b = state.battle || state;
+  if(state.mmr!=null) playerMMR=state.mmr;
   if(b.log)b.log.forEach(msg=>log(msg));
 
   if(b.playerAction){
