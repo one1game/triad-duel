@@ -571,6 +571,7 @@ const RATE_LIMITED_EVENTS = new Set([
 	"playerAction",
 	"pvpAction",
 	"getReferralStats",
+	"trackEvent",
 ]);
 
 // ═══ HELPERS ═══
@@ -642,6 +643,18 @@ async function recordReferralIfNew(inviterTelegramId, inviteeTelegramId) {
 }
 
 // Начисляет золото игроку в БД и, если он сейчас онлайн, обновляет его активную сессию и шлёт событие в клиент
+// ═══ ANALYTICS ═══
+// Простое логирование событий в БД. Никогда не бросает исключение наружу —
+// сбой аналитики не должен ломать игровой процесс.
+function logEvent(telegramId, event, payload) {
+	supabase
+		.from("kart_events")
+		.insert({ telegram_id: telegramId ? String(telegramId) : null, event, payload: payload || {} })
+		.then(({ error }) => {
+			if (error) console.error("[analytics] log error:", error.message);
+		});
+}
+
 async function creditGold(telegramId, amount) {
 	const { data } = await supabase
 		.from("kart_players")
@@ -1408,6 +1421,9 @@ APP.post("/bot/webhook", express.json(), async (req, res) => {
 		// Telegram Stars: платёж прошёл успешно — начисляем премиум
 		if (msg?.successful_payment && msg?.from?.id) {
 			await grantPremium(msg.from.id.toString());
+			logEvent(msg.from.id.toString(), "premium_purchase", {
+				stars: msg.successful_payment.total_amount,
+			});
 			console.log(`[premium] granted to tg${msg.from.id}`);
 			return res.sendStatus(200);
 		}
@@ -1626,6 +1642,7 @@ IO.on("connection", (socket) => {
 			}
 
 			console.log(`[auth:miniapp] tg${telegramId} -> ${sessionId}`);
+			logEvent(telegramId, "session_start", { isNew, source: "miniapp" });
 			socket.emit("init", getSessionState(sessionId));
 		} catch (e) {
 			console.error("[auth:miniapp error]", e.message);
@@ -1669,6 +1686,7 @@ IO.on("connection", (socket) => {
 				prices: [{ label: "Премиум на 7 дней", amount: PREMIUM_PRICE_STARS }],
 			});
 			if (invoice?.ok) {
+				logEvent(telegramId, "premium_invoice_created", {});
 				socket.emit("invoiceLink", invoice.result);
 			} else {
 				console.error("[premium] createInvoiceLink failed:", invoice);
@@ -1705,6 +1723,21 @@ IO.on("connection", (socket) => {
 		} catch (e) {
 			console.error("[referral] stats error:", e.message);
 		}
+	});
+
+	// ═══ CLIENT-SIDE EVENT TRACKING ═══
+	// Небольшой белый список, чтобы клиент не мог засорять таблицу произвольными
+	// именами событий и данными.
+	const ALLOWED_CLIENT_EVENTS = new Set([
+		"invite_link_shared",
+		"shop_view",
+		"deck_selected",
+		"pvp_view",
+	]);
+	socket.on("trackEvent", (data) => {
+		const event = data?.event;
+		if (!event || !ALLOWED_CLIENT_EVENTS.has(event)) return;
+		logEvent(userId, event, data?.payload || {});
 	});
 
 	// ═══ GET SHOP ═══
@@ -1790,6 +1823,7 @@ IO.on("connection", (socket) => {
 	socket.on("startBattle", () => {
 		const s = sessions[sessionId];
 		if (!s) return;
+		logEvent(userId, "battle_start", { mode: "pve" });
 		beginPveBattle(s, socket, sessionId);
 	});
 
@@ -3057,6 +3091,13 @@ function endGame(battle, victory, s, socket, sessionId, userId) {
 	}
 
 	battle.gameEnd = { victory, reward, premium: premiumActive };
+
+	logEvent(userId, "battle_end", {
+		victory,
+		reward,
+		turns: battle.turnCount,
+		isFirstBattle: (s.wins || 0) + (s.losses || 0) === 1,
+	});
 
 	// Реферальная награда: срабатывает строго на первом бою в жизни игрока
 	// (wins+losses стало равно 1 именно на этом бою), чтобы нельзя было

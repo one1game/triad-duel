@@ -1109,6 +1109,7 @@ function shareInviteLink(){
     el('inviteError').textContent='Сначала нужно авторизоваться';
     return;
   }
+  socket.emit('trackEvent',{event:'invite_link_shared'});
   const link=`https://t.me/${BOT_USERNAME}/${APP_SHORT_NAME}?startapp=ref${myId}`;
   const text='Присоединяйся к Triad Duel — карточная PvP-битва! Получи бонусные Remains за первый бой 🔥';
   const shareUrl=`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`;
