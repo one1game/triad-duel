@@ -861,6 +861,7 @@ socket.on('matchmakingStatus', ({status}) => {
   if (status === 'cancelled') hideMatchmakingOverlay();
 });
 socket.on('error',(msg)=>{
+  hideLoading();clearTimeout(_ncTimeout);
   showToast(msg||'Ошибка сервера');
   el('authError').textContent=msg||'';
   if(msg==='Токен недействителен'){
@@ -1047,7 +1048,7 @@ let _loadingTimer=null;
 function showLoading(msg){let o=el('loadingOverlay');if(!o){o=document.createElement('div');o.id='loadingOverlay';o.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(3,3,4,.95);backdrop-filter:blur(15px);z-index:5000;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:16px;cursor:pointer';o.onclick=hideLoading;o.innerHTML='<div style="font-family:Cinzel,serif;font-size:18px;color:#c4a265;letter-spacing:2px;" id="loadingText"></div><div style="width:120px;height:2px;background:#2a2a30;border-radius:1px;overflow:hidden;"><div style="width:100%;height:100%;background:#c4a265;animation:loadBar 1.8s cubic-bezier(.4,0,.2,1) infinite;border-radius:1px;"></div></div><div id="loadingError" style="font-size:11px;color:#a04040;text-align:center;display:none;margin-top:8px;"></div>';document.body.appendChild(o);let s=document.createElement('style');s.textContent='@keyframes loadBar{0%{transform:translateX(-100%)}100%{transform:translateX(120%)}}';document.head.appendChild(s)}o.style.display='flex';el('loadingText').textContent=msg||'Загрузка...';el('loadingError').style.display='none';
   clearTimeout(_loadingTimer);
   _loadingTimer=setTimeout(()=>{el('loadingText').textContent='Сервер не отвечает';el('loadingError').style.display='';el('loadingError').textContent='Нажмите чтобы закрыть'},12000)}
-function hideLoading(){clearTimeout(_loadingTimer);let o=el('loadingOverlay');if(o)o.style.display='none'}
+function hideLoading(){clearTimeout(_loadingTimer);clearTimeout(_ncTimeout);let o=el('loadingOverlay');if(o)o.style.display='none'}
 
 // ═══ SETTINGS ═══
 let gameBrightness=100,gameContrast=100,gameSaturation=100;
@@ -1187,7 +1188,28 @@ function newCampaign(){
   if(!gameState){showToast('Идёт загрузка данных...');return}
   showLoading('Создаём кампанию...');
   saveGameState({playerGold,playerCollection,selectedDeck,cardUpgrades,shopCards,battle:null},'shop');
-  socket.emit('newCampaign')
+  socket.emit('newCampaign');
+  clearTimeout(_ncTimeout);
+  _ncTimeout=setTimeout(()=>{
+    if(document.getElementById('loadingOverlay').style.display!=='none'){
+      el('loadingText').textContent='Сервер не отвечает. Попробовать снова?';
+      el('loadingError').style.display='';
+      el('loadingError').innerHTML='<button class="btn" style="font-size:12px;padding:6px 16px;" onclick="event.stopPropagation();retryNewCampaign()">Повторить</button>';
+    }
+  },8000)
+}
+function retryNewCampaign(){
+  clearTimeout(_ncTimeout);
+  socket.emit('newCampaign');
+  el('loadingText').textContent='Повторная попытка...';
+  el('loadingError').style.display='none';
+  _ncTimeout=setTimeout(()=>{
+    if(document.getElementById('loadingOverlay').style.display!=='none'){
+      el('loadingText').textContent='Сервер не отвечает';
+      el('loadingError').style.display='';
+      el('loadingError').innerHTML='<button class="btn" style="font-size:12px;padding:6px 16px;" onclick="event.stopPropagation();retryNewCampaign()">Повторить</button>';
+    }
+  },8000)
 }
 function backToMenu(){Object.values(scr).forEach(s=>s.classList.remove('active'));scr.menu.classList.add('active');saveGameState({playerGold,playerCollection,selectedDeck,cardUpgrades,shopCards,battle:null},'menu')}
 

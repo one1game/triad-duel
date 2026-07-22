@@ -1657,7 +1657,10 @@ IO.on("connection", (socket) => {
 	// ═══ NEW CAMPAIGN ═══
 	socket.on("newCampaign", () => {
 		const s = sessions[sessionId];
-		if (!s) return;
+		if (!s) {
+			socket.emit("error", "Сессия не найдена. Перезайдите в игру.");
+			return;
+		}
 		s.playerGold = 100;
 		s.playerCollection = ["mage_01", "tank_01", "assa_01"];
 		s.cardUpgrades = {};
