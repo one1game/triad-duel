@@ -820,6 +820,10 @@ function getManaCap(cardId, cardUpgrades) {
 	return Math.min(MAX_MANA + (up.mana || 0), 10);
 }
 
+function getFireballCost(attacker) {
+	return attacker.baseId === "mage_01" ? 2 : 3;
+}
+
 function buildDeckCards(deckIds, cardUpgrades) {
 	return deckIds.map((id) => {
 		const c = createBlankCard(id);
@@ -1777,6 +1781,10 @@ IO.on("connection", (socket) => {
 	socket.on("upgradeCard", ({ cardId, stat }) => {
 		const s = sessions[sessionId];
 		if (!s) return;
+		if (!["hp", "atk", "mana"].includes(stat)) {
+			socket.emit("error", "bad stat");
+			return;
+		}
 		if (!s.playerCollection.includes(cardId)) {
 			socket.emit("error", "Карта не в коллекции");
 			return;
@@ -1883,7 +1891,7 @@ IO.on("connection", (socket) => {
 
 	// ═══ PLAYER ACTION ═══
 	socket.on("playerAction", (action) => {
-		console.log(
+		process.env.DEBUG && console.log(
 			"[action]",
 			action.type,
 			"attackerIdx:",
@@ -1893,13 +1901,13 @@ IO.on("connection", (socket) => {
 		);
 		const s = sessions[sessionId];
 		if (!s) {
-			console.log("[action] no session");
+			process.env.DEBUG && console.log("[action] no session");
 			return;
 		}
 		if (s.pvpRoomId) return; // PvP использует событие pvpAction
 		const battle = s.battle;
 		if (!battle || battle.gameOver || !battle.isPlayerTurn) {
-			console.log(
+			process.env.DEBUG && console.log(
 				"[action] blocked: battle=",
 				!!battle,
 				"gameOver=",
@@ -1913,25 +1921,28 @@ IO.on("connection", (socket) => {
 
 		const { type, attackerIdx, defenderIdx } = action;
 
+		if (!Number.isInteger(attackerIdx) || attackerIdx < 0 || attackerIdx >= battle.playerCards.length) return;
+
 		if (type === "endTurn") {
-			console.log("[action] endTurn → executePlayerEndTurn");
+			process.env.DEBUG && console.log("[action] endTurn → executePlayerEndTurn");
 			executePlayerEndTurn(s, socket, userId);
 			return;
 		}
 
 		const attacker = battle.playerCards[attackerIdx];
 		if (!attacker || attacker.hp <= 0) {
-			console.log("[action] attacker dead/missing");
+			process.env.DEBUG && console.log("[action] attacker dead/missing");
 			return;
 		}
 
 		let actionResult = null;
 
 		if (type === "attack") {
+			if (!Number.isInteger(defenderIdx) || defenderIdx < 0 || defenderIdx >= battle.enemyCards.length) return;
 			actionResult = executeAttack(battle, attackerIdx, defenderIdx, true);
 		} else if (type === "crit") {
 			if (attacker.type !== "assa" || attacker.mana < 2) {
-				console.log(
+				process.env.DEBUG && console.log(
 					"[crit] blocked: type=",
 					attacker.type,
 					"mana=",
@@ -1940,54 +1951,56 @@ IO.on("connection", (socket) => {
 				return;
 			}
 			if (battle.firstTurn) {
-				console.log("[crit] blocked: firstTurn");
+				process.env.DEBUG && console.log("[crit] blocked: firstTurn");
 				return;
 			}
 			if (battle.abilitiesUsedThisTurn.includes(attackerIdx)) {
-				console.log("[crit] blocked: ability already used");
+				process.env.DEBUG && console.log("[crit] blocked: ability already used");
 				return;
 			}
 			// Taunt check only when actually selecting a target (not during activation)
 			if (defenderIdx !== undefined) {
+				if (!Number.isInteger(defenderIdx) || defenderIdx < 0 || defenderIdx >= battle.enemyCards.length) return;
 				const ignoreTaunt = attacker.baseId === "assa_03";
 				if (!ignoreTaunt) {
 					const taunter = battle.enemyCards.find(
 						(e) => e.tauntActive && e.hp > 0,
 					);
 					if (taunter && defenderIdx !== battle.enemyCards.indexOf(taunter)) {
-						console.log("[crit] blocked: taunt");
+						process.env.DEBUG && console.log("[crit] blocked: taunt");
 						return;
 					}
 				}
 			}
 			actionResult = executeCrit(battle, attackerIdx, defenderIdx);
-			console.log("[crit] result:", actionResult?.type);
+			process.env.DEBUG && console.log("[crit] result:", actionResult?.type);
 		} else if (type === "fireball") {
 			if (attacker.type !== "mage") {
-				console.log("[fireball] blocked: type=", attacker.type);
+				process.env.DEBUG && console.log("[fireball] blocked: type=", attacker.type);
 				return;
 			}
 			if (battle.firstTurn) {
-				console.log("[fireball] blocked: firstTurn");
+				process.env.DEBUG && console.log("[fireball] blocked: firstTurn");
 				return;
 			}
 			if (battle.abilitiesUsedThisTurn.includes(attackerIdx)) {
-				console.log("[fireball] blocked: ability already used");
+				process.env.DEBUG && console.log("[fireball] blocked: ability already used");
 				return;
 			}
 			// Taunt check only when actually selecting a target (not during activation)
 			if (defenderIdx !== undefined) {
+				if (!Number.isInteger(defenderIdx) || defenderIdx < 0 || defenderIdx >= battle.enemyCards.length) return;
 				const taunter = battle.enemyCards.find(
 					(e) => e.tauntActive && e.hp > 0,
 				);
 				if (taunter && defenderIdx !== battle.enemyCards.indexOf(taunter)) {
-					console.log("[fireball] blocked: taunt");
+					process.env.DEBUG && console.log("[fireball] blocked: taunt");
 					return;
 				}
 			}
-			const cost = attacker.baseId === "mage_01" ? 2 : 3;
+			const cost = getFireballCost(attacker);
 			if (attacker.mana < cost) {
-				console.log("[fireball] blocked: mana=", attacker.mana, "need=", cost);
+				process.env.DEBUG && console.log("[fireball] blocked: mana=", attacker.mana, "need=", cost);
 				return;
 			}
 			actionResult = executeFireball(
@@ -1996,7 +2009,7 @@ IO.on("connection", (socket) => {
 				defenderIdx,
 				s.cardUpgrades,
 			);
-			console.log(
+			process.env.DEBUG && console.log(
 				"[fireball] result:",
 				actionResult?.type,
 				"defIdx:",
@@ -2029,7 +2042,7 @@ IO.on("connection", (socket) => {
 			(actionResult.type === "crit_ready" ||
 				actionResult.type === "fireball_ready")
 		) {
-			console.log(
+			process.env.DEBUG && console.log(
 				"[action] ability activated, NOT ending turn. type:",
 				actionResult.type,
 			);
@@ -2038,7 +2051,7 @@ IO.on("connection", (socket) => {
 		}
 
 		// End of player action: auto-end turn
-		console.log("[action] ending turn, actionResult:", actionResult?.type);
+		process.env.DEBUG && console.log("[action] ending turn, actionResult:", actionResult?.type);
 		executePlayerEndTurn(s, socket, userId);
 	});
 
@@ -2446,8 +2459,7 @@ function executeFireball(battle, attIdx, defIdx, cardUpgrades) {
 	if (attacker.baseId === "mage_07" && defender.type === "tank") dmg += 1;
 
 	// Mana cost
-	let manaCost = 3;
-	if (attacker.baseId === "mage_01") manaCost = 2;
+	let manaCost = getFireballCost(attacker);
 	if (attacker.baseId === "mage_11" && Math.random() < 0.4) manaCost = 1;
 	attacker.mana -= manaCost;
 

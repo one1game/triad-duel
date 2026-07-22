@@ -537,7 +537,7 @@ if(window.Telegram?.WebApp?.initData){
     <button id="toBattleBtn" class="btn gold-btn" onclick="startBattle()" disabled>В бой!</button>
   </div>
   <div class="shop-footer">
-    <div class="shop-copyright">Triad Duel &copy; 2025</div>
+    <div class="shop-copyright">Triad Duel &copy; 2026</div>
   </div>
   <div id="shopToast" class="shop-toast"></div>
 </div>
@@ -584,7 +584,7 @@ if(window.Telegram?.WebApp?.initData){
     <button id="endTurnBtn" class="btn" onclick="endPlayerTurn()" style="display:block;">Завершить ход</button>
   </div>
   <div class="battle-footer">
-    <div class="shop-copyright">Triad Duel &copy; 2025</div>
+    <div class="shop-copyright">Triad Duel &copy; 2026</div>
   </div>
 </div>
 <div id="resultOverlay">
@@ -1135,10 +1135,11 @@ function checkPremiumStatusRetry(attemptsLeft){
 }
 
 // ═══ PARTICLES ═══
-let pCanvas,pCtx,particles=[];
-function initParticles(){pCanvas=el('particlesCanvas');pCtx=pCanvas.getContext('2d');resizeParticles();window.addEventListener('resize',resizeParticles);for(let i=0;i<60;i++)particles.push({x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,r:Math.random()*1.5+.5,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,o:Math.random()*.5+.1});requestAnimationFrame(drawParticles)}
+let pCanvas,pCtx,particles=[],pRafId=null;
+const pCount=window.innerWidth<768?25:60;
+function initParticles(){pCanvas=el('particlesCanvas');pCtx=pCanvas.getContext('2d');resizeParticles();window.addEventListener('resize',resizeParticles);for(let i=0;i<pCount;i++)particles.push({x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,r:Math.random()*1.5+.5,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,o:Math.random()*.5+.1});pRafId=requestAnimationFrame(drawParticles);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){cancelAnimationFrame(pRafId);pRafId=null}else if(!pRafId){pRafId=requestAnimationFrame(drawParticles)}})}
 function resizeParticles(){pCanvas.width=window.innerWidth;pCanvas.height=window.innerHeight}
-function drawParticles(){pCtx.clearRect(0,0,pCanvas.width,pCanvas.height);particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=pCanvas.width;if(p.x>pCanvas.width)p.x=0;if(p.y<0)p.y=pCanvas.height;if(p.y>pCanvas.height)p.y=0;pCtx.beginPath();pCtx.arc(p.x,p.y,p.r,0,Math.PI*2);pCtx.fillStyle=`rgba(196,162,101,${p.o})`;pCtx.fill()});requestAnimationFrame(drawParticles)}
+function drawParticles(){pCtx.clearRect(0,0,pCanvas.width,pCanvas.height);particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=pCanvas.width;if(p.x>pCanvas.width)p.x=0;if(p.y<0)p.y=pCanvas.height;if(p.y>pCanvas.height)p.y=0;pCtx.beginPath();pCtx.arc(p.x,p.y,p.r,0,Math.PI*2);pCtx.fillStyle=`rgba(196,162,101,${p.o})`;pCtx.fill()});pRafId=requestAnimationFrame(drawParticles)}
 
 // ═══ EFFECTS ═══
 function dmgNum(el,dmg,color){const n=document.createElement('div');n.className='damage-number';n.textContent='-'+dmg;n.style.color=color||'#c04030';n.style.textShadow=`0 0 15px ${color||'rgba(192,64,48,.8)'}`;el.appendChild(n);setTimeout(()=>n.remove(),1000)}
