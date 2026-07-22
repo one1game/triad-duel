@@ -16,6 +16,20 @@ const supabase = createClient(
 
 // ═══ TELEGRAM + JWT ═══
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
+const WEBHOOK_SECRET =
+	process.env.TELEGRAM_WEBHOOK_SECRET || crypto.randomBytes(24).toString("hex");
+if (!process.env.TELEGRAM_WEBHOOK_SECRET) {
+	console.warn(
+		"[security] TELEGRAM_WEBHOOK_SECRET не задан в env — сгенерирован временный секрет. " +
+		"На проде ОБЯЗАТЕЛЬНО зафиксируйте его в переменных окружения, иначе он будет меняться при каждом рестарте.",
+	);
+}
+if (!process.env.JWT_SECRET) {
+	console.warn(
+		"[security] JWT_SECRET не задан в env — сгенерирован временный секрет. " +
+		"Это разлогинит всех игроков при каждом рестарте сервера. Зафиксируйте JWT_SECRET на проде.",
+	);
+}
 const JWT_SECRET =
 	process.env.JWT_SECRET || crypto.randomBytes(32).toString("hex");
 
@@ -487,16 +501,19 @@ const ALL_CARDS = [
 	},
 ];
 
+const ALLOWED_ORIGINS = [
+	"http://localhost:3000",
+	"http://127.0.0.1:3000",
+	"https://triad-duel.pages.dev",
+	"https://traekart1cdn.vercel.app",
+];
+
 const APP = express();
+APP.set("trust proxy", 1); // Render/большинство PaaS стоят за прокси — без этого req.ip будет одинаковым для всех
 const SERVER = http.createServer(APP);
 const IO = new Server(SERVER, {
 	cors: {
-			origin: [
-				"http://localhost:3000",
-				"http://127.0.0.1:3000",
-				"https://triad-duel.pages.dev",
-				"https://traekart1cdn.vercel.app",
-			],
+			origin: ALLOWED_ORIGINS,
 			methods: ["GET", "POST"],
 		},
 });
@@ -504,12 +521,49 @@ const IO = new Server(SERVER, {
 APP.use(express.static(path.join(__dirname, "public")));
 APP.use(express.json());
 APP.use((req, res, next) => {
-	res.setHeader("Access-Control-Allow-Origin", "*");
+	const origin = req.headers.origin;
+	if (origin && ALLOWED_ORIGINS.includes(origin)) {
+		res.setHeader("Access-Control-Allow-Origin", origin);
+	}
 	res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
 	res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 	if (req.method === "OPTIONS") return res.sendStatus(200);
 	next();
 });
+
+// ═══ RATE LIMITING (без внешних зависимостей) ═══
+// Скользящее окно в памяти процесса. Для одного инстанса этого достаточно;
+// если сервер масштабируется на несколько инстансов — заменить на Redis.
+function makeRateLimiter({ windowMs, max }) {
+	const hits = new Map();
+	return function isAllowed(key) {
+		const now = Date.now();
+		const arr = (hits.get(key) || []).filter((t) => now - t < windowMs);
+		arr.push(now);
+		hits.set(key, arr);
+		if (hits.size > 20000) {
+			for (const [k, v] of hits) {
+				if (v.every((t) => now - t > windowMs)) hits.delete(k);
+			}
+		}
+		return arr.length <= max;
+	};
+}
+
+// HTTP: не больше 20 попыток поллинга авторизации в минуту с одного IP
+const authPollRateLimiter = makeRateLimiter({ windowMs: 60_000, max: 20 });
+// Socket.IO: не больше 15 "чувствительных" действий за 10 секунд с одного сокета
+const socketActionRateLimiter = makeRateLimiter({ windowMs: 10_000, max: 15 });
+const RATE_LIMITED_EVENTS = new Set([
+	"buyCard",
+	"upgradeCard",
+	"buyPremium",
+	"updateDeck",
+	"startBattle",
+	"findMatch",
+	"playerAction",
+	"pvpAction",
+]);
 
 // ═══ HELPERS ═══
 function rand(min, max) {
@@ -1205,6 +1259,9 @@ APP.get("/auth/bot/start", (_req, res) => {
 
 // Step 2: poll for auth result
 APP.get("/auth/bot/poll", async (req, res) => {
+	if (!authPollRateLimiter(req.ip)) {
+		return res.status(429).json({ error: "too many requests" });
+	}
 	const { code } = req.query;
 	if (!code) return res.status(400).json({ error: "code required" });
 	const info = getAuthCodeInfo(code);
@@ -1240,6 +1297,14 @@ APP.get("/auth/bot/poll", async (req, res) => {
 
 // Step 3: bot webhook — receives Telegram messages
 APP.post("/bot/webhook", express.json(), async (req, res) => {
+	// Telegram присылает этот заголовок только если он был передан в setWebhook.
+	// Без проверки кто угодно может POST-нуть сюда поддельный successful_payment
+	// с произвольным from.id и получить премиум бесплатно.
+	const incomingSecret = req.get("X-Telegram-Bot-Api-Secret-Token");
+	if (incomingSecret !== WEBHOOK_SECRET) {
+		console.warn("[webhook] отклонён запрос с неверным secret token");
+		return res.sendStatus(401);
+	}
 	try {
 		// Telegram Stars: подтверждение перед оплатой (обязателен ответ в течение 10 сек)
 		const preCheckout = req.body?.pre_checkout_query;
@@ -1283,12 +1348,44 @@ APP.post("/bot/webhook", express.json(), async (req, res) => {
 	}
 });
 
+// ═══ CRASH SAFETY ═══
+// Необработанные ошибки не должны ронять весь процесс (это оборвёт все активные
+// игры разом). Логируем и продолжаем работу; сама операция, где случилась ошибка,
+// прервётся, но остальные игроки не пострадают.
+process.on("uncaughtException", (err) => {
+	console.error("[uncaughtException]", err);
+});
+process.on("unhandledRejection", (reason) => {
+	console.error("[unhandledRejection]", reason);
+});
+
 // ═══ SOCKET.IO ═══
 IO.on("connection", (socket) => {
 	let userId = null;
 	let _playerData = null;
 	const sessionId = socket.id;
 	console.log(`[connect] ${sessionId}`);
+
+	// Оборачиваем каждый socket.on этого соединения в try/catch + rate limit,
+	// не трогая тела самих обработчиков. Если внутри произойдёт исключение —
+	// упадёт только текущее событие, а не весь процесс/все соединения.
+	const _originalOn = socket.on.bind(socket);
+	socket.on = (event, handler) => {
+		return _originalOn(event, async (...args) => {
+			try {
+				if (RATE_LIMITED_EVENTS.has(event) && !socketActionRateLimiter(socket.id)) {
+					socket.emit("error", "Слишком много действий, подождите немного");
+					return;
+				}
+				await handler(...args);
+			} catch (e) {
+				console.error(`[socket:${event}] error:`, e?.message || e);
+				try {
+					socket.emit("error", "Внутренняя ошибка сервера");
+				} catch {}
+			}
+		});
+	};
 
 	// Store temporary session for battles
 	sessions[sessionId] = {
@@ -2880,6 +2977,7 @@ SERVER.listen(PORT, "0.0.0.0", () => {
 		tgApiRequest("setWebhook", {
 			url: webhookUrl,
 			allowed_updates: ["message", "pre_checkout_query"],
+			secret_token: WEBHOOK_SECRET,
 		}).then((r) => console.log("[webhook]", r.description || r.ok)).catch((e) => console.error("[webhook fail]", e.message));
 		// Set menu button — shows "Играть" directly in Telegram chat list
 		const appUrl = process.env.APP_URL || "https://triad-duel.pages.dev/";
