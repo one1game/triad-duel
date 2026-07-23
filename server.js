@@ -1289,9 +1289,16 @@ function handlePvpAction(roomId, sessionId, action) {
 	let actionResult = null;
 	const cardUpgrades = (side === "A" ? room.sideA : room.sideB).cardUpgrades;
 
+	// Вражеская провокация блокирует все способности — только базовые атаки
+	const enemyTauntActive = battle.enemyCards.some((e) => e.tauntActive && e.hp > 0);
+
 	if (type === "attack") {
 		actionResult = executeAttack(battle, attackerIdx, defenderIdx, true);
 	} else if (type === "crit") {
+		if (enemyTauntActive && attacker.baseId !== "assa_03") {
+			armTurnTimer(roomId);
+			return;
+		}
 		if (attacker.type !== "assa" || attacker.mana < 2) {
 			armTurnTimer(roomId);
 			return;
@@ -1318,6 +1325,10 @@ function handlePvpAction(roomId, sessionId, action) {
 		}
 		actionResult = executeCrit(battle, attackerIdx, defenderIdx);
 	} else if (type === "fireball") {
+		if (enemyTauntActive) {
+			armTurnTimer(roomId);
+			return;
+		}
 		if (attacker.type !== "mage") {
 			armTurnTimer(roomId);
 			return;
@@ -1349,6 +1360,10 @@ function handlePvpAction(roomId, sessionId, action) {
 			cardUpgrades,
 		);
 	} else if (type === "taunt") {
+		if (enemyTauntActive) {
+			armTurnTimer(roomId);
+			return;
+		}
 		if (attacker.type !== "tank" || attacker.mana < 2) {
 			armTurnTimer(roomId);
 			return;
@@ -1981,10 +1996,17 @@ IO.on("connection", (socket) => {
 
 		let actionResult = null;
 
+		// Вражеская провокация блокирует все способности — только базовые атаки
+		const enemyTauntActive = battle.enemyCards.some((e) => e.tauntActive && e.hp > 0);
+
 		if (type === "attack") {
 			if (!Number.isInteger(defenderIdx) || defenderIdx < 0 || defenderIdx >= battle.enemyCards.length) return;
 			actionResult = executeAttack(battle, attackerIdx, defenderIdx, true);
 		} else if (type === "crit") {
+			if (enemyTauntActive && attacker.baseId !== "assa_03") {
+				process.env.DEBUG && console.log("[crit] blocked: enemy taunt");
+				return;
+			}
 			if (attacker.type !== "assa" || attacker.mana < 2) {
 				process.env.DEBUG && console.log(
 					"[crit] blocked: type=",
@@ -2019,6 +2041,10 @@ IO.on("connection", (socket) => {
 			actionResult = executeCrit(battle, attackerIdx, defenderIdx);
 			process.env.DEBUG && console.log("[crit] result:", actionResult?.type);
 		} else if (type === "fireball") {
+			if (enemyTauntActive) {
+				process.env.DEBUG && console.log("[fireball] blocked: enemy taunt");
+				return;
+			}
 			if (attacker.type !== "mage") {
 				process.env.DEBUG && console.log("[fireball] blocked: type=", attacker.type);
 				return;
@@ -2060,6 +2086,10 @@ IO.on("connection", (socket) => {
 				defenderIdx,
 			);
 		} else if (type === "taunt") {
+			if (enemyTauntActive) {
+				process.env.DEBUG && console.log("[taunt] blocked: enemy taunt already active");
+				return;
+			}
 			if (attacker.type !== "tank" || attacker.mana < 2) return;
 			if (battle.firstTurn) return;
 			if (battle.abilitiesUsedThisTurn.includes(attackerIdx)) return;
@@ -2733,15 +2763,6 @@ function executePlayerEndTurn(s, socket, userId) {
 	battle.waitingForCritTarget = null;
 	battle.turnCount++;
 
-	// ═══ ПРОВОКАЦИЯ AI: случайная карта игрока принудительно атакует танка врага ═══
-	const enemyTaunter = battle.enemyCards.find((c) => c.tauntActive && c.hp > 0);
-	const alivePlayerCards = battle.playerCards.filter((c) => c.hp > 0);
-	if (enemyTaunter && alivePlayerCards.length > 0) {
-		const forcedPlayer = alivePlayerCards[Math.floor(Math.random() * alivePlayerCards.length)];
-		const tauntResult = resolveTauntForcedAttack(forcedPlayer, enemyTaunter, battle, false);
-		battle.playerAction = tauntResult;
-	}
-
 	// Clear enemy taunt (expires when the opponent's turn is over)
 	battle.enemyCards.forEach((c) => {
 		c.tauntActive = false;
@@ -2983,7 +3004,7 @@ function executeAiTurn(battle, _cardUpgrades) {
 				actions.push({ actor, actorIdx, type: "attack", target, score });
 		}
 
-		if (!battle.firstTurn) {
+		if (!battle.firstTurn && !taunter) {
 			if (actor.type === "tank" && actor.mana >= 2 && !ourTaunterActive) {
 				actions.push({
 					actor,
@@ -3044,8 +3065,8 @@ function executeAiTurn(battle, _cardUpgrades) {
 		let best = 0;
 		for (const pActor of alivePl) {
 			const candidateTargets = ourTaunter ? [ourTaunter] : aliveAi;
-			const canCrit = pActor.type === "assa" && pActor.mana >= 2;
-			const canFireball = pActor.type === "mage" && pActor.mana >= 2;
+			const canCrit = !ourTaunter && pActor.type === "assa" && pActor.mana >= 2;
+			const canFireball = !ourTaunter && pActor.type === "mage" && pActor.mana >= 2;
 			for (const tgt of candidateTargets) {
 				const types = ["attack"];
 				if (canCrit) types.push("crit");
