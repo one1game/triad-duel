@@ -884,6 +884,8 @@ socket.on('error',(msg)=>{
   el('authError').textContent=msg||'';
   if(msg==='Токен недействителен'){
     localStorage.removeItem('td_access_token');
+    localStorage.removeItem('td_game_state');
+    localStorage.removeItem('td_tgUser');
     accessToken=null;
     el('authOverlay').classList.add('show');
     resetAuthBtn();

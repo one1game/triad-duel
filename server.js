@@ -737,21 +737,28 @@ async function grantReferralRewardIfEligible(inviteeTelegramId) {
 }
 
 async function savePlayerData(userId, data) {
-	const { error } = await supabase
-		.from("kart_players")
-		.update({
-			gold: data.playerGold,
-			collection: data.playerCollection,
-			card_upgrades: data.cardUpgrades || {},
-			selected_deck: data.selectedDeck || [],
-			wins: data.wins || 0,
-			losses: data.losses || 0,
-			premium_until: data.premiumUntil || null,
-			updated_at: new Date().toISOString(),
-		})
-		.eq("telegram_id", userId);
-	if (error) console.error("Failed to save player:", error.message);
-	else console.log("[db] player saved:", userId, "gold:", data.playerGold);
+	const payload = {
+		gold: data.playerGold,
+		collection: data.playerCollection,
+		card_upgrades: data.cardUpgrades || {},
+		selected_deck: data.selectedDeck || [],
+		wins: data.wins || 0,
+		losses: data.losses || 0,
+		premium_until: data.premiumUntil || null,
+		updated_at: new Date().toISOString(),
+	};
+	const run = () =>
+		supabase
+			.from("kart_players")
+			.update(payload)
+			.eq("telegram_id", userId)
+			.then(({ error }) => {
+				if (error) console.error("Failed to save player:", error.message);
+			});
+	// Сериализуем сохранения на сессию — гарантирует порядок записи в БД
+	data._saveQueue = (data._saveQueue || Promise.resolve())
+		.then(run, run);
+	return data._saveQueue;
 }
 
 async function saveBattleResult(
