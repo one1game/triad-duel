@@ -772,6 +772,7 @@ try{
 socket.on('init',(state)=>{
   if(!accessToken){
     pendingInit=state;
+    setTimeout(()=>{if(pendingInit){console.warn('[init] pendingInit timeout — no auth');pendingInit=null}},10000);
     return;
   }
   pendingInit=null;
@@ -943,7 +944,7 @@ function playSound(name) {
     src.start(0);
 }
 
-function playWarpSmile(){if(Math.random()<0.25)playSound('battle_start')}
+function playWarpSmile(){if(Math.random()<0.25)playSound('buy')}
 
 // ═══ BGM ═══
 function initBGM(){
@@ -1300,8 +1301,8 @@ function renderChaosGrid(){const g=el('shopGridChaos');g.innerHTML='';const owne
 }
 
 function buyCard(id){playSound('select');socket.emit('buyCard',id)}
-function toggleDeckCard(id){playSound('select');socket.emit('updateDeck',{cardId:id})}
-async function doUpgrade(cardId,stat){playSound('select');const up=getUp(cardId);const lvl=up[stat];const cost=upgradeCost(stat,lvl);
+function toggleDeckCard(id){if(toggleDeckCard._lock)return;toggleDeckCard._lock=true;setTimeout(()=>toggleDeckCard._lock=false,300);playSound('select');socket.emit('updateDeck',{cardId:id})}
+async function doUpgrade(cardId,stat){if(doUpgrade._lock)return;doUpgrade._lock=true;setTimeout(()=>doUpgrade._lock=false,300);playSound('select');const up=getUp(cardId);const lvl=up[stat];const cost=upgradeCost(stat,lvl);
   if(playerGold<cost){showToast('Не хватает Remains',cost-playerGold);return}
   if(stat==='mana'&&lvl>=4){showToast('Мана на максимуме');return}
   socket.emit('upgradeCard',{cardId,stat})}
@@ -1591,7 +1592,7 @@ function cancelMatchmaking(){ socket.emit('cancelMatch'); hideMatchmakingOverlay
 const classTips=[
   'Маги: фаербол стоит 2 маны, наносит 4-6 урона и зависит от пассива мага.',
   'Танки: провокация снижает входящий урон на 1 и притягивает атаки врага.',
-  'Ассасины: крит стоит 2 маны и наносит двойной урон.',
+  'Ассасины: крит стоит 2 маны и наносит x2-x2.5 урона (зависит от пассива).',
   'Маги: Раскол — 5% шанс задеть соседние карты врага на 1-3 урона при атаке.',
   'Танки: Прикрытие — 5% шанс забрать атаку с соседа и не получить урона.',
   'Ассасины: Кровопускание — 5% шанс нанести половину урона соседней карте врага.',
