@@ -704,36 +704,33 @@ async function creditGold(telegramId, amount) {
 // Проверяет, есть ли для этого игрока неоплаченная реферальная связь, и если да —
 // с учётом дневного лимита начисляет награду обоим (пригласившему и приглашённому)
 async function grantReferralRewardIfEligible(inviteeTelegramId) {
-	const { data: ref } = await supabase
+	// Атомарный захват: UPDATE ... WHERE rewarded=false вернёт строку ровно одному вызову
+	const { data: claimed } = await supabase
 		.from("kart_referrals")
-		.select("*")
+		.update({ rewarded: true, rewarded_at: new Date().toISOString() })
 		.eq("invitee_telegram_id", inviteeTelegramId)
 		.eq("rewarded", false)
+		.select()
 		.single();
-	if (!ref) return null;
+	if (!claimed) return null; // уже награждён или связи нет
 
 	const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 	const { count } = await supabase
 		.from("kart_referrals")
 		.select("id", { count: "exact", head: true })
-		.eq("inviter_telegram_id", ref.inviter_telegram_id)
+		.eq("inviter_telegram_id", claimed.inviter_telegram_id)
 		.eq("rewarded", true)
 		.gte("rewarded_at", since);
 	if ((count || 0) >= REFERRAL_DAILY_CAP) {
-		console.warn(`[referral] дневной лимит наград исчерпан для tg${ref.inviter_telegram_id}`);
+		console.warn(`[referral] дневной лимит наград исчерпан для tg${claimed.inviter_telegram_id}`);
 		return null;
 	}
 
-	await supabase
-		.from("kart_referrals")
-		.update({ rewarded: true, rewarded_at: new Date().toISOString() })
-		.eq("id", ref.id);
-
-	await creditGold(ref.inviter_telegram_id, REFERRAL_REWARD_GOLD);
+	await creditGold(claimed.inviter_telegram_id, REFERRAL_REWARD_GOLD);
 	await creditGold(inviteeTelegramId, REFERRAL_REWARD_GOLD);
-	console.log(`[referral] награда выдана: tg${ref.inviter_telegram_id} <-> tg${inviteeTelegramId}`);
+	console.log(`[referral] награда выдана: tg${claimed.inviter_telegram_id} <-> tg${inviteeTelegramId}`);
 
-	return { inviterTelegramId: ref.inviter_telegram_id };
+	return { inviterTelegramId: claimed.inviter_telegram_id };
 }
 
 async function savePlayerData(userId, data) {
@@ -1110,6 +1107,12 @@ function endPvpGame(roomId, winnerSide, reason) {
 				sess.wins = (sess.wins || 0) + 1;
 			} else {
 				sess.losses = (sess.losses || 0) + 1;
+			}
+			// Реферальная награда за первый бой
+			if (p.userId && (sess.wins || 0) + (sess.losses || 0) === 1) {
+				grantReferralRewardIfEligible(p.userId).catch((e) =>
+					console.error("[referral] grant error:", e.message),
+				);
 			}
 		}
 		if (p.userId) {
@@ -2164,6 +2167,13 @@ IO.on("connection", (socket) => {
 		battle.battleLog.push(
 			`<span class="log-defeat">СДАЛСЯ! -${penalty} Remains</span>`,
 		);
+
+		// Реферальная награда за первый бой (даже если сдался)
+		if (userId && (s.wins || 0) + (s.losses || 0) === 1) {
+			grantReferralRewardIfEligible(userId).catch((e) =>
+				console.error("[referral] grant error:", e.message),
+			);
+		}
 
 		// Сохраняем в БД
 		if (userId) {
