@@ -2090,6 +2090,7 @@ IO.on("connection", (socket) => {
 				"[action] ability activated, NOT ending turn. type:",
 				actionResult.type,
 			);
+			battle.turnLocked = true;
 			socket.emit("stateUpdate", getSessionState(sessionId));
 			return;
 		}

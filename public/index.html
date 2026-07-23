@@ -983,7 +983,7 @@ let premiumUntil=null;
 let shopCards=[];
 let currentTab='shop';
 const gridRendered={shop:false,inv:false,chaos:false};
-let turnLocked=false,critActivated=false,fireballActive=false,firstTurn=true,waitingForCritTarget=null;
+let turnLocked=false,critActivated=false,fireballActive=false,firstTurn=true,waitingForCritTarget=null,abilityTimeout=null;
 let roundTimerInterval=null,roundSeconds=20,stuckWatchdog=null,battleGen=0,battleCardsReady=false,aiAnimating=false;
 
 function upgradeCost(stat,level){return 150*Math.pow(2,level)}
@@ -1495,7 +1495,8 @@ function updateRoundTimerUI(){
 
 // ═══ BATTLE ACTIONS ═══
 function onCard(isP,idx){
-  if(gameOver||!isPlayerTurn||turnLocked)return;
+  if(gameOver||!isPlayerTurn||aiAnimating)return;
+  if(turnLocked&&!critActivated&&!fireballActive)return;
   if(isP){
     if(critActivated||fireballActive)return;
     if(!playerCards[idx]||playerCards[idx].hp<=0)return;
@@ -1528,8 +1529,9 @@ function doAttack(aIdx,dIdx){
 }
 
 function doCrit(aIdx,dIdx){
-  if(!isPlayerTurn||gameOver||turnLocked)return;
-  turnLocked=true;
+  if(!isPlayerTurn||gameOver)return;
+  if(turnLocked&&waitingForCritTarget===null)return;
+  turnLocked=true;clearTimeout(abilityTimeout);
   playSound('crit');
   const aE=el('playerRow').querySelector(`[data-idx="${aIdx}"]`);
   const dE=el('enemyRow').querySelector(`[data-idx="${dIdx}"]`);
@@ -1539,8 +1541,9 @@ function doCrit(aIdx,dIdx){
 }
 
 function doFireball(aIdx,dIdx){
-  if(!isPlayerTurn||gameOver||turnLocked||!fireballActive)return;
-  turnLocked=true;
+  if(!isPlayerTurn||gameOver||!fireballActive)return;
+  if(turnLocked&&!fireballActive)return;
+  turnLocked=true;clearTimeout(abilityTimeout);
   playSound('fireball');
   const aE=el('playerRow').querySelector(`[data-idx="${aIdx}"]`);
   const dE=el('enemyRow').querySelector(`[data-idx="${dIdx}"]`);
@@ -1562,21 +1565,33 @@ function useTaunt(){
 
 function useCrit(){
   if(activeIdx<0||!isPlayerTurn||gameOver||turnLocked||firstTurn)return;
-  critActivated=true;waitingForCritTarget=activeIdx;
+  turnLocked=true;critActivated=true;waitingForCritTarget=activeIdx;
   flash('radial-gradient(rgba(192,128,48,.1),transparent)');updUI();
+  clearTimeout(abilityTimeout);
+  abilityTimeout=setTimeout(()=>{
+    if(!critActivated)return;
+    console.warn('[ability] crit timed out — resetting');
+    critActivated=false;waitingForCritTarget=null;turnLocked=false;updUI();
+  },8000);
   sendBattleAction({type:'crit',attackerIdx:activeIdx});
 }
 
 function useFireball(){
   if(activeIdx<0||!isPlayerTurn||gameOver||firstTurn||turnLocked)return;
-  fireballActive=true;
+  turnLocked=true;fireballActive=true;
   flash('radial-gradient(rgba(138,74,26,.1),transparent)');updUI();
+  clearTimeout(abilityTimeout);
+  abilityTimeout=setTimeout(()=>{
+    if(!fireballActive)return;
+    console.warn('[ability] fireball timed out — resetting');
+    fireballActive=false;turnLocked=false;updUI();
+  },8000);
   sendBattleAction({type:'fireball',attackerIdx:activeIdx});
 }
 
 function endPlayerTurn(){
-  if(gameOver||!isPlayerTurn)return;
-  fireballActive=false;
+  if(gameOver||!isPlayerTurn||turnLocked)return;
+  fireballActive=false;critActivated=false;waitingForCritTarget=null;clearTimeout(abilityTimeout);
   stopRoundTimer();turnLocked=true;updUI();
   el('endTurnBtn').style.display='none';sendBattleAction({type:'endTurn'});
 }
@@ -1712,7 +1727,6 @@ function processBattleUpdate(state){
     setTimeout(()=>{
       if(battleGen!==gen)return;
       aiAnimating=false;
-      updUI();updateRowStates();
       if((state.battle && state.battle.gameEnd)||gameOver){
         gameOver=true;stopRoundTimer();isPlayerTurn=false;activeIdx=-1;
         el('turnIndicator').textContent='Бой окончен';el('endTurnBtn').style.display='none';updUI();updateRowStates();
@@ -1721,7 +1735,7 @@ function processBattleUpdate(state){
       }else{
         isPlayerTurn=true;turnLocked=false;abilitiesUsedThisTurn=new Set();
         el('turnIndicator').textContent='Ваш ход';el('turnIndicator').classList.remove('enemy-turn');
-        el('endTurnBtn').style.display='block';startRoundTimer();
+        el('endTurnBtn').style.display='block';updUI();updateRowStates();startRoundTimer();
       }
     },450);
     return;
