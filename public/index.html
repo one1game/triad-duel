@@ -225,7 +225,7 @@
   .ability-panel{display:flex;gap:12px;justify-content:center;align-items:center;min-height:44px;padding:8px;background:rgba(0,0,0,.2);border-radius:4px;border:1px solid transparent;transition:border-color .3s}.ability-panel:has(.ability-btn){border-color:var(--border-dim);background:rgba(12,12,15,.6)}
   .action-hint{font-size:12px;color:var(--text-dim);text-align:center;letter-spacing:1px;font-family:'Inter',sans-serif;min-height:20px;transition:color .3s}.action-hint .key{color:var(--accent-gold-bright);font-weight:600}
   .round-timer{text-align:center;padding:6px 0}.round-timer-text{font-family:'Cinzel',serif;font-size:22px;font-weight:800;color:#c08030;letter-spacing:3px}.round-timer-text.warning{color:#e0a040}.round-timer-text.danger{color:#e05040;animation:pulse-enemy 1s ease-in-out infinite}
-  .battle-log{background:rgba(5,5,8,.75);border-bottom:1px solid rgba(255,255,255,.05);padding:8px 20px;max-height:80px;overflow-y:auto;font-family:'Inter',sans-serif;font-size:11px;line-height:1.65;color:var(--text-dim);text-align:center;width:100%;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.08) transparent;flex-shrink:0;position:relative}
+  .battle-log{background:rgba(5,5,8,.75);border-bottom:1px solid rgba(255,255,255,.05);padding:8px 20px;margin-top:12px;border-radius:8px;max-height:80px;overflow-y:auto;font-family:'Inter',sans-serif;font-size:11px;line-height:1.65;color:var(--text-dim);text-align:center;width:100%;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.08) transparent;flex-shrink:0;position:relative}
   .battle-log::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:linear-gradient(180deg,transparent,rgba(200,60,60,.3),rgba(200,180,120,.15),transparent)}
   .battle-log::-webkit-scrollbar{width:3px}.battle-log::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:2px}
   .battle-log:empty{display:none}
@@ -251,6 +251,7 @@
   #resultOverlay,#cardDetailOverlay,#authOverlay,#settingsOverlay,#premiumOverlay,#inviteOverlay{backdrop-filter:blur(6px)!important}
   .card{box-shadow:0 8px 18px rgba(0,0,0,.6)}.card:hover{box-shadow:0 12px 24px rgba(0,0,0,.8),0 0 12px rgba(255,255,255,.02)}.card.selected{box-shadow:0 0 18px rgba(138,115,85,.2),0 0 30px rgba(138,115,85,.08)}.card,.btn,.chaos-upg-btn{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
   body::after{display:none}
+  .shop-bg-video{filter:none}
   .btn::before{display:none}
   @keyframes premiumShimmer{0%,100%{box-shadow:none;border-color:rgba(220,40,40,.3)}50%{box-shadow:none;border-color:rgba(220,40,40,.5)}}
   #shopScreen.active{height:calc(100vh - 120px)!important;max-height:calc(100dvh - 120px)!important}
@@ -622,7 +623,7 @@ if(window.Telegram?.WebApp?.initData){
     <div class="round-timer"><span class="round-timer-text" id="roundTimerText">20</span></div>
     <div class="action-hint" id="actionHint"><span class="key">Выберите юнита</span> — 1 действие за ход</div>
     <div class="card-row" id="playerRow"></div>
-    <button id="endTurnBtn" class="btn" onclick="endPlayerTurn()" style="display:block;">Завершить ход</button>
+    <button id="endTurnBtn" class="btn" onclick="endPlayerTurn()">Завершить ход</button>
   </div>
   <div class="battle-footer">
     <div class="shop-copyright">Triad Duel &copy; 2026</div>
@@ -1066,7 +1067,7 @@ function enrichCards(arr){return(arr||[]).map(enrichCard)}
 const scr={menu:el('menuScreen'),shop:el('shopScreen'),battle:el('battleScreen')};
 let currentScreen='menu';
 function el(id){return document.getElementById(id)}
-function showScreen(n){currentScreen=n;Object.values(scr).forEach(s=>s.classList.remove('active'));scr[n].classList.add('active');el('resultOverlay').classList.remove('show');document.body.classList.toggle('in-battle',n==='battle');if(n!=='battle'){el('bgClep').style.opacity='.4';el('bgWarp').style.opacity='0';el('bgHaus').style.opacity='0'}startBGM()}
+function showScreen(n){currentScreen=n;Object.values(scr).forEach(s=>s.classList.remove('active'));scr[n].classList.add('active');el('resultOverlay').classList.remove('show');document.body.classList.toggle('in-battle',n==='battle');if(n==='shop'){setActiveBgVideo(currentTab||'shop')}else{['bgClep','bgWarp','bgHaus'].forEach(id=>{const v=el(id);if(v&&!v.paused)v.pause()})}startBGM();if(n!=='battle')resumeParticlesIfNeeded();}
 
 // ═══ LOADING ═══
 let _loadingTimer=null;
@@ -1101,7 +1102,7 @@ function switchSettingsTab(tab){
   }
 }
 function openSettings(){el('settingsOverlay').classList.add('show')}
-function closeSettings(){el('settingsOverlay').classList.remove('show')}
+function closeSettings(){el('settingsOverlay').classList.remove('show');resumeParticlesIfNeeded()}
 
 function isPremiumActiveClient(){return premiumUntil && new Date(premiumUntil).getTime() > Date.now()}
 
@@ -1130,7 +1131,7 @@ function openPremium(){
   socket.emit('getPremiumStatus');
   el('premiumOverlay').classList.add('show');
 }
-function closePremium(){el('premiumOverlay').classList.remove('show')}
+function closePremium(){el('premiumOverlay').classList.remove('show');resumeParticlesIfNeeded()}
 
 // ═══ REFERRAL / ПРИГЛАСИТЬ ДРУГА ═══
 // TODO: замените APP_SHORT_NAME на короткое имя вашего Mini App из BotFather
@@ -1144,7 +1145,7 @@ function openInvite(){
   socket.emit('getReferralStats');
   el('inviteOverlay').classList.add('show');
 }
-function closeInvite(){el('inviteOverlay').classList.remove('show')}
+function closeInvite(){el('inviteOverlay').classList.remove('show');resumeParticlesIfNeeded()}
 
 socket.on('referralStats',({invited,earned})=>{
   const t=el('inviteStatsText');
@@ -1192,7 +1193,11 @@ let pCanvas,pCtx,particles=[],pRafId=null;
 const pCount=window.innerWidth<768?25:60;
 function initParticles(){pCanvas=el('particlesCanvas');pCtx=pCanvas.getContext('2d');resizeParticles();let resizeT=null;window.addEventListener('resize',()=>{clearTimeout(resizeT);resizeT=setTimeout(resizeParticles,200)});for(let i=0;i<pCount;i++)particles.push({x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,r:Math.random()*1.5+.5,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,o:Math.random()*.5+.1});pRafId=requestAnimationFrame(drawParticles);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){cancelAnimationFrame(pRafId);pRafId=null}else if(!pRafId){pRafId=requestAnimationFrame(drawParticles)}})}
 function resizeParticles(){pCanvas.width=window.innerWidth;pCanvas.height=window.innerHeight}
-function drawParticles(){if(currentScreen==='battle'||document.querySelector('#resultOverlay.show,#cardDetailOverlay.show,#authOverlay.show,#settingsOverlay.show,#premiumOverlay.show,#inviteOverlay.show')){pRafId=requestAnimationFrame(drawParticles);return}pCtx.clearRect(0,0,pCanvas.width,pCanvas.height);particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=pCanvas.width;if(p.x>pCanvas.width)p.x=0;if(p.y<0)p.y=pCanvas.height;if(p.y>pCanvas.height)p.y=0;pCtx.beginPath();pCtx.arc(p.x,p.y,p.r,0,Math.PI*2);pCtx.fillStyle=`rgba(196,162,101,${p.o})`;pCtx.fill()});pRafId=requestAnimationFrame(drawParticles)}
+function drawParticles(){if(currentScreen==='battle'||document.querySelector('#resultOverlay.show,#cardDetailOverlay.show,#authOverlay.show,#settingsOverlay.show,#premiumOverlay.show,#inviteOverlay.show')){pRafId=null;return}pCtx.clearRect(0,0,pCanvas.width,pCanvas.height);particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=pCanvas.width;if(p.x>pCanvas.width)p.x=0;if(p.y<0)p.y=pCanvas.height;if(p.y>pCanvas.height)p.y=0;pCtx.beginPath();pCtx.arc(p.x,p.y,p.r,0,Math.PI*2);pCtx.fillStyle=`rgba(196,162,101,${p.o})`;pCtx.fill()});pRafId=requestAnimationFrame(drawParticles)}
+// Раньше RAF-цикл частиц не останавливался в бою/оверлеях, а просто гонял проверку DOM
+// каждый кадр вхолостую. Теперь цикл реально останавливается и перезапускается при
+// возврате на меню/магазин через showScreen/закрытие оверлеев (см. resumeParticlesIfNeeded).
+function resumeParticlesIfNeeded(){if(!pRafId&&pCtx)pRafId=requestAnimationFrame(drawParticles)}
 
 // ═══ EFFECTS ═══
 function dmgNum(el,dmg,color){const n=document.createElement('div');n.className='damage-number';n.textContent='-'+dmg;n.style.color=color||'#c04030';n.style.textShadow=`0 0 15px ${color||'rgba(192,64,48,.8)'}`;el.appendChild(n);setTimeout(()=>n.remove(),1000)}
@@ -1222,13 +1227,25 @@ function newCampaign(){
 function backToMenu(){Object.values(scr).forEach(s=>s.classList.remove('active'));scr.menu.classList.add('active');saveGameState({playerGold,playerCollection,selectedDeck,cardUpgrades,shopCards,battle:null},'menu')}
 
 // ═══ SHOP ═══
+function setActiveBgVideo(tab){
+  // Раньше все 3 фоновых видео (склеп/варп/хаос) крутились ОДНОВРЕМЕННО всегда,
+  // даже невидимые (opacity:0) — три параллельных видео-декодера + blur(2px) на весь экран
+  // грели телефон в магазине сильнее всего. Теперь играет только активное, остальные на паузе.
+  const map={shop:'bgClep',inv:'bgWarp',chaos:'bgHaus'};
+  ['bgClep','bgWarp','bgHaus'].forEach(id=>{
+    const v=el(id);
+    if(!v)return;
+    if(id===map[tab]){v.style.opacity='0.4';if(v.paused)v.play().catch(()=>{});}
+    else{v.style.opacity='0';if(!v.paused)v.pause();}
+  });
+}
 function showShopTab(tab){
   currentTab=tab;
   el('tabShopBtn').classList.toggle('active',tab==='shop');el('tabInvBtn').classList.toggle('active',tab==='inv');el('tabChaosBtn').classList.toggle('active',tab==='chaos');
   el('shopTabTitle').textContent=tab==='shop'?'Склеп':tab==='inv'?'Варп':'Хаос';
   if(tab==='shop'||tab==='chaos'){setBattleButton(false,false);el('deckCount').style.display='none'}
   else{setBattleButton(true,selectedDeck.length===3);el('deckCount').style.display='block';el('deckCount').textContent='Выбрано: '+selectedDeck.length+' / 3';}
-  el('bgClep').style.opacity=tab==='shop'?'0.4':'0';el('bgWarp').style.opacity=tab==='inv'?'0.4':'0';el('bgHaus').style.opacity=tab==='chaos'?'0.4':'0';
+  setActiveBgVideo(tab);
   el('shopScreen').querySelector('.shop-header').style.background=tab==='chaos'?'rgba(0,0,0,0.5)':'';
   el('shopGrid').style.display=tab==='shop'?'':'none';
   el('shopGridInv').style.display=tab==='inv'?'':'none';
@@ -1336,7 +1353,7 @@ function buyDetailCard(){
   playSound('select');socket.emit('buyCard',detailCardId);
   closeCardDetail();
 }
-function closeCardDetail(e){if(e&&e.target!==e.currentTarget)return;el('cardDetailOverlay').classList.remove('show')}
+function closeCardDetail(e){if(e&&e.target!==e.currentTarget)return;el('cardDetailOverlay').classList.remove('show');resumeParticlesIfNeeded()}
 
 // ═══ BATTLE ═══
 function rCard(card,isPlayer,idx){
@@ -1484,6 +1501,7 @@ function updateRowStates(){
 }
 
 // ═══ TIMER ═══
+function setEndTurnBtnVisible(v){const b=el('endTurnBtn');if(!b)return;b.style.visibility=v?'visible':'hidden';b.style.pointerEvents=v?'auto':'none';}
 function startRoundTimer(){stopRoundTimer();roundSeconds=20;updateRoundTimerUI();
   roundTimerInterval=setInterval(()=>{roundSeconds--;updateRoundTimerUI();if(roundSeconds<=0){stopRoundTimer();if(isPlayerTurn&&!turnLocked&&!gameOver){log('<span class="log-enemy">⏰ Время вышло! Ход пропущен.</span>');endPlayerTurn()}else if(!isPlayerTurn&&!gameOver){stuckWatchdog=setTimeout(()=>{console.warn('[watchdog] AI stuck — requesting resync');socket.emit('resync')},30000)}}},1000)}
 function stopRoundTimer(){if(roundTimerInterval){clearInterval(roundTimerInterval);roundTimerInterval=null}if(stuckWatchdog){clearTimeout(stuckWatchdog);stuckWatchdog=null}}
@@ -1558,7 +1576,7 @@ function useTaunt(){
   turnLocked=true;
   playSound('taunt');flash('radial-gradient(rgba(138,74,26,.15),transparent)');
   stopRoundTimer();updUI();
-  el('endTurnBtn').style.display='none';
+  setEndTurnBtnVisible(false);
   el('actionHint').innerHTML='<span class="key">Провокация!</span> Ход завершается...';
   sendBattleAction({type:'taunt',attackerIdx:activeIdx});
 }
@@ -1593,7 +1611,7 @@ function endPlayerTurn(){
   if(gameOver||!isPlayerTurn||turnLocked)return;
   fireballActive=false;critActivated=false;waitingForCritTarget=null;clearTimeout(abilityTimeout);
   stopRoundTimer();turnLocked=true;updUI();
-  el('endTurnBtn').style.display='none';sendBattleAction({type:'endTurn'});
+  setEndTurnBtnVisible(false);sendBattleAction({type:'endTurn'});
 }
 
 function sendBattleAction(action){
@@ -1740,7 +1758,7 @@ function processBattleUpdate(state){
     turnLocked=true;isPlayerTurn=false;updUI();
     aiAnimating=true;
     el('turnIndicator').textContent='Враг атакует!';el('turnIndicator').classList.add('enemy-turn');
-    el('endTurnBtn').style.display='none';updateRowStates();startRoundTimer();
+    setEndTurnBtnVisible(false);updateRowStates();startRoundTimer();
     const gen=battleGen;
     animateAiAction(b.aiAction);
     setTimeout(()=>{
@@ -1748,13 +1766,13 @@ function processBattleUpdate(state){
       aiAnimating=false;
       if((state.battle && state.battle.gameEnd)||gameOver){
         gameOver=true;stopRoundTimer();isPlayerTurn=false;activeIdx=-1;
-        el('turnIndicator').textContent='Бой окончен';el('endTurnBtn').style.display='none';updUI();updateRowStates();
+        el('turnIndicator').textContent='Бой окончен';setEndTurnBtnVisible(false);updUI();updateRowStates();
         const ge = state.battle ? state.battle.gameEnd : null;
         setTimeout(()=>{if(battleGen!==gen)return;showGameEnd(ge)},700);
       }else{
         isPlayerTurn=true;turnLocked=false;abilitiesUsedThisTurn=new Set();
         el('turnIndicator').textContent='Ваш ход';el('turnIndicator').classList.remove('enemy-turn');
-        el('endTurnBtn').style.display='block';updUI();updateRowStates();startRoundTimer();
+        setEndTurnBtnVisible(true);updUI();updateRowStates();startRoundTimer();
       }
     },450);
     return;
@@ -1764,7 +1782,7 @@ function processBattleUpdate(state){
   if((state.battle && state.battle.gameEnd)||gameOver){
     const ge = state.battle ? state.battle.gameEnd : null;
     gameOver=true;stopRoundTimer();isPlayerTurn=false;activeIdx=-1;
-    el('turnIndicator').textContent='Бой окончен';el('endTurnBtn').style.display='none';updUI();updateRowStates();
+    el('turnIndicator').textContent='Бой окончен';setEndTurnBtnVisible(false);updUI();updateRowStates();
     const gen=battleGen;
     setTimeout(()=>{if(battleGen!==gen)return;showGameEnd(ge)},700);
     return;
@@ -1772,10 +1790,10 @@ function processBattleUpdate(state){
   updUI();updateRowStates();
   if(isPlayerTurn){
     el('turnIndicator').textContent='Ваш ход';el('turnIndicator').classList.remove('enemy-turn');
-    el('endTurnBtn').style.display='block';startRoundTimer();
+    setEndTurnBtnVisible(true);startRoundTimer();
   }else{
     el('turnIndicator').textContent='Ход врага';el('turnIndicator').classList.add('enemy-turn');
-    el('endTurnBtn').style.display='none';startRoundTimer();
+    setEndTurnBtnVisible(false);startRoundTimer();
   }
 }
 
@@ -1800,7 +1818,7 @@ function backToShop(){stopRoundTimer();showScreen('shop');currentTab='shop';
   el('tabShopBtn').classList.add('active');el('tabInvBtn').classList.remove('active');el('tabChaosBtn').classList.remove('active');
   el('shopTabTitle').textContent='Склеп';el('deckCount').style.display='none';setBattleButton(false,false);
   socket.emit('getShop');}
-function backToShopFromResult(){el('resultOverlay').classList.remove('show');backToShop()}
+function backToShopFromResult(){el('resultOverlay').classList.remove('show');backToShop();resumeParticlesIfNeeded()}
 
 // ═══ AUTH ═══
 const AUTH_BASE='https://triad-duel-server.onrender.com';
