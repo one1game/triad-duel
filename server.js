@@ -2190,6 +2190,7 @@ function getSessionState(sessionId) {
 		tgUser: s.tgUser || null,
 		premiumUntil: s.premiumUntil || null,
 		mmr: calcMMR(s),
+		allCards: ALL_CARDS,
 	};
 }
 
