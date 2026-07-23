@@ -2922,12 +2922,82 @@ function executeAiTurn(battle, _cardUpgrades) {
 
 	if (!actions.length) return;
 
+	// ═══ LOOKAHEAD: "if I play this, what's their best answer?" ═══
+	// Reuses the exact same action types/costs available to the player
+	// (attack/crit/fireball/taunt) — no new abilities, just deeper calculation.
+	const cloneSide = (arr) => arr.map((c) => ({ ...c }));
+
+	// Applies the *expected* outcome of an AI action to cloned boards (no RNG,
+	// no rare procs — this is only for scoring hypothetical futures, the real
+	// execution below still uses the normal randomized damage/passives).
+	const simulateAiAction = (aiClone, plClone, action) => {
+		const actor = aiClone[action.actorIdx];
+		if (!actor) return;
+		if (action.type === "taunt") {
+			actor.mana = Math.max(0, actor.mana - 2);
+			actor.tauntActive = true;
+			return;
+		}
+		const tIdx = plClone.findIndex((c) => c.id === action.target.id);
+		if (tIdx === -1) return;
+		const tgt = plClone[tIdx];
+		tgt.hp = Math.max(0, tgt.hp - estimateRawDamage(actor, action.type, tgt));
+		if (action.type === "crit" || action.type === "fireball")
+			actor.mana = Math.max(0, actor.mana - 2);
+	};
+
+	// Mirrors bestTargetFor/scoreTargetForAction, but for the player's side
+	// attacking our (hypothetical, post-action) board — gives the strongest
+	// single reply the opponent could land next turn.
+	const bestPlayerReplyThreat = (aiClone, plClone) => {
+		const aliveAi = aiClone.filter((c) => c.hp > 0);
+		const alivePl = plClone.filter((c) => c.hp > 0);
+		if (!aliveAi.length || !alivePl.length) return 0;
+		const ourTaunter = aiClone.find((c) => c.hp > 0 && c.tauntActive);
+		let best = 0;
+		for (const pActor of alivePl) {
+			const candidateTargets = ourTaunter ? [ourTaunter] : aliveAi;
+			const canCrit = pActor.type === "assa" && pActor.mana >= 2;
+			const canFireball = pActor.type === "mage" && pActor.mana >= 2;
+			for (const tgt of candidateTargets) {
+				const types = ["attack"];
+				if (canCrit) types.push("crit");
+				if (canFireball) types.push("fireball");
+				for (const type of types) {
+					const dmg = estimateRawDamage(pActor, type, tgt);
+					const lethal = dmg >= tgt.hp;
+					const val = dmg + (lethal ? 15 + targetThreatValue(tgt) : 0);
+					if (val > best) best = val;
+				}
+			}
+		}
+		return best;
+	};
+
 	// Small jitter to break ties between near-equal options without ever
 	// overturning a clearly better (especially lethal) play.
 	actions.forEach((a) => {
 		a.score += Math.random() * 1.2;
 	});
 	actions.sort((a, b) => b.score - a.score);
+
+	// Look one reply ahead for the strongest candidates (cheap: top 4 max).
+	const LOOKAHEAD_N = Math.min(4, actions.length);
+	for (let i = 0; i < actions.length; i++) {
+		if (i >= LOOKAHEAD_N) {
+			actions[i].finalScore = -Infinity;
+			continue;
+		}
+		const a = actions[i];
+		const aiClone = cloneSide(battle.enemyCards);
+		const plClone = cloneSide(battle.playerCards);
+		simulateAiAction(aiClone, plClone, a);
+		const replyThreat = bestPlayerReplyThreat(aiClone, plClone);
+		// Punish moves that hand the opponent a strong/lethal answer;
+		// a guaranteed kill now still easily outweighs a future threat.
+		a.finalScore = a.score - replyThreat * 0.45;
+	}
+	actions.sort((a, b) => b.finalScore - a.finalScore);
 	const { actor, actorIdx, type, target } = actions[0];
 
 	let aiAction = null;
