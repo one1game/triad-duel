@@ -918,6 +918,7 @@ async function initSFX() {
 ['click','touchstart','keydown'].forEach(e => document.addEventListener(e, () => {
     initSFX();
     if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    if (bgmEnabled && !bgmPlaying) startBGM();
 }, { once: true }));
 initSFX();
 
