@@ -1583,13 +1583,16 @@ IO.on("connection", (socket) => {
 			_playerData = dbPlayer;
 			sessions[sessionId]._dbPlayerId = dbPlayer.id;
 			sessions[sessionId].userId = userId;
-			sessions[sessionId].playerGold = dbPlayer.gold;
 			sessions[sessionId].playerCollection = dbPlayer.collection || [];
 			sessions[sessionId].cardUpgrades = dbPlayer.card_upgrades || {};
-			sessions[sessionId].selectedDeck = dbPlayer.selected_deck || [];
-			sessions[sessionId].wins = dbPlayer.wins || 0;
-			sessions[sessionId].losses = dbPlayer.losses || 0;
 			sessions[sessionId].premiumUntil = dbPlayer.premium_until || null;
+			// При реконнекте НЕ перезаписываем live-статы (могли измениться после последнего save)
+			if (!isReconnect || sessions[sessionId].playerGold == null) {
+				sessions[sessionId].playerGold = dbPlayer.gold;
+				sessions[sessionId].selectedDeck = dbPlayer.selected_deck || [];
+				sessions[sessionId].wins = dbPlayer.wins || 0;
+				sessions[sessionId].losses = dbPlayer.losses || 0;
+			}
 			sessions[sessionId].tgUser = decoded.tgUser || {
 				id: decoded.telegram_id,
 				firstName: decoded.username,
@@ -2228,6 +2231,8 @@ function getSessionState(sessionId) {
 		battle: s.battle ? getBattleState(s.battle) : null,
 		tgUser: s.tgUser || null,
 		premiumUntil: s.premiumUntil || null,
+		wins: s.wins || 0,
+		losses: s.losses || 0,
 		mmr: calcMMR(s),
 		allCards: ALL_CARDS,
 	};
