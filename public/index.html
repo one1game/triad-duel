@@ -984,7 +984,7 @@ let shopCards=[];
 let currentTab='shop';
 const gridRendered={shop:false,inv:false,chaos:false};
 let turnLocked=false,critActivated=false,fireballActive=false,firstTurn=true,waitingForCritTarget=null;
-let roundTimerInterval=null,roundSeconds=20,battleGen=0,battleCardsReady=false,aiAnimating=false;
+let roundTimerInterval=null,roundSeconds=20,stuckWatchdog=null,battleGen=0,battleCardsReady=false,aiAnimating=false;
 
 function upgradeCost(stat,level){return 150*Math.pow(2,level)}
 function getUp(cardId){if(!cardUpgrades[cardId])cardUpgrades[cardId]={hp:0,atk:0,mana:0};return cardUpgrades[cardId]}
@@ -1485,8 +1485,8 @@ function updateRowStates(){
 
 // ═══ TIMER ═══
 function startRoundTimer(){stopRoundTimer();roundSeconds=20;updateRoundTimerUI();
-  roundTimerInterval=setInterval(()=>{roundSeconds--;updateRoundTimerUI();if(roundSeconds<=0){stopRoundTimer();if(isPlayerTurn&&!turnLocked&&!gameOver){log('<span class="log-enemy">⏰ Время вышло! Ход пропущен.</span>');endPlayerTurn()}}},1000)}
-function stopRoundTimer(){if(roundTimerInterval){clearInterval(roundTimerInterval);roundTimerInterval=null}}
+  roundTimerInterval=setInterval(()=>{roundSeconds--;updateRoundTimerUI();if(roundSeconds<=0){stopRoundTimer();if(isPlayerTurn&&!turnLocked&&!gameOver){log('<span class="log-enemy">⏰ Время вышло! Ход пропущен.</span>');endPlayerTurn()}else if(!isPlayerTurn&&!gameOver){stuckWatchdog=setTimeout(()=>{console.warn('[watchdog] AI stuck — requesting resync');socket.emit('resync')},30000)}}},1000)}
+function stopRoundTimer(){if(roundTimerInterval){clearInterval(roundTimerInterval);roundTimerInterval=null}if(stuckWatchdog){clearTimeout(stuckWatchdog);stuckWatchdog=null}}
 function updateRoundTimerUI(){
   const t=el('roundTimerText');t.textContent=roundSeconds;
   t.classList.remove('warning','danger');
@@ -1677,8 +1677,8 @@ function animateAiAction(action){
 
 // ═══ PROCESS BATTLE UPDATE ═══
 function processBattleUpdate(state){
-  const b = state.battle || state;
-  if(state.mmr!=null) playerMMR=state.mmr;
+  if(!state||!state.battle)return;
+  const b = state.battle; if(state.mmr!=null) playerMMR=state.mmr;
   if(b.log)b.log.forEach(msg=>log(msg));
 
   if(b.playerAction){

@@ -1788,6 +1788,14 @@ IO.on("connection", (socket) => {
 		if (userId) savePlayerData(userId, s);
 	});
 
+	// ═══ RESYNC (watchdog recovery) ═══
+	socket.on("resync", () => {
+		const s = sessions[sessionId];
+		if (!s) return;
+		console.log(`[resync] ${sessionId} requested resync — re-emitting state`);
+		socket.emit("stateUpdate", getSessionState(sessionId));
+	});
+
 	// ═══ BUY CARD ═══
 	socket.on("buyCard", (cardId) => {
 		const s = sessions[sessionId];
