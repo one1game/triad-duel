@@ -772,6 +772,7 @@ socket.on('init',(state)=>{
   el('authOverlay').classList.remove('show');
   hideLoading();
   applyFullState(state);
+  if(pendingPlayIntent){pendingPlayIntent=false;newCampaign();return;}
   const saved=loadSavedState();
   if(saved&&saved.screen==='battle'){
     if(state.battle){
@@ -1197,9 +1198,13 @@ function byId(id){return ALL_CARDS.find(c=>c.id===id)||{}}
 function getEffAtk(c){return Math.max(0,(c.atk||0)-(c.atkDebuff||0))}
 
 // ═══ MENU ═══
+let pendingPlayIntent=false;
 function newCampaign(){
-  if(!socket.connected){showToast('Нет соединения с сервером. Подождите...');return}
-  if(!gameState){showToast('Идёт загрузка данных...');return}
+  if(!socket.connected||!gameState){
+    pendingPlayIntent=true;
+    showLoading('Подключение к серверу...');
+    return;
+  }
   showLoading('Создаём кампанию...');
   saveGameState({playerGold,playerCollection,selectedDeck,cardUpgrades,shopCards,battle:null},'shop');
   socket.emit('newCampaign')
@@ -1805,6 +1810,7 @@ function pollForAuth(code){
           el('authOverlay').classList.remove('show');
           hideLoading();
           applyFullState(gameState);
+          if(pendingPlayIntent){pendingPlayIntent=false;newCampaign();return}
           const saved=loadSavedState();
           if(saved&&saved.screen==='shop'){
             showScreen('shop');currentTab='shop';
