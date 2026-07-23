@@ -1053,8 +1053,9 @@ function enrichCards(arr){return(arr||[]).map(enrichCard)}
 
 // ═══ DOM ═══
 const scr={menu:el('menuScreen'),shop:el('shopScreen'),battle:el('battleScreen')};
+let currentScreen='menu';
 function el(id){return document.getElementById(id)}
-function showScreen(n){Object.values(scr).forEach(s=>s.classList.remove('active'));scr[n].classList.add('active');el('resultOverlay').classList.remove('show');if(n!=='battle'){el('bgClep').style.opacity='.4';el('bgWarp').style.opacity='0';el('bgHaus').style.opacity='0'}startBGM()}
+function showScreen(n){currentScreen=n;Object.values(scr).forEach(s=>s.classList.remove('active'));scr[n].classList.add('active');el('resultOverlay').classList.remove('show');if(n!=='battle'){el('bgClep').style.opacity='.4';el('bgWarp').style.opacity='0';el('bgHaus').style.opacity='0'}startBGM()}
 
 // ═══ LOADING ═══
 let _loadingTimer=null;
