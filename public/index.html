@@ -1238,11 +1238,13 @@ function showShopTab(tab){
   else if(tab==='chaos'&&!gridRendered.chaos){renderChaosGrid();gridRendered.chaos=true}
   else if(tab==='inv')playWarpSmile();
 }
-function renderShop(){el('shopGoldAmt').textContent=playerGold;gridRendered.shop=gridRendered.inv=gridRendered.chaos=false;
+function renderShop(){el('shopGoldAmt').textContent=playerGold;
   el('shopGrid').style.display=currentTab==='shop'?'':'none';
   el('shopGridInv').style.display=currentTab==='inv'?'':'none';
   el('shopGridChaos').style.display=currentTab==='chaos'?'':'none';
-  if(currentTab==='shop')renderShopGrid();else if(currentTab==='inv')renderColGrid();else renderChaosGrid()}
+  if(currentTab==='shop'){gridRendered.shop=false;renderShopGrid()}
+  else if(currentTab==='inv'){gridRendered.inv=false;renderColGrid();playWarpSmile()}
+  else if(currentTab==='chaos'){gridRendered.chaos=false;renderChaosGrid()}}
 function showToast(msg,missing){
   const t=el('shopToast');t.textContent=msg;
   if(missing>0){const img=document.createElement('img');img.src='img/game/Remains_icon.webp';t.appendChild(img);t.appendChild(document.createTextNode(' +'+missing))}
