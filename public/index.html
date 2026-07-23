@@ -1683,6 +1683,14 @@ function animateAiAction(action){
   }else if(action.type==='taunt'){
     playSound('taunt');
     flash('radial-gradient(rgba(138,74,26,.15),transparent)');
+  }else if(action.type==='taunt_forced'){
+    if(aE)aE.classList.add('enemy-attacking');
+    if(dE){
+      if(action.damage>0){dE.classList.add('taking-damage');dmgNum(dE,action.damage,action.isPierced?'#ff4040':'#c08030');impact(dE);if(action.isPierced){dE.classList.add('crit-text');critText(dE)}}
+      if(action.counterDmg>0){aE.classList.add('taking-damage');dmgNum(aE,action.counterDmg,'#4080ff');impact(aE)}
+      if(action.reflectDmg>0){dmgNum(aE,action.reflectDmg,'#c0a030');}
+    }
+    playSound('taunt');
   }else if(action.type==='attack_blocked'||action.type==='crit_blocked'){
     if(aE)aE.classList.add('enemy-attacking');
     playSound('attack');
@@ -1700,7 +1708,18 @@ function processBattleUpdate(state){
     const pa=b.playerAction;
     const aE=el('playerRow').querySelector(`[data-idx="${pa.attackerIdx}"]`);
     const dE=el('enemyRow').querySelector(`[data-idx="${pa.defenderIdx}"]`);
-    if(dE&&pa.damage>0){
+    if(pa.type==='taunt_forced'){
+      if(dE&&pa.damage>0){
+        dmgNum(dE,pa.damage,pa.isPierced?'#ff4040':'#c08030');impact(dE);
+        if(pa.isPierced){critText(dE)}
+      }
+      if(aE&&pa.counterDmg>0){
+        dmgNum(aE,pa.counterDmg,'#4080ff');impact(aE);
+      }
+      if(aE&&pa.reflectDmg>0){
+        dmgNum(aE,pa.reflectDmg,'#c0a030');
+      }
+    }else if(dE&&pa.damage>0){
       dmgNum(dE,pa.damage,pa.isCrit?'#c08030':pa.type==='fireball'?'#e07830':'#c04030');
       impact(dE);if(pa.isCrit)critText(dE);
       if(pa.isDead){dE.classList.add('dying');deathFx(dE);playSound('death')}

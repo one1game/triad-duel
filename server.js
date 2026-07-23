@@ -2651,6 +2651,74 @@ function executeTaunt(battle, attIdx, _cardUpgrades) {
 	);
 }
 
+// ═══ TAUNT FORCED ATTACK (новая механика) ═══
+// Вызывается когда одна сторона использовала провокацию:
+// — случайная карта противника ПРИНУДИТЕЛЬНО атакует танка
+// — 5% шанс пробить защиту (полный урон, без контратаки)
+// — 95%: урон со снижением брони + танк контратакует 50% ATK
+function resolveTauntForcedAttack(attacker, defender, battle, attackerIsEnemy) {
+	const attackerBase = byId(attacker.baseId);
+	const variance = attackerBase.variance || 0;
+	let dmg = Math.max(
+		1,
+		Math.round(attacker.atk * (1 - variance + Math.random() * variance * 2)),
+	);
+
+	const isPierced = Math.random() < 0.05;
+	let counterDmg = 0;
+	let reflectDmg = 0;
+	let reducedDmg = dmg;
+
+	const attName = attacker.name;
+	const defName = defender.name;
+
+	if (isPierced) {
+		// Пробил защиту: полный урон, танк не контратакует
+		defender.hp = Math.max(0, defender.hp - dmg);
+		battle.battleLog.push(
+			`<span class="${attackerIsEnemy ? "log-enemy" : "log-player"}">${attName}</span> <span class="log-crit">ПРОБИЛ</span> защиту <span class="${attackerIsEnemy ? "log-player" : "log-enemy"}">${defName}</span> на <span class="log-dmg">${dmg}</span>! Провокация прорвана.`,
+		);
+	} else {
+		// Обычная атака: снижение брони танка
+		reducedDmg = dmg;
+		if (defender.baseId === "tank_04") reducedDmg = Math.max(1, reducedDmg - 1);
+		else if (defender.baseId === "tank_01" && defender.tauntActive) reducedDmg = Math.max(1, reducedDmg - 1);
+		if (defender.baseId === "mage_05") reducedDmg = Math.max(1, reducedDmg - 1);
+
+		defender.hp = Math.max(0, defender.hp - reducedDmg);
+
+		// Танк контратакует: 50% ATK
+		counterDmg = Math.floor(defender.atk * 0.5);
+		if (counterDmg > 0) {
+			attacker.hp = Math.max(0, attacker.hp - counterDmg);
+		}
+
+		// tank_02 отражение
+		if (defender.baseId === "tank_02" && defender.tauntActive) {
+			reflectDmg = 1;
+			attacker.hp = Math.max(0, attacker.hp - 1);
+		}
+
+		const totalBack = counterDmg + reflectDmg;
+		battle.battleLog.push(
+			`<span class="${attackerIsEnemy ? "log-enemy" : "log-player"}">${attName}</span> атакует <span class="${attackerIsEnemy ? "log-player" : "log-enemy"}">${defName}</span> (провокация) на <span class="log-dmg">${reducedDmg}</span>. <span class="${attackerIsEnemy ? "log-player" : "log-enemy"}">${defName}</span> контратакует на <span class="log-dmg">${totalBack}</span>`,
+		);
+	}
+
+	return {
+		type: "taunt_forced",
+		attackerIdx: battle[attackerIsEnemy ? "enemyCards" : "playerCards"].indexOf(attacker),
+		defenderIdx: battle[attackerIsEnemy ? "playerCards" : "enemyCards"].indexOf(defender),
+		damage: isPierced ? dmg : (reducedDmg || 0),
+		counterDmg,
+		reflectDmg,
+		isPierced,
+		attackerName: attName,
+		defenderName: defName,
+		attackerIsEnemy,
+	};
+}
+
 function executePlayerEndTurn(s, socket, userId) {
 	const battle = s.battle;
 	if (!battle || battle.gameOver) return;
@@ -2663,6 +2731,15 @@ function executePlayerEndTurn(s, socket, userId) {
 	battle.fireballActive = false;
 	battle.waitingForCritTarget = null;
 	battle.turnCount++;
+
+	// ═══ ПРОВОКАЦИЯ AI: случайная карта игрока принудительно атакует танка врага ═══
+	const enemyTaunter = battle.enemyCards.find((c) => c.tauntActive && c.hp > 0);
+	const alivePlayerCards = battle.playerCards.filter((c) => c.hp > 0);
+	if (enemyTaunter && alivePlayerCards.length > 0) {
+		const forcedPlayer = alivePlayerCards[Math.floor(Math.random() * alivePlayerCards.length)];
+		const tauntResult = resolveTauntForcedAttack(forcedPlayer, enemyTaunter, battle, false);
+		battle.playerAction = tauntResult;
+	}
 
 	// Clear enemy taunt (expires when the opponent's turn is over)
 	battle.enemyCards.forEach((c) => {
@@ -2752,6 +2829,27 @@ function executeAiTurn(battle, _cardUpgrades) {
 	const alivePlayers = battle.playerCards.filter((c) => c.hp > 0);
 	if (!aliveEnemies.length || !alivePlayers.length) return;
 
+	// ═══ ПРОВОКАЦИЯ ИГРОКА: случайный враг принудительно атакует танка ═══
+	let forcedTauntAction = null;
+	const playerTaunter = alivePlayers.find((c) => c.tauntActive && c.hp > 0);
+	if (playerTaunter && aliveEnemies.length > 0) {
+		const pool = aliveEnemies.filter(e => e.hp > 0);
+		if (pool.length > 0) {
+			const forcedEnemy = pool[Math.floor(Math.random() * pool.length)];
+			forcedTauntAction = resolveTauntForcedAttack(forcedEnemy, playerTaunter, battle, true);
+			// Убираем этого врага из пула — остальные действуют свободно
+			const forcedIdx = aliveEnemies.indexOf(forcedEnemy);
+			if (forcedIdx >= 0) aliveEnemies.splice(forcedIdx, 1);
+		}
+	}
+
+	if (forcedTauntAction) {
+		// Убираем мёртвых игроков из alivePlayers после принудительной атаки
+		for (let i = alivePlayers.length - 1; i >= 0; i--) {
+			if (alivePlayers[i].hp <= 0) alivePlayers.splice(i, 1);
+		}
+	}
+
 	// tank_03 rage passive: +2 ATK when HP < 50% (for AI tanks)
 	aliveEnemies.forEach((e) => {
 		if (e.baseId === "tank_03" && e.hp < e.maxHp * 0.5) {
@@ -2760,9 +2858,7 @@ function executeAiTurn(battle, _cardUpgrades) {
 		}
 	});
 
-	// Find taunter (player card forcing AI to target it)
-	const taunter = alivePlayers.find((c) => c.tauntActive);
-	// Do we already have an active taunt on our own side this round?
+	// AI side: есть ли уже активная провокация у нас?
 	const ourTaunterActive = aliveEnemies.find((c) => c.tauntActive);
 
 	// Helper: tank cover — 5% шанс сосед-танк заберёт атаку без урона
@@ -2865,7 +2961,7 @@ function executeAiTurn(battle, _cardUpgrades) {
 	// Pick the best legal target for a given actor/action (respects taunt).
 	const bestTargetFor = (actor, actionType) => {
 		const ignoresTaunt = actionType === "crit" && actor.baseId === "assa_03";
-		const candidates = taunter && !ignoresTaunt ? [taunter] : alivePlayers;
+		const candidates = alivePlayers;
 		let best = null;
 		let bestScore = -Infinity;
 		for (const t of candidates) {
@@ -3194,7 +3290,7 @@ function executeAiTurn(battle, _cardUpgrades) {
 		}
 	}
 
-	battle.aiAction = aiAction;
+	battle.aiAction = forcedTauntAction || aiAction;
 }
 
 function endGame(battle, victory, s, socket, sessionId, userId) {
