@@ -1772,7 +1772,7 @@ function backToShopFromResult(){el('resultOverlay').classList.remove('show');bac
 // ═══ AUTH ═══
 const AUTH_BASE='https://triad-duel-server.onrender.com';
 let accessToken=localStorage.getItem('td_access_token')||null;
-let pollTimer=null;
+let pollTimer=null,authGen=0;
 
 function saveGameState(state,screen){
   try{
@@ -1785,6 +1785,7 @@ function loadSavedState(){
 }
 
 async function startBotAuth(){
+  const gen=++authGen;
   el('authError').textContent='';
   el('tgLoginBtn').disabled=true;
   el('tgLoginBtn').textContent='Соединение...';
@@ -1792,23 +1793,25 @@ async function startBotAuth(){
   try{
     const res=await fetch(`${AUTH_BASE}/auth/bot/start`);
     const data=await res.json();
+    if(authGen!==gen)return;
     if(data.error){el('authError').textContent=data.error;resetAuthBtn();return}
     el('authStatus').textContent='Открой бота и нажми START';
     el('tgLoginBtn').textContent='Открыть бота';
     el('tgLoginBtn').disabled=false;
     el('tgLoginBtn').onclick=()=>window.open(data.bot_url,'_blank');
-    // Start polling
-    pollForAuth(data.code);
+    pollForAuth(data.code,gen);
   }catch(e){
+    if(authGen!==gen)return;
     el('authError').textContent='Ошибка сервера';
     resetAuthBtn();
   }
 }
 
-function pollForAuth(code){
+function pollForAuth(code,gen){
   if(pollTimer)clearInterval(pollTimer);
   let attempts=0;
   pollTimer=setInterval(async()=>{
+    if(authGen!==gen){clearInterval(pollTimer);return}
     attempts++;
     if(attempts>60){clearInterval(pollTimer);el('authError').textContent='Время истекло. Попробуй снова.';resetAuthBtn();return}
     try{
