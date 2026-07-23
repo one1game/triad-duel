@@ -1107,7 +1107,7 @@ function endPvpGame(roomId, winnerSide, reason) {
 		}
 		if (p.userId) {
 			saveBattleResult(
-				p.userId,
+				sess?._dbPlayerId || p.userId,
 				won ? "win" : "loss",
 				won ? reward : 0,
 				side === "A" ? battle.deckIdsA : battle.deckIdsB,
@@ -1718,7 +1718,7 @@ IO.on("connection", (socket) => {
 		s.battle = null;
 		s.shopCards = eraDef();
 		socket.emit("stateUpdate", getSessionState(sessionId));
-		if (userId) savePlayerData(userId, s);
+		// БД не трогаем — selectedDeck очищается только в памяти
 	});
 
 	// ═══ PREMIUM ═══
@@ -1803,7 +1803,6 @@ IO.on("connection", (socket) => {
 		if (!s) return;
 		if (!s.shopCards.length) s.shopCards = eraDef();
 		socket.emit("stateUpdate", getSessionState(sessionId));
-		if (userId) savePlayerData(userId, s);
 	});
 
 	// ═══ RESYNC (watchdog recovery) ═══
@@ -2162,7 +2161,7 @@ IO.on("connection", (socket) => {
 		// Сохраняем в БД
 		if (userId) {
 			saveBattleResult(
-				userId,
+				s._dbPlayerId || userId,
 				"loss",
 				-penalty,
 				battle.playerDeckIds || s.selectedDeck,
