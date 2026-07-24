@@ -734,6 +734,11 @@ async function grantReferralRewardIfEligible(inviteeTelegramId) {
 }
 
 async function savePlayerData(userId, data) {
+	// Не сохраняем дефолтные данные — только если сессия загружена из БД
+	if (!data._dbLoaded) {
+		console.warn("[save] skip: session not loaded from DB yet");
+		return;
+	}
 	const payload = {
 		gold: data.playerGold,
 		collection: data.playerCollection,
@@ -1591,6 +1596,7 @@ IO.on("connection", (socket) => {
 				username: decoded.username,
 			});
 			_playerData = dbPlayer;
+			sessions[sessionId]._dbLoaded = true;
 			sessions[sessionId]._dbPlayerId = dbPlayer.id;
 			sessions[sessionId].userId = userId;
 			sessions[sessionId].playerCollection = dbPlayer.collection || [];
@@ -1674,6 +1680,7 @@ IO.on("connection", (socket) => {
 				);
 			}
 
+			sessions[sessionId]._dbLoaded = true;
 			sessions[sessionId]._dbPlayerId = dbPlayer.id;
 			sessions[sessionId].userId = userId;
 			sessions[sessionId].playerGold = dbPlayer.gold;
