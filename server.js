@@ -2556,6 +2556,13 @@ function executeFireball(battle, attIdx, defIdx, cardUpgrades) {
 	const defender = battle.enemyCards[defIdx];
 	if (!defender || defender.hp <= 0) return null;
 
+	// Taunt mechanic: resolve forced attack (pierce/counter)
+	if (defender.tauntActive) {
+		const tauntRes = resolveTauntForcedAttack(attacker, defender, battle, true);
+		battle.playerAction = tauntRes;
+		return tauntRes;
+	}
+
 	const base = byId(attacker.baseId);
 	let dmg = attacker.atk + 2;
 
@@ -3142,6 +3149,10 @@ function executeAiTurn(battle, _cardUpgrades) {
 		aiAction = { type: "taunt", actorIdx, targetIdx: null, damage: 0 };
 	} else if (type === "crit") {
 		const tIdx = battle.playerCards.indexOf(target);
+		if (target.tauntActive) {
+			const tauntRes = resolveTauntForcedAttack(actor, target, battle, true);
+			aiAction = tauntRes;
+		} else {
 		let dmg = Math.round(actor.atk * 2);
 		if (actor.baseId === "assa_05") dmg = Math.round(actor.atk * 2.5);
 		if (actor.baseId === "assa_02" && target.hp < target.maxHp * 0.5) dmg += 2;
@@ -3196,8 +3207,13 @@ function executeAiTurn(battle, _cardUpgrades) {
 				defenderName: target.name,
 			};
 		}
-	} else if (type === "fireball") {
+	}
+} else if (type === "fireball") {
 		const tIdx = battle.playerCards.indexOf(target);
+		if (target.tauntActive) {
+			const tauntRes = resolveTauntForcedAttack(actor, target, battle, true);
+			aiAction = tauntRes;
+		} else {
 		let dmg = actor.atk + 2;
 		if (actor.baseId === "mage_10" && actor.hp < actor.maxHp * 0.5) dmg += 2;
 		if (actor.baseId === "mage_07" && target.type === "tank") dmg += 1;
@@ -3262,7 +3278,8 @@ function executeAiTurn(battle, _cardUpgrades) {
 				defenderName: target.name,
 			};
 		}
-	} else {
+	}
+} else {
 		// basic attack
 		const tIdx = battle.playerCards.indexOf(target);
 		let dmg = actor.atk;
