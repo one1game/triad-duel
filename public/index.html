@@ -776,7 +776,7 @@ try{
 }catch(e){}
 
 socket.on('init',(state)=>{
-  if(!accessToken){
+  if(!accessToken && !authInProgress){
     pendingInit=state;
     setTimeout(()=>{if(pendingInit){console.warn('[init] pendingInit timeout — no auth');pendingInit=null}},10000);
     return;
