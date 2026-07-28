@@ -543,6 +543,8 @@
   </div>
 </div>
 <script>
+// Telegram Mini App: скрываем authOverlay сразу (авто-авторизация), спиннер покажет статус подключения
+if(window.Telegram?.WebApp?.initData) document.getElementById('authOverlay').classList.remove('show');
 </script>
 <div class="screen" id="shopScreen">
   <video id="bgClep" class="shop-bg-video" autoplay muted loop playsinline><source src="img/game/fonsclep.mp4" type="video/mp4"></video>
