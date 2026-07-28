@@ -543,11 +543,6 @@
   </div>
 </div>
 <script>
-// Hide auth overlay and footer in Telegram Mini App (auto-auth via initData)
-if(window.Telegram?.WebApp?.initData){
-  document.getElementById('authOverlay').classList.remove('show');
-  // .footer hidden removed — always visible
-}
 </script>
 <div class="screen" id="shopScreen">
   <video id="bgClep" class="shop-bg-video" autoplay muted loop playsinline><source src="img/game/fonsclep.mp4" type="video/mp4"></video>
@@ -740,15 +735,25 @@ function setBattleButton(visible,active){
 const socket=io(window.SERVER_URL);
 let gameState=null;
 
+showLoading('Подключение к серверу...');
+
+socket.on('connect_error',(err)=>{
+  console.warn('[socket] connect_error:',err.message);
+  showLoading('Не удаётся подключиться, пробуем снова...');
+});
+socket.io.on('reconnect_attempt',(n)=>{
+  showLoading('Переподключение ('+n+')...');
+});
+
 socket.on('connect',()=>{
+  hideLoading();
   console.log('[socket] connected:',socket.id);
   if(isTelegramMiniApp){
     // Auto-auth via Telegram initData
-    accessToken='tg_'+socket.id; // Mini App auth bypass — initData replaces JWT
+    authInProgress=true;
     const initData=window.Telegram.WebApp.initData;
     console.log('[miniapp] sending auth_miniapp...');
     socket.emit('auth_miniapp',{initData});
-    el('authOverlay').classList.remove('show');
   }else if(accessToken){
     socket.emit('auth',{access_token:accessToken});
   }else if(isLocal){

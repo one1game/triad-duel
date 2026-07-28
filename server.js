@@ -1418,6 +1418,9 @@ function handlePvpAction(roomId, sessionId, action) {
 	endPvpTurn(roomId);
 }
 
+// ═══ HEALTH CHECK (keepalive for Render free tier) ═══
+APP.get("/health", (_req, res) => res.sendStatus(200));
+
 // ═══ AUTH ENDPOINTS ═══
 // Step 1: request auth from site → get code + bot link
 APP.get("/auth/bot/start", (_req, res) => {
@@ -2236,6 +2239,9 @@ IO.on("connection", (socket) => {
 				if (sessions[sessionId] && sessions[sessionId].userId === userId)
 					delete sessions[sessionId];
 			}, 120000);
+		} else if (s && !userId) {
+			// не успел авторизоваться — чистим сразу, нечего сохранять
+			delete sessions[sessionId];
 		}
 	});
 });
