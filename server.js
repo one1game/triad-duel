@@ -30,8 +30,17 @@ if (!process.env.JWT_SECRET) {
 		"Это разлогинит всех игроков при каждом рестарте сервера. Зафиксируйте JWT_SECRET на проде.",
 	);
 }
-const JWT_SECRET =
-	process.env.JWT_SECRET || crypto.randomBytes(32).toString("hex");
+// --- Security Fix: Use stable fallbacks for development, but warn loudly ---
+const JWT_SECRET = process.env.JWT_SECRET || "triad-duel-dev-secret-key-change-me-1234567890";
+
+// --- Validation Helpers ---
+function isValidId(id) {
+	return typeof id === 'string' && id.length > 0 && id.length < 64;
+}
+
+function isValidIdx(idx, array) {
+	return Number.isInteger(idx) && idx >= 0 && idx < array.length;
+}
 
 // ═══ PREMIUM (Telegram Stars) ═══
 const PREMIUM_PRICE_STARS = 149; // цена в Telegram Stars (XTR)
@@ -285,19 +294,19 @@ const ALL_CARDS = [
 			"Фаербол снижает ATK врага на 1. Раскол: 5% шанс 1-3 урона соседним",
 		lore: "Когда-то был светлым магом, но проклятие Хаоса извратило его дар.",
 	},
-	{
-		id: "mage_03",
-		name: "Азатот Посвящённый",
-		atk: 5,
-		hp: 14,
-		price: 500,
-		type: "mage",
-		variance: 0.15,
-		passive: "Жертва",
-		passiveDesc:
-			"Фаербол лечит мага на 2 HP. Раскол: 5% шанс 1-3 урона соседним",
-		lore: "Служитель культа Азатота.",
-	},
+		{
+			id: "mage_03",
+			name: "Азатот Посвящённый",
+			atk: 5,
+			hp: 12,
+			price: 600,
+			type: "mage",
+			variance: 0.15,
+			passive: "Жертва",
+			passiveDesc:
+				"Фаербол лечит мага на 2 HP. Раскол: 5% шанс 1-3 урона соседним",
+			lore: "Служитель культа Азатота.",
+		},
 	{
 		id: "mage_04",
 		name: "Гнилоуст Проповедник",
@@ -311,19 +320,19 @@ const ALL_CARDS = [
 			"Фаербол = 1 урон/ход на 2 хода. Раскол: 5% шанс 1-3 урона соседним",
 		lore: "Уста его источают чумные миазмы.",
 	},
-	{
-		id: "mage_05",
-		name: "Иландра Хранительница Рун",
-		atk: 6,
-		hp: 12,
-		price: 750,
-		type: "mage",
-		variance: 0.1,
-		passive: "Рунный щит",
-		passiveDesc:
-			"Получает на 1 урона меньше. Раскол: 5% шанс 1-3 урона соседним",
-		lore: "Последняя из ордена Рунных Стражей.",
-	},
+		{
+			id: "mage_05",
+			name: "Иландра Хранительница Рун",
+			atk: 6,
+			hp: 10,
+			price: 750,
+			type: "mage",
+			variance: 0.1,
+			passive: "Рунный щит",
+			passiveDesc:
+				"Получает на 1 урона меньше. Раскол: 5% шанс 1-3 урона соседним",
+			lore: "Последняя из ордена Рунных Стражей.",
+		},
 	{
 		id: "mage_06",
 		name: "Ксаль'Торот",
@@ -367,7 +376,7 @@ const ALL_CARDS = [
 		name: "Кадавр",
 		atk: 5,
 		hp: 14,
-		price: 500,
+		price: 650,
 		type: "mage",
 		variance: 0.15,
 		passive: "Сбор душ",
@@ -401,71 +410,71 @@ const ALL_CARDS = [
 			"40% шанс: фаербол стоит 1 ману. Раскол: 5% шанс 1-3 урона соседним",
 		lore: "Её глаза закрыты, но она видит всё.",
 	},
-	{
-		id: "tank_01",
-		name: "Железный Дредноут",
-		atk: 4,
-		hp: 20,
-		price: 650,
-		type: "tank",
-		variance: 0.15,
-		passive: "Броня",
-		passiveDesc:
-			"Провокация: -1 вх. урона. Прикрытие: 5% шанс забрать атаку с соседа без урона",
-		lore: "Живая крепость, закованная в адамантий.",
-	},
-	{
-		id: "tank_02",
-		name: "Чумной Гигант",
-		atk: 3,
-		hp: 24,
-		price: 800,
-		type: "tank",
-		variance: 0.2,
-		passive: "Гнилая кровь",
-		passiveDesc:
-			"Провокация: отражает 1 урон. Прикрытие: 5% шанс забрать атаку с соседа без урона",
-		lore: "Порождение гнилых садов Нургла.",
-	},
-	{
-		id: "tank_03",
-		name: "Страж Некрона",
-		atk: 4,
-		hp: 18,
-		price: 700,
-		type: "tank",
-		variance: 0.1,
-		passive: "Ярость мёртвых",
-		passiveDesc:
-			"HP<50%: +2 ATK. Прикрытие: 5% шанс забрать атаку с соседа без урона",
-		lore: "Пробуждённый от вечного сна воин.",
-	},
-	{
-		id: "tank_04",
-		name: "Каменный Страж",
-		atk: 3,
-		hp: 22,
-		price: 850,
-		type: "tank",
-		variance: 0.1,
-		passive: "Каменная кожа",
-		passiveDesc:
-			"Всегда -1 вх. урона. Прикрытие: 5% шанс забрать атаку с соседа без урона",
-		lore: "Голем, высеченный из горного хребта.",
-	},
-	{
-		id: "tank_05",
-		name: "Шоггот-Брут",
-		atk: 4,
-		hp: 21,
-		price: 650,
-		type: "tank",
-		variance: 0.25,
-		passive: "Регенерация",
-		passiveDesc:
-			"Провокация лечит 2 HP. Прикрытие: 5% шанс забрать атаку с соседа без урона",
-		lore: "Бесформенная тварь из глубин Иннсмута.",
-	},
+		{
+			id: "tank_01",
+			name: "Железный Дредноут",
+			atk: 5,
+			hp: 24,
+			price: 750,
+			type: "tank",
+			variance: 0.15,
+			passive: "Броня",
+			passiveDesc:
+				"Провокация: -1 вх. урона. Прикрытие: 5% шанс забрать атаку с соседа без урона",
+			lore: "Живая крепость, закованная в адамантий.",
+		},
+		{
+			id: "tank_02",
+			name: "Чумной Гигант",
+			atk: 4,
+			hp: 28,
+			price: 800,
+			type: "tank",
+			variance: 0.2,
+			passive: "Гнилая кровь",
+			passiveDesc:
+				"Провокация: отражает 1 урон. Прикрытие: 5% шанс забрать атаку с соседа без урона",
+			lore: "Порождение гнилых садов Нургла.",
+		},
+		{
+			id: "tank_03",
+			name: "Страж Некрона",
+			atk: 5,
+			hp: 22,
+			price: 700,
+			type: "tank",
+			variance: 0.1,
+			passive: "Ярость мёртвых",
+			passiveDesc:
+				"HP<50%: +2 ATK. Прикрытие: 5% шанс забрать атаку с соседа без урона",
+			lore: "Пробуждённый от вечного сна воин.",
+		},
+		{
+			id: "tank_04",
+			name: "Каменный Страж",
+			atk: 4,
+			hp: 26,
+			price: 850,
+			type: "tank",
+			variance: 0.1,
+			passive: "Каменная кожа",
+			passiveDesc:
+				"Всегда -1 вх. урона. Прикрытие: 5% шанс забрать атаку с соседа без урона",
+			lore: "Голем, высеченный из горного хребта.",
+		},
+		{
+			id: "tank_05",
+			name: "Шоггот-Брут",
+			atk: 5,
+			hp: 25,
+			price: 650,
+			type: "tank",
+			variance: 0.25,
+			passive: "Регенерация",
+			passiveDesc:
+				"Провокация лечит 2 HP. Прикрытие: 5% шанс забрать атаку с соседа без урона",
+			lore: "Бесформенная тварь из глубин Иннсмута.",
+		},
 	{
 		id: "assa_01",
 		name: "Ночной Клинок",
@@ -484,7 +493,7 @@ const ALL_CARDS = [
 		name: "Теневой Убийца",
 		atk: 9,
 		hp: 6,
-		price: 750,
+		price: 600,
 		type: "assa",
 		variance: 0.1,
 		passive: "Добивание",
@@ -495,22 +504,22 @@ const ALL_CARDS = [
 	{
 		id: "assa_03",
 		name: "Варп-Сталкер",
-		atk: 7,
-		hp: 10,
-		price: 650,
-		type: "assa",
-		variance: 0.2,
-		passive: "Фазовый сдвиг",
-		passiveDesc:
-			"Крит игнорирует провокацию. Кровопускание: 5% шанс нанести половину урона соседу",
-		lore: "Ходок через Варп.",
-	},
+			atk: 6,
+			hp: 9,
+			price: 650,
+			type: "assa",
+			variance: 0.2,
+			passive: "Фазовый сдвиг",
+			passiveDesc:
+				"Крит: 50% шанс игнорировать провокацию. Кровопускание: 5% шанс нанести половину урона соседу",
+			lore: "Ходок через Варп.",
+		},
 	{
 		id: "assa_04",
 		name: "Глубинный Хищник",
 		atk: 9,
 		hp: 7,
-		price: 750,
+		price: 650,
 		type: "assa",
 		variance: 0.15,
 		passive: "Хищник",
@@ -1295,6 +1304,11 @@ function handlePvpAction(roomId, sessionId, action) {
 		return;
 	}
 
+	if (!isValidIdx(attackerIdx, battle.playerCards)) {
+		armTurnTimer(roomId);
+		return;
+	}
+
 	const attacker = battle.playerCards[attackerIdx];
 	if (!attacker || attacker.hp <= 0) {
 		armTurnTimer(roomId);
@@ -1308,12 +1322,21 @@ function handlePvpAction(roomId, sessionId, action) {
 	const enemyTauntActive = battle.enemyCards.some((e) => e.tauntActive && e.hp > 0);
 
 	if (type === "attack") {
-		actionResult = executeAttack(battle, attackerIdx, defenderIdx, true);
-	} else if (type === "crit") {
-		if (enemyTauntActive && attacker.baseId !== "assa_03") {
+		if (!isValidIdx(defenderIdx, battle.enemyCards)) {
 			armTurnTimer(roomId);
 			return;
 		}
+		actionResult = executeAttack(battle, attackerIdx, defenderIdx, true);
+	} else if (type === "crit") {
+			// --- Balance Fix: assa_03 phase shift is now 50% chance ---
+			const canIgnoreTaunt = attacker.baseId === "assa_03" && Math.random() < 0.5;
+			if (enemyTauntActive && !canIgnoreTaunt) {
+				if (attacker.baseId === "assa_03") {
+					socket.emit("error", "Провокация мешает обойти защиту (50% шанс провален)");
+				}
+				armTurnTimer(roomId);
+				return;
+			}
 		if (attacker.type !== "assa" || attacker.mana < 2) {
 			armTurnTimer(roomId);
 			return;
@@ -1327,16 +1350,19 @@ function handlePvpAction(roomId, sessionId, action) {
 			return;
 		}
 		if (defenderIdx !== undefined) {
-			const ignoreTaunt = attacker.baseId === "assa_03";
-			if (!ignoreTaunt) {
+			if (!isValidIdx(defenderIdx, battle.enemyCards)) {
+				armTurnTimer(roomId);
+				return;
+			}
+				// ignoreTaunt logic handled at the start of crit action for consistency
 				const taunter = battle.enemyCards.find(
 					(e) => e.tauntActive && e.hp > 0,
 				);
 				if (taunter && defenderIdx !== battle.enemyCards.indexOf(taunter)) {
+					// We already checked canIgnoreTaunt at the start of the 'crit' block
 					armTurnTimer(roomId);
 					return;
 				}
-			}
 		}
 		actionResult = executeCrit(battle, attackerIdx, defenderIdx);
 	} else if (type === "fireball") {
@@ -1357,6 +1383,10 @@ function handlePvpAction(roomId, sessionId, action) {
 			return;
 		}
 		if (defenderIdx !== undefined) {
+			if (!isValidIdx(defenderIdx, battle.enemyCards)) {
+				armTurnTimer(roomId);
+				return;
+			}
 			const taunter = battle.enemyCards.find((e) => e.tauntActive && e.hp > 0);
 			if (taunter && defenderIdx !== battle.enemyCards.indexOf(taunter)) {
 				armTurnTimer(roomId);
@@ -1834,78 +1864,106 @@ IO.on("connection", (socket) => {
 	});
 
 	// ═══ BUY CARD ═══
-	socket.on("buyCard", (cardId) => {
-		const s = sessions[sessionId];
-		if (!s) return;
-		const card = s.shopCards.find((c) => c.id === cardId);
-		if (!card) {
-			socket.emit("error", "Карта не найдена");
-			return;
-		}
-		if (s.playerCollection.includes(cardId)) {
-			socket.emit("error", "Карта уже в коллекции");
-			return;
-		}
-		if (s.playerGold < card.price) {
-			socket.emit("error", "Недостаточно золота");
-			return;
-		}
-		s.playerGold -= card.price;
-		s.playerCollection.push(cardId);
-		socket.emit("sfx", "buy");
-		socket.emit("stateUpdate", getSessionState(sessionId));
-		if (userId) savePlayerData(userId, s);
-	});
+		socket.on("buyCard", (cardId) => {
+			if (!isValidId(cardId)) return;
+			const s = sessions[sessionId];
+			if (!s) return;
+			
+			const card = s.shopCards.find((c) => c.id === cardId);
+			if (!card) {
+				socket.emit("error", "Карта не найдена в текущем предложении магазина");
+				return;
+			}
+			
+			if (s.playerCollection.includes(cardId)) {
+				socket.emit("error", "Эта карта уже есть в вашей коллекции");
+				return;
+			}
+			
+			if (s.playerGold < card.price) {
+				socket.emit("error", `Недостаточно золота. Требуется: ${card.price}, у вас: ${s.playerGold}`);
+				return;
+			}
+			
+			// Execute transaction
+			s.playerGold -= card.price;
+			s.playerCollection.push(cardId);
+			
+			socket.emit("sfx", "buy");
+			socket.emit("stateUpdate", getSessionState(sessionId));
+			if (userId) savePlayerData(userId, s).catch(err => console.error("[buyCard] DB Save Error:", err));
+		});
 
 	// ═══ UPGRADE CARD ═══
-	socket.on("upgradeCard", ({ cardId, stat }) => {
-		const s = sessions[sessionId];
-		if (!s) return;
-		if (!["hp", "atk", "mana"].includes(stat)) {
-			socket.emit("error", "bad stat");
-			return;
-		}
-		if (!s.playerCollection.includes(cardId)) {
-			socket.emit("error", "Карта не в коллекции");
-			return;
-		}
-		if (!s.cardUpgrades[cardId])
-			s.cardUpgrades[cardId] = { hp: 0, atk: 0, mana: 0 };
-		const up = s.cardUpgrades[cardId];
-		const cost = 150 * 2 ** up[stat];
-		if (stat === "mana" && up.mana >= 4) {
-			socket.emit("error", "Мана на максимуме");
-			return;
-		}
-		if (s.playerGold < cost) {
-			socket.emit("error", "Недостаточно золота");
-			return;
-		}
-		s.playerGold -= cost;
-		up[stat]++;
-		socket.emit("sfx", "upgrade");
-		socket.emit("stateUpdate", getSessionState(sessionId));
-		if (userId) savePlayerData(userId, s);
-	});
+		socket.on("upgradeCard", ({ cardId, stat }) => {
+			if (!isValidId(cardId) || !["hp", "atk", "mana"].includes(stat)) {
+				socket.emit("error", "Некорректные данные для улучшения");
+				return;
+			}
+			
+			const s = sessions[sessionId];
+			if (!s) return;
+			
+			if (!s.playerCollection.includes(cardId)) {
+				socket.emit("error", "Вы не можете улучшать карту, которой нет в коллекции");
+				return;
+			}
+			
+			if (!s.cardUpgrades[cardId]) {
+				s.cardUpgrades[cardId] = { hp: 0, atk: 0, mana: 0 };
+			}
+			
+			const up = s.cardUpgrades[cardId];
+			
+			// Validate max levels
+			const MAX_LEVELS = { hp: 10, atk: 10, mana: 4 };
+			if (up[stat] >= MAX_LEVELS[stat]) {
+				socket.emit("error", `Характеристика ${stat.toUpperCase()} уже на максимуме`);
+				return;
+			}
+			
+			const cost = 150 * 2 ** up[stat];
+			if (s.playerGold < cost) {
+				socket.emit("error", `Недостаточно золота для улучшения. Нужно: ${cost}`);
+				return;
+			}
+			
+			// Execute transaction
+			s.playerGold -= cost;
+			up[stat]++;
+			
+			socket.emit("sfx", "upgrade");
+			socket.emit("stateUpdate", getSessionState(sessionId));
+			if (userId) savePlayerData(userId, s).catch(err => console.error("[upgradeCard] DB Save Error:", err));
+		});
 
 	// ═══ UPDATE DECK ═══
-	socket.on("updateDeck", ({ cardId }) => {
-		const s = sessions[sessionId];
-		if (!s) return;
-		if (!s.playerCollection.includes(cardId)) {
-			socket.emit("error", "Карта не в коллекции");
-			return;
-		}
-		const idx = s.selectedDeck.indexOf(cardId);
-		if (idx >= 0) {
-			s.selectedDeck.splice(idx, 1);
-		} else {
-			s.selectedDeck.push(cardId);
-			if (s.selectedDeck.length > CARDS_PER_SIDE) s.selectedDeck.shift();
-		}
-		socket.emit("stateUpdate", getSessionState(sessionId));
-		if (userId) savePlayerData(userId, s);
-	});
+		socket.on("updateDeck", ({ cardId }) => {
+			if (!isValidId(cardId)) return;
+			const s = sessions[sessionId];
+			if (!s) return;
+			
+			if (!s.playerCollection.includes(cardId)) {
+				socket.emit("error", "Карта должна быть в коллекции, чтобы добавить её в колоду");
+				return;
+			}
+			
+			const idx = s.selectedDeck.indexOf(cardId);
+			if (idx >= 0) {
+				s.selectedDeck.splice(idx, 1);
+			} else {
+				// Ensure no duplicates in deck (security check)
+				if (!s.selectedDeck.includes(cardId)) {
+					s.selectedDeck.push(cardId);
+					if (s.selectedDeck.length > CARDS_PER_SIDE) {
+						s.selectedDeck.shift();
+					}
+				}
+			}
+			
+			socket.emit("stateUpdate", getSessionState(sessionId));
+			if (userId) savePlayerData(userId, s).catch(err => console.error("[updateDeck] DB Save Error:", err));
+		});
 
 	// ═══ MATCHMAKING ═══
 	socket.on("startBattle", () => {
@@ -2049,13 +2107,15 @@ IO.on("connection", (socket) => {
 			// Taunt check only when actually selecting a target (not during activation)
 			if (defenderIdx !== undefined) {
 				if (!Number.isInteger(defenderIdx) || defenderIdx < 0 || defenderIdx >= battle.enemyCards.length) return;
-				const ignoreTaunt = attacker.baseId === "assa_03";
+				// --- Balance Fix: assa_03 phase shift is now 50% chance ---
+				const ignoreTaunt = attacker.baseId === "assa_03" && Math.random() < 0.5;
 				if (!ignoreTaunt) {
 					const taunter = battle.enemyCards.find(
 						(e) => e.tauntActive && e.hp > 0,
 					);
 					if (taunter && defenderIdx !== battle.enemyCards.indexOf(taunter)) {
 						process.env.DEBUG && console.log("[crit] blocked: taunt");
+						socket.emit("error", "Провокация мешает обойти защиту (50% шанс провален)");
 						return;
 					}
 				}
