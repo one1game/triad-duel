@@ -2024,7 +2024,7 @@ IO.on("connection", (socket) => {
 
 	socket.on("pvpAction", (action) => {
 		const s = sessions[sessionId];
-		if (!s?.pvpRoomId) return;
+		if (!s?.pvpRoomId || !action || typeof action !== "object") return;
 		handlePvpAction(s.pvpRoomId, sessionId, action);
 	});
 

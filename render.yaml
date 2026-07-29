@@ -6,3 +6,10 @@ services:
     startCommand: node server.js
     plan: free
     autoDeploy: true
+    envVars:
+      - key: JWT_SECRET
+        sync: false  # Установи в Render Dashboard → Environment → случайную строку (например, openssl rand -hex 64)
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false  # Установи в Render Dashboard — токен от @BotFather
+      - key: TELEGRAM_WEBHOOK_SECRET
+        sync: false  # Установи в Render Dashboard — случайная строка для вебхуков (опционально)
