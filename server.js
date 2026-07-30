@@ -1670,7 +1670,7 @@ IO.on("connection", (socket) => {
 			}
 
 			console.log(`[auth] tg${decoded.telegram_id} -> ${sessionId}`);
-			socket.emit("init", getSessionState(sessionId));
+			socket.emit("init", getSessionState(sessionId, true));
 		} catch (e) {
 			console.error("[auth error]", e.message);
 			socket.emit("error", "Ошибка авторизации");
@@ -1750,7 +1750,7 @@ IO.on("connection", (socket) => {
 
 			console.log(`[auth:miniapp] tg${telegramId} -> ${sessionId}`);
 			logEvent(telegramId, "session_start", { isNew, source: "miniapp" });
-			socket.emit("init", getSessionState(sessionId));
+			socket.emit("init", getSessionState(sessionId, true));
 		} catch (e) {
 			console.error("[auth:miniapp error]", e.message);
 			socket.emit("error", "Ошибка авторизации Mini App");
@@ -2308,10 +2308,10 @@ IO.on("connection", (socket) => {
 
 // ═══ GAME LOGIC ═══
 
-function getSessionState(sessionId) {
+function getSessionState(sessionId, includeAllCards) {
 	const s = sessions[sessionId];
 	if (!s) return null;
-	return {
+	const state = {
 		playerGold: s.playerGold,
 		playerCollection: s.playerCollection,
 		cardUpgrades: s.cardUpgrades,
@@ -2323,8 +2323,9 @@ function getSessionState(sessionId) {
 		wins: s.wins || 0,
 		losses: s.losses || 0,
 		mmr: calcMMR(s),
-		allCards: ALL_CARDS,
 	};
+	if (includeAllCards) state.allCards = ALL_CARDS;
+	return state;
 }
 
 function getBattleState(b) {
