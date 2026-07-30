@@ -227,10 +227,10 @@
   .ability-panel{display:flex;gap:12px;justify-content:center;align-items:center;min-height:44px;padding:8px;background:rgba(0,0,0,.2);border-radius:4px;border:1px solid transparent;transition:border-color .3s}.ability-panel:has(.ability-btn){border-color:var(--border-dim);background:rgba(12,12,15,.6)}
   .action-hint{font-size:12px;color:var(--text-dim);text-align:center;letter-spacing:1px;font-family:'Inter',sans-serif;min-height:20px;transition:color .3s}.action-hint .key{color:var(--accent-gold-bright);font-weight:600}
   .round-timer{text-align:center;padding:6px 0}.round-timer-text{font-family:'Cinzel',serif;font-size:22px;font-weight:800;color:#c08030;letter-spacing:3px}.round-timer-text.warning{color:#e0a040}.round-timer-text.danger{color:#e05040;animation:pulse-enemy 1s ease-in-out infinite}
-  .battle-log{background:rgba(16,16,20,.8);border-bottom:1px solid rgba(255,255,255,.05);padding:8px 20px;margin-top:12px;border-radius:8px;max-height:80px;overflow-y:auto;font-family:'Inter',sans-serif;font-size:11px;line-height:1.65;color:var(--text-dim);text-align:center;width:100%;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.08) transparent;flex-shrink:0;position:relative}
+  .battle-log{background:rgba(16,16,20,.8);border-bottom:1px solid rgba(255,255,255,.05);padding:8px 20px;margin-top:12px;border-radius:8px;height:80px;overflow-y:auto;font-family:'Inter',sans-serif;font-size:11px;line-height:1.65;color:var(--text-dim);text-align:center;width:100%;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.08) transparent;flex-shrink:0;position:relative}
   .battle-log::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:linear-gradient(180deg,transparent,rgba(200,60,60,.3),rgba(200,180,120,.15),transparent)}
   .battle-log::-webkit-scrollbar{width:3px}.battle-log::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:2px}
-  .battle-log:empty{display:none}
+  .battle-log:empty{opacity:.35}
   .battle-log .log-entry{padding:3px 0;border-bottom:1px solid rgba(255,255,255,.015);animation:lfi .35s ease;font-size:11px}
   .battle-log .log-entry:last-child{border-bottom:none}
   @keyframes lfi{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
