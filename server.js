@@ -618,6 +618,29 @@ function shuffle(arr) {
 function byId(id) {
 	return ALL_CARDS.find((c) => c.id === id);
 }
+
+// ═══ DECK VALIDATION ═══
+function isValidDeck(deckIds) {
+	if (!Array.isArray(deckIds) || deckIds.length !== CARDS_PER_SIDE) return false;
+	const types = deckIds.map(id => byId(id)?.type).filter(Boolean);
+	if (types.length !== CARDS_PER_SIDE) return false;
+	const counts = { mage: 0, tank: 0, assa: 0 };
+	types.forEach(t => { counts[t] = (counts[t] || 0) + 1; });
+	return counts.mage === 1 && counts.tank === 1 && counts.assa === 1;
+}
+
+function getFreeSlotType(selectedDeck) {
+	const counts = { mage: 0, tank: 0, assa: 0 };
+	selectedDeck.forEach(id => {
+		const c = byId(id);
+		if (c) counts[c.type]++;
+	});
+	for (const t of ["tank", "mage", "assa"]) {
+		if (counts[t] === 0) return t;
+	}
+	return null;
+}
+
 function eraDef() {
 	const pool = ALL_CARDS.filter(
 		(c) => !["mage_01", "tank_01", "assa_01"].includes(c.id),
@@ -884,14 +907,20 @@ function buildDeckCards(deckIds, cardUpgrades) {
 
 // ═══ PVE BATTLE ═══
 function beginPveBattle(s, socket, sessionId) {
-	if (s.selectedDeck.length !== CARDS_PER_SIDE) {
-		socket.emit("error", "Выберите ровно 3 карты");
+	if (!isValidDeck(s.selectedDeck)) {
+		socket.emit("error", "Колода должна содержать ровно 1 мага, 1 танка и 1 ассасина");
 		return;
 	}
-	const npcPool = ALL_CARDS.filter((c) => !s.selectedDeck.includes(c.id));
-	const enemyDeck = shuffle(npcPool)
-		.slice(0, CARDS_PER_SIDE)
-		.map((c) => c.id);
+	// 🤖 БОТ ТОЖЕ ВЫБИРАЕТ ПО ПРАВИЛАМ: 1 маг + 1 танк + 1 ассасин
+	const playerIds = new Set(s.selectedDeck);
+	const availableMages = shuffle(ALL_CARDS.filter(c => c.type === "mage" && !playerIds.has(c.id)));
+	const availableTanks = shuffle(ALL_CARDS.filter(c => c.type === "tank" && !playerIds.has(c.id)));
+	const availableAssas = shuffle(ALL_CARDS.filter(c => c.type === "assa" && !playerIds.has(c.id)));
+	const enemyDeck = [
+		availableMages[0].id,
+		availableTanks[0].id,
+		availableAssas[0].id,
+	];
 	const bot = BOT_POOL[Math.floor(Math.random() * BOT_POOL.length)];
 	s.battle = seedBattle(s.selectedDeck, enemyDeck, s.cardUpgrades);
 	s.battle.enemyName = bot.name;
@@ -1639,6 +1668,10 @@ IO.on("connection", (socket) => {
 			if (!isReconnect || sessions[sessionId].playerGold == null) {
 				sessions[sessionId].playerGold = dbPlayer.gold;
 				sessions[sessionId].selectedDeck = dbPlayer.selected_deck || [];
+				if (sessions[sessionId].selectedDeck.length > 0 && !isValidDeck(sessions[sessionId].selectedDeck)) {
+					console.log(`[migration] invalid deck for tg${userId}, resetting`);
+					sessions[sessionId].selectedDeck = [];
+				}
 				sessions[sessionId].wins = dbPlayer.wins || 0;
 				sessions[sessionId].losses = dbPlayer.losses || 0;
 			}
@@ -1720,6 +1753,11 @@ IO.on("connection", (socket) => {
 			sessions[sessionId].playerCollection = dbPlayer.collection || [];
 			sessions[sessionId].cardUpgrades = dbPlayer.card_upgrades || {};
 			sessions[sessionId].selectedDeck = dbPlayer.selected_deck || [];
+			// Если колода невалидна — сбрасываем (миграция на новый формат 1+1+1)
+			if (sessions[sessionId].selectedDeck.length > 0 && !isValidDeck(sessions[sessionId].selectedDeck)) {
+				console.log(`[migration] invalid deck for tg${userId}, resetting`);
+				sessions[sessionId].selectedDeck = [];
+			}
 			sessions[sessionId].wins = dbPlayer.wins || 0;
 			sessions[sessionId].losses = dbPlayer.losses || 0;
 			sessions[sessionId].premiumUntil = dbPlayer.premium_until || null;
@@ -1939,31 +1977,52 @@ IO.on("connection", (socket) => {
 
 	// ═══ UPDATE DECK ═══
 		socket.on("updateDeck", ({ cardId }) => {
-			if (!isValidId(cardId)) return;
-			const s = sessions[sessionId];
-			if (!s) return;
-			
-			if (!s.playerCollection.includes(cardId)) {
-				socket.emit("error", "Карта должна быть в коллекции, чтобы добавить её в колоду");
-				return;
-			}
-			
-			const idx = s.selectedDeck.indexOf(cardId);
-			if (idx >= 0) {
-				s.selectedDeck.splice(idx, 1);
-			} else {
-				// Ensure no duplicates in deck (security check)
-				if (!s.selectedDeck.includes(cardId)) {
-					s.selectedDeck.push(cardId);
-					if (s.selectedDeck.length > CARDS_PER_SIDE) {
-						s.selectedDeck.shift();
-					}
-				}
-			}
-			
+		if (!isValidId(cardId)) return;
+		const s = sessions[sessionId];
+		if (!s) return;
+
+		const card = byId(cardId);
+		if (!card) {
+			socket.emit("error", "Карта не найдена");
+			return;
+		}
+
+		if (!s.playerCollection.includes(cardId)) {
+			socket.emit("error", "Карта должна быть в коллекции");
+			return;
+		}
+
+		const idx = s.selectedDeck.indexOf(cardId);
+
+		// Если карта уже в колоде — убираем
+		if (idx >= 0) {
+			s.selectedDeck.splice(idx, 1);
 			socket.emit("stateUpdate", getSessionState(sessionId));
-			if (userId) savePlayerData(userId, s).catch(err => console.error("[updateDeck] DB Save Error:", err));
+			if (userId) savePlayerData(userId, s).catch(err =>
+				console.error("[updateDeck] DB Save Error:", err));
+			return;
+		}
+
+		// Проверяем занятые типы
+		const counts = { mage: 0, tank: 0, assa: 0 };
+		s.selectedDeck.forEach(id => {
+			const c = byId(id);
+			if (c) counts[c.type]++;
 		});
+
+		if (counts[card.type] >= 1) {
+			const typeNames = { tank: "🛡️ танк", mage: "🔮 маг", assa: "⚔️ ассасин" };
+			socket.emit("error", `В колоде уже есть ${typeNames[card.type]}. Сначала убери текущую карту этого типа.`);
+			return;
+		}
+
+		// Добавляем карту
+		s.selectedDeck.push(cardId);
+
+		socket.emit("stateUpdate", getSessionState(sessionId));
+		if (userId) savePlayerData(userId, s).catch(err =>
+			console.error("[updateDeck] DB Save Error:", err));
+	});
 
 	// ═══ MATCHMAKING ═══
 	socket.on("startBattle", () => {
@@ -1976,8 +2035,8 @@ IO.on("connection", (socket) => {
 	socket.on("findMatch", () => {
 		const s = sessions[sessionId];
 		console.log(`[match] findMatch sessionId=${sessionId} deck=${s?.selectedDeck?.length} queue=${matchQueue.length}`);
-		if (!s || s.selectedDeck.length !== CARDS_PER_SIDE) {
-			socket.emit("error", "Выберите ровно 3 карты");
+		if (!s || !isValidDeck(s.selectedDeck)) {
+			socket.emit("error", "Соберите колоду: 1 маг + 1 танк + 1 ассасин");
 			return;
 		}
 		if (s.pvpRoomId || matchQueue.find((q) => q.sessionId === sessionId))

@@ -69,6 +69,13 @@
   @import url('https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Nosifer&family=Cinzel:wght@400;600;800&family=Inter:wght@300;400;600&display=swap');
   :root{--bg-deep:#030304;--bg-surface:#0c0c0f;--bg-panel:rgba(12,12,15,.85);--border-dim:#1a1a1f;--border-glow:#2a2a30;--accent-gold:#c4a265;--accent-gold-bright:#f0d68a;--accent-blood:#5a1a1a;--accent-blood-bright:#8a2a2a;--text-primary:#e8e4dc;--text-dim:#9a9a94;--mana-dim:#2a2530;--mana-glow:#9a8aae;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px)}
   *{margin:0;padding:0;box-sizing:border-box}
+  /* Оптимизация: когда Mini App свёрнут/скрыт — гасим все decorative CSS-анимации, чтобы не грелся телефон в фоне */
+  body.app-bg *{animation-play-state:paused!important;transition:none!important}
+  /* Оптимизация: на слабых устройствах (мало ядер/памяти) отключаем тяжёлые decorative-анимации и шум */
+  body.low-power .premium-badge,body.low-power .preloader-title,body.low-power .menu-title,body.low-power #endTurnBtn,body.low-power .chaos-upg-btn,body.low-power .card.selected,body.low-power .chance-target,body.low-power .turn-indicator.enemy-turn,body.low-power .round-timer-text.danger{animation:none!important}
+  body.low-power::after{display:none}
+  body.low-power #particlesCanvas{display:none}
+  @media(prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
   body{background-color:var(--bg-deep);background-image:radial-gradient(ellipse at 50% 0%,#1a1010 0%,transparent 70%),radial-gradient(ellipse at 0% 100%,#0a0a12 0%,transparent 60%),radial-gradient(ellipse at 100% 100%,#0a0a12 0%,transparent 60%);min-height:100dvh;display:flex;flex-direction:column;font-family:'Inter',sans-serif;color:var(--text-primary);overflow:hidden;overscroll-behavior:none;user-select:none;position:relative}
   body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:radial-gradient(circle at center,transparent 40%,rgba(0,0,0,.8) 100%);pointer-events:none;z-index:999}
   body::after{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");pointer-events:none;z-index:998;opacity:.4}
@@ -143,6 +150,7 @@
   .shop-bg-video{position:fixed;top:0;left:0;width:100vw;height:100vh;object-fit:cover;opacity:.4;pointer-events:none;z-index:0;filter:blur(2px);transition:opacity .8s cubic-bezier(.4,0,.2,1)}
   .section-title{font-family:'Cinzel',serif;font-size:18px;color:var(--accent-gold-bright);letter-spacing:3px;text-transform:uppercase;transition:all .3s ease;flex:0 0 auto;text-align:center}
   .card-grid{display:grid;grid-template-columns:repeat(3,180px);grid-auto-rows:270px;gap:20px;justify-content:center;width:100%;contain:layout style}
+  .shop-card,.deck-card,.chaos-card{content-visibility:auto;contain-intrinsic-size:180px 270px}
   #shopGrid,#shopGridInv,#shopGridChaos{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;min-height:0;padding:12px 24px;scrollbar-width:thin;scrollbar-color:var(--border-glow) transparent}
   #shopGrid::-webkit-scrollbar,#shopGridInv::-webkit-scrollbar,#shopGridChaos::-webkit-scrollbar{width:4px}#shopGrid::-webkit-scrollbar-thumb,#shopGridInv::-webkit-scrollbar-thumb,#shopGridChaos::-webkit-scrollbar-thumb{background:var(--border-glow);border-radius:2px}
   .shop-footer{flex-shrink:0;width:100%;display:flex;justify-content:center;align-items:center;padding:12px 24px;padding-bottom:calc(12px + var(--safe-bottom, 0px));background:var(--bg-deep);border-top:1px solid var(--border-dim)}
@@ -164,12 +172,13 @@
   .deck-card-name{font-size:10px;text-align:center;padding:8px 4px;color:var(--text-primary);font-family:'Cinzel',serif;line-height:1.3}
   .deck-info-btn{position:absolute;top:6px;left:50%;transform:translateX(-50%);width:20px;height:20px;background:rgba(0,0,0,.6);border:1px solid var(--border-dim);color:var(--accent-gold-bright);font-size:10px;cursor:pointer;z-index:6;display:flex;align-items:center;justify-content:center;transition:all .3s;clip-path:polygon(50% 0%,100% 100%,0% 100%);padding-top:2px}.deck-info-btn:hover{border-color:var(--accent-gold);color:#f0d68a;box-shadow:0 0 12px rgba(138,115,85,.4)}
   .deck-select-count{text-align:center;font-size:13px;color:var(--accent-gold-bright);letter-spacing:2px;font-family:'Cinzel',serif;transition:opacity .4s ease}.deck-empty{color:var(--text-dim);font-size:13px;text-align:center;padding:40px;font-style:italic;border:1px dashed var(--border-dim);width:100%}
+  .deck-slots{display:flex;gap:10px;justify-content:center;padding:10px 0 6px}.deck-slot{display:flex;flex-direction:column;align-items:center;justify-content:center;width:90px;padding:8px 6px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);transition:background .2s,border-color .2s}.deck-slot.filled{border-color:var(--accent-gold-bright);background:rgba(200,180,120,.08)}.deck-slot .slot-icon{font-size:18px;margin-bottom:2px}.deck-slot .slot-name{font-size:10px;color:var(--text-dim);text-align:center;line-height:1.2}.deck-slot.filled .slot-name{color:var(--text-light)}.deck-slot .slot-stats{font-size:9px;color:var(--accent-gold-dim);margin-top:2px}.deck-slot .slot-hint{font-size:8px;color:var(--text-dim);opacity:.5}
   .chaos-card{width:180px;height:270px;background:transparent;transition:all .3s ease;position:relative;overflow:hidden}
   .chaos-card-frame{width:180px;position:relative;overflow:hidden;border-radius:4px;border:1px solid var(--border-dim);transition:all .3s ease}
   .chaos-card:hover .chaos-card-frame{border-color:var(--accent-gold);box-shadow:0 15px 35px rgba(0,0,0,.6),0 0 20px rgba(138,115,85,.12)}.chaos-card:hover{transform:translateY(-5px) scale(1.02)}
   .chaos-card-img{width:100%;height:270px;object-fit:cover;display:block;filter:brightness(.92);cursor:pointer;transition:filter .4s ease;image-rendering:auto}.chaos-card:hover .chaos-card-img{filter:brightness(1.08)}
   .chaos-card-name{position:absolute;bottom:48px;left:50%;transform:translateX(-50%);z-index:5;pointer-events:none;font-family:'Cinzel',serif;font-size:10px;font-weight:700;color:#e0d8c8;text-align:center;letter-spacing:.5px;text-transform:uppercase;text-shadow:0 1px 3px rgba(0,0,0,.95);background:rgba(0,0,0,.65);padding:3px 6px;border-radius:2px;white-space:nowrap}
-  @keyframes pulse-upgrade{0%,100%{box-shadow:0 2px 4px rgba(0,0,0,.3)}50%{box-shadow:0 2px 8px rgba(106,58,122,.15)}}
+  @keyframes pulse-upgrade{0%,100%{opacity:1}50%{opacity:.82}}
   .chaos-upgrades{position:absolute;bottom:0;left:0;right:0;display:flex;gap:2px;z-index:5;padding:4px 3px;background:rgba(10,8,16,.96);border-top:1px solid rgba(196,162,101,.15)}
   .chaos-upg-btn{flex:1;border:none;color:var(--text-primary);font-family:'Inter',sans-serif;font-size:10px;font-weight:600;cursor:pointer;border-radius:0;transition:all .2s ease;position:relative;overflow:visible;padding:0;min-height:50px;background:linear-gradient(180deg,rgba(55,45,60,.9) 0%,rgba(25,20,30,.95) 100%);box-shadow:0 2px 4px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.05)}
   .chaos-upg-btn:not(.locked){animation:pulse-upgrade 3s ease-in-out infinite}
@@ -572,6 +581,7 @@ if(window.Telegram?.WebApp?.initData) document.getElementById('authOverlay').cla
   <div id="shopGrid" class="card-grid"></div>
   <div id="shopGridInv" class="card-grid" style="display:none"></div>
   <div id="shopGridChaos" class="card-grid" style="display:none"></div>
+  <div id="deckSlots" class="deck-slots"></div>
   <div class="shop-action-bar">
     <div id="deckCount" class="deck-select-count">Выбрано: 0 / 3</div>
     <button id="toBattleBtn" class="btn gold-btn" onclick="startBattle()" disabled>В бой!</button>
@@ -1257,7 +1267,7 @@ function showShopTab(tab){
   el('tabShopBtn').classList.toggle('active',tab==='shop');el('tabInvBtn').classList.toggle('active',tab==='inv');el('tabChaosBtn').classList.toggle('active',tab==='chaos');
   el('shopTabTitle').textContent=tab==='shop'?'Склеп':tab==='inv'?'Варп':'Хаос';
   if(tab==='shop'||tab==='chaos'){setBattleButton(false,false);el('deckCount').style.display='none'}
-  else{setBattleButton(true,selectedDeck.length===3);el('deckCount').style.display='block';el('deckCount').textContent='Выбрано: '+selectedDeck.length+' / 3';}
+  else{setBattleButton(true,selectedDeck.length===3);el('deckCount').style.display='block';el('deckCount').textContent='Выбрано: '+selectedDeck.length+' / 3';renderDeckSlots();}
   setActiveBgVideo(tab);
   el('shopScreen').querySelector('.shop-header').style.background=tab==='chaos'?'rgba(0,0,0,0.5)':'';
   el('shopGrid').style.display=tab==='shop'?'':'none';
@@ -1316,7 +1326,7 @@ function renderColGrid(){const g=el('shopGridInv');g.innerHTML='';
       ${statsBlockHTML(c,up)}<div class="card-overlay"><div class="card-name">${c.name}</div></div>`;
     div.addEventListener('click',()=>toggleDeckCard(c.id));g.appendChild(div);
   });
-  el('deckCount').style.display='block';el('deckCount').textContent='Выбрано: '+selectedDeck.length+' / 3';setBattleButton(true,selectedDeck.length===3);
+  el('deckCount').style.display='block';el('deckCount').textContent='Выбрано: '+selectedDeck.length+' / 3';setBattleButton(true,selectedDeck.length===3);renderDeckSlots();
 }
 function renderChaosGrid(){const g=el('shopGridChaos');g.innerHTML='';const owned=playerCollection.map(id=>{const b=byId(id);return b?{...b}:null}).filter(Boolean);
   if(!owned.length){g.innerHTML='<div class="deck-empty">Нет карт для прокачки</div>';return}
@@ -1334,7 +1344,17 @@ function renderChaosGrid(){const g=el('shopGridChaos');g.innerHTML='';const owne
 }
 
 function buyCard(id){playSound('select');socket.emit('buyCard',id)}
-function toggleDeckCard(id){if(toggleDeckCard._lock)return;toggleDeckCard._lock=true;setTimeout(()=>toggleDeckCard._lock=false,300);playSound('select');socket.emit('updateDeck',{cardId:id})}
+function toggleDeckCard(id){if(toggleDeckCard._lock)return;toggleDeckCard._lock=true;setTimeout(()=>toggleDeckCard._lock=false,300);
+  if(selectedDeck.includes(id)){playSound('select');socket.emit('updateDeck',{cardId:id});return}
+  const card=ALL_CARDS.find(c=>c.id===id);if(!card)return;
+  const occupiedType=selectedDeck.find(did=>{const dc=ALL_CARDS.find(c=>c.id===did);return dc&&dc.type===card.type});
+  if(occupiedType){const tn={tank:'Танк',mage:'Маг',assa:'Ассасин'};showToast(`Слот «${tn[card.type]}» уже занят`);return}
+  playSound('select');socket.emit('updateDeck',{cardId:id})}
+function renderDeckSlots(){const g=el('deckSlots');if(!g)return;const tn={tank:{icon:'🛡️',name:'Танк'},mage:{icon:'🔮',name:'Маг'},assa:{icon:'⚔️',name:'Ассасин'}};
+  const occ={tank:null,mage:null,assa:null};selectedDeck.forEach(id=>{const c=ALL_CARDS.find(x=>x.id===id);if(c)occ[c.type]=c});
+  g.innerHTML=['tank','mage','assa'].map(t=>{const c=occ[t];
+    return c?`<div class="deck-slot filled"><div class="slot-icon">${tn[t].icon}</div><div class="slot-name">${c.name}</div><div class="slot-stats">⚔${c.atk} ❤${c.hp}</div></div>`
+      :`<div class="deck-slot"><div class="slot-icon">${tn[t].icon}</div><div class="slot-name">${tn[t].name}</div><div class="slot-hint">—</div></div>`}).join('')}
 async function doUpgrade(cardId,stat){if(doUpgrade._lock)return;doUpgrade._lock=true;setTimeout(()=>doUpgrade._lock=false,300);playSound('select');const up=getUp(cardId);const lvl=up[stat];const cost=upgradeCost(stat,lvl);
   if(playerGold<cost){showToast('Не хватает Remains',cost-playerGold);return}
   if(stat==='mana'&&lvl>=4){showToast('Мана на максимуме');return}
@@ -1921,6 +1941,16 @@ function resetAuthBtn(){
   btn.onclick=startBotAuth;
   el('authStatus').textContent='Без паролей — просто открой бота';
 }
+
+// ═══ ОПТИМИЗАЦИЯ: детект слабого устройства и пауза анимаций в фоне ═══
+(function perfGuard(){
+  const cores=navigator.hardwareConcurrency||4;
+  const mem=navigator.deviceMemory||4; // deviceMemory не в iOS Safari, но у большинства Android-телефонов есть
+  if(cores<=4||mem<=3){document.body.classList.add('low-power')}
+  document.addEventListener('visibilitychange',()=>{
+    document.body.classList.toggle('app-bg',document.visibilityState==='hidden');
+  });
+})();
 
 // ═══ INIT ═══
 initParticles();
