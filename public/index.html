@@ -598,7 +598,7 @@ if(window.Telegram?.WebApp?.initData) document.getElementById('authOverlay').cla
     </div>
   </div>
 </div>
-<div class="screen" id="battleScreen">
+<div class="screen" id="battleScreen" style="background:url('img/game/boy1.png') center/cover no-repeat rgba(3,3,4,1);background-blend-mode:overlay;">
   <div class="battle-header">
     <button class="btn small bh-surrender" onclick="surrenderBattle()">Сдаться</button>
     <span class="user-badge enemy-badge" id="enemyBadge" style="display:none">
@@ -1672,11 +1672,6 @@ function showMatchmakingOverlay(){
   mmTipIdx=Math.floor(Math.random()*classTips.length);
   const tipEl=document.getElementById('mmTip');
   if(tipEl) tipEl.textContent=classTips[mmTipIdx];
-  mmTipTimer=setInterval(()=>{
-    mmTipIdx=(mmTipIdx+1)%classTips.length;
-    const el=document.getElementById('mmTip');
-    if(el){el.style.opacity='0';setTimeout(()=>{el.textContent=classTips[mmTipIdx];el.style.opacity='1'},200)}
-  },4500);
 }
 function hideMatchmakingOverlay(){
   const ov=document.getElementById('mmOverlay');
