@@ -1077,7 +1077,7 @@ function applyBattleState(data){
   enemyName=b.enemyName||null;
   enemyAvatar=b.enemyAvatar||null;
   updateEnemyBadge();
-  activeIdx=b.activeIdx>=0?b.activeIdx:activeIdx;isPlayerTurn=b.isPlayerTurn;gameOver=b.gameOver;
+  activeIdx=b.activeIdx;isPlayerTurn=b.isPlayerTurn;gameOver=b.gameOver;
   turnLocked=b.turnLocked||false;critActivated=b.critActivated||false;fireballActive=b.fireballActive||false;
   waitingForCritTarget=b.waitingForCritTarget!==undefined?b.waitingForCritTarget:null;
   critActivated=waitingForCritTarget!==null;
@@ -1647,6 +1647,7 @@ function useFireball(){
 function endPlayerTurn(){
   if(gameOver||!isPlayerTurn||turnLocked)return;
   fireballActive=false;critActivated=false;waitingForCritTarget=null;clearTimeout(abilityTimeout);
+  activeIdx=-1;
   stopRoundTimer();turnLocked=true;updUI();
   setEndTurnBtnVisible(false);sendBattleAction({type:'endTurn'});
 }
