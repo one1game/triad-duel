@@ -3664,7 +3664,7 @@ SERVER.listen(PORT, "0.0.0.0", () => {
 	if (TELEGRAM_BOT_TOKEN) {
 		tgApiRequest("setWebhook", {
 			url: webhookUrl,
-			allowed_updates: ["message", "pre_checkout_query"],
+			allowed_updates: ["message", "pre_checkout_query", "inline_query", "callback_query"],
 			secret_token: WEBHOOK_SECRET,
 		}).then((r) => console.log("[webhook]", r.description || r.ok)).catch((e) => console.error("[webhook fail]", e.message));
 		// Set menu button — shows "Играть" directly in Telegram chat list
