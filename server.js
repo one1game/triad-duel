@@ -1586,16 +1586,14 @@ APP.post("/bot/webhook", express.json(), async (req, res) => {
 		}
 
 		// ═══ INLINE MODE: вызов на дуэль прямо из любого чата ═══
-		// @triad_duel_bot <query> → Telegram сам показывает карточку вызова
+		// @triad_duel_bot <query> → Telegram сам показывает карточку вызова.
+		// БЕЗ запросов в БД — имя берём из самого запроса, чтобы ответить быстрее 10 сек
 		const inlineQuery = req.body?.inline_query;
 		if (inlineQuery && inlineQuery.from?.id) {
+			const name = inlineQuery.from.first_name || inlineQuery.from.username || "Игрок";
 			const telegramId = inlineQuery.from.id.toString();
-			const { player } = await getOrCreatePlayer(telegramId, {
-				first_name: inlineQuery.from.first_name,
-				username: inlineQuery.from.username,
-			});
-			const name = player.username || player.first_name || "Игрок";
-			await tgApiRequest("answerInlineQuery", {
+			console.log(`[inline] query from tg${telegramId}: "${inlineQuery.query || ""}"`);
+			const apiRes = await tgApiRequest("answerInlineQuery", {
 				inline_query_id: inlineQuery.id,
 				cache_time: 0,
 				results: [{
@@ -1614,6 +1612,9 @@ APP.post("/bot/webhook", express.json(), async (req, res) => {
 					},
 				}],
 			});
+			if (apiRes && !apiRes.ok) {
+				console.error(`[inline] answerInlineQuery ERROR: ${JSON.stringify(apiRes).slice(0, 300)}`);
+			}
 			return res.sendStatus(200);
 		}
 
