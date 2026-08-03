@@ -139,7 +139,7 @@ function quickResolveDuel(challenger, opponent) {
 	const oScore = calcCombatPower(dbPlayerToCombatShape(opponent)) * (0.85 + Math.random() * 0.3);
 	const winner = cScore >= oScore ? challenger : opponent;
 	return {
-		winnerName: winner.username || "Игрок",
+		winnerName: winner.username || winner.first_name || "Игрок",
 		score: `${Math.round(Math.max(cScore, oScore))} : ${Math.round(Math.min(cScore, oScore))}`,
 	};
 }
@@ -1647,7 +1647,7 @@ APP.post("/bot/webhook", express.json(), async (req, res) => {
 				await tgApiRequest("editMessageText", {
 					inline_message_id: inlineMessageId,
 					parse_mode: "HTML",
-					text: `🏆 <b>${escapeHtml(result.winnerName)}</b> победил в дуэли ${result.score}!\n\n${escapeHtml(challenger.username || "Челленджер")} vs ${escapeHtml(opponent.username || "Игрок")}`,
+					text: `🏆 <b>${escapeHtml(result.winnerName)}</b> победил в дуэли ${result.score}!\n\n${escapeHtml(challenger.username || challenger.first_name || "Челленджер")} vs ${escapeHtml(opponent.username || opponent.first_name || "Игрок")}`,
 					reply_markup: {
 						inline_keyboard: [[
 							{ text: "🎮 Играть в Triad Duel", url: "https://t.me/triad_duel_bot/app" },
