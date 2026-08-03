@@ -193,8 +193,8 @@
   .chaos-upg-icon{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover}.chaos-upg-label{display:none}
   .chaos-card:nth-child(1){animation-delay:.02s}.chaos-card:nth-child(2){animation-delay:.05s}.chaos-card:nth-child(3){animation-delay:.08s}.chaos-card:nth-child(4){animation-delay:.11s}.chaos-card:nth-child(5){animation-delay:.14s}.chaos-card:nth-child(6){animation-delay:.17s}.chaos-card:nth-child(7){animation-delay:.2s}.chaos-card:nth-child(8){animation-delay:.23s}.chaos-card:nth-child(9){animation-delay:.26s}.chaos-card:nth-child(10){animation-delay:.29s}.chaos-card:nth-child(11){animation-delay:.32s}.chaos-card:nth-child(12){animation-delay:.35s}
   .shop-toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.9);color:var(--accent-gold-bright);font-family:'Cinzel',serif;font-size:14px;font-weight:600;padding:12px 24px;border-radius:4px;border:1px solid var(--accent-gold);pointer-events:none;opacity:0;transition:opacity .3s ease,transform .3s ease;z-index:100;display:flex;align-items:center;gap:8px;white-space:nowrap}.shop-toast.show{opacity:1;transform:translateX(-50%) translateY(-8px)}.shop-toast img{width:18px;height:18px}
-  #battleScreen.active{display:flex;flex-direction:column;align-self:stretch;margin:0 auto;width:100%;max-width:900px;height:var(--tg-viewport-stable-height,100dvh);min-height:100dvh;overflow:hidden;padding:0;padding-top:var(--safe-top);gap:0;position:relative;background:linear-gradient(180deg,rgba(6,6,9,.6) 0%,rgba(6,6,9,.15) 25%,rgba(6,6,9,.1) 60%,rgba(6,6,9,.55) 85%,rgba(4,4,6,.85) 100%),url('img/game/boy1.webp') 48% 58%/cover no-repeat;background-color:#08080a}
-  body.miniapp #battleScreen.active{height:var(--tg-viewport-stable-height,100%);justify-content:flex-start}
+  #battleScreen.active{display:flex;flex-direction:column;align-self:stretch;flex:1;min-height:0;margin:0 auto;width:100%;max-width:900px;overflow:hidden;padding:0;padding-top:var(--safe-top);gap:0;position:relative;background:linear-gradient(180deg,rgba(6,6,9,.6) 0%,rgba(6,6,9,.15) 25%,rgba(6,6,9,.1) 60%,rgba(6,6,9,.55) 85%,rgba(4,4,6,.85) 100%),url('img/game/boy1.webp') 48% 58%/cover no-repeat;background-color:#08080a}
+  body.miniapp #battleScreen.active{justify-content:flex-start}
   body.miniapp .shop-footer{padding-bottom:calc(12px + var(--safe-bottom, 0px))}
   .battle-header{width:100%;display:flex;align-items:center;justify-content:center;padding:10px 24px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;background:linear-gradient(180deg,rgba(15,15,20,.95),rgba(10,10,15,.98));position:relative;gap:14px}
   .battle-header::after{content:'';position:absolute;bottom:-1px;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,rgba(200,60,60,.15),rgba(200,180,120,.10),rgba(200,60,60,.15),transparent)}
@@ -267,7 +267,6 @@
   .btn::before{display:none}
   @keyframes premiumShimmer{0%,100%{box-shadow:none;border-color:rgba(220,40,40,.3)}50%{box-shadow:none;border-color:rgba(220,40,40,.5)}}
   #shopScreen.active{height:calc(100vh - 120px)!important;max-height:calc(100dvh - 120px)!important}
-  #battleScreen.active{height:calc(100vh - 60px)!important;max-height:calc(100dvh - 60px)!important}
   .shop-action-bar{padding-bottom:25px!important;margin-bottom:8px!important}
   #toBattleBtn{margin-bottom:8px!important}
   .shop-footer{padding-bottom:calc(12px + var(--safe-bottom, 0px))!important}
