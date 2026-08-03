@@ -574,8 +574,8 @@ if(window.Telegram?.WebApp?.initData) document.getElementById('authOverlay').cla
     </div>
   </div>
   <div class="shop-tabs">
-    <button class="shop-tab shop-tab-sklep active" id="tabShopBtn" onclick="showShopTab('shop')"><div class="shop-tab-bg"></div><div class="shop-tab-title">Склеп</div></button>
-    <button class="shop-tab shop-tab-warp" id="tabInvBtn" onclick="showShopTab('inv')"><div class="shop-tab-bg"></div><div class="shop-tab-title">Варп</div></button>
+    <button class="shop-tab shop-tab-sklep" id="tabShopBtn" onclick="showShopTab('shop')"><div class="shop-tab-bg"></div><div class="shop-tab-title">Склеп</div></button>
+    <button class="shop-tab shop-tab-warp active" id="tabInvBtn" onclick="showShopTab('inv')"><div class="shop-tab-bg"></div><div class="shop-tab-title">Варп</div></button>
     <button class="shop-tab shop-tab-chaos" id="tabChaosBtn" onclick="showShopTab('chaos')"><div class="shop-tab-bg"></div><div class="shop-tab-title">Хаос</div></button>
   </div>
   <div id="shopGrid" class="card-grid"></div>
@@ -818,9 +818,9 @@ socket.on('init',(state)=>{
       showScreen('menu');
     }
   }else if(saved&&saved.screen==='shop'){
-    showScreen('shop');currentTab='shop';
-    el('tabShopBtn').classList.add('active');el('tabInvBtn').classList.remove('active');el('tabChaosBtn').classList.remove('active');
-    el('shopTabTitle').textContent='Склеп';el('deckCount').style.display='none';setBattleButton(false,false);
+    showScreen('shop');currentTab='inv';
+    el('tabInvBtn').classList.add('active');el('tabShopBtn').classList.remove('active');el('tabChaosBtn').classList.remove('active');
+    el('shopTabTitle').textContent='Варп';el('deckCount').style.display='block';el('deckSlots').style.display='flex';el('deckCount').textContent='Выбрано: '+selectedDeck.length+' / 3';renderDeckSlots();setBattleButton(true,selectedDeck.length===3);
     renderShop();socket.emit('getShop');
     saveGameState(saved,'shop');
   }else{
@@ -848,9 +848,9 @@ socket.on('stateUpdate',(state)=>{
     }else{
       applyFullState(state);
       if(!document.getElementById('shopScreen').classList.contains('active')){
-        showScreen('shop');currentTab='shop';
-        el('tabShopBtn').classList.add('active');el('tabInvBtn').classList.remove('active');el('tabChaosBtn').classList.remove('active');
-        el('shopTabTitle').textContent='Склеп';el('deckCount').style.display='none';setBattleButton(false,false);
+        showScreen('shop');currentTab='inv';
+        el('tabInvBtn').classList.add('active');el('tabShopBtn').classList.remove('active');el('tabChaosBtn').classList.remove('active');
+        el('shopTabTitle').textContent='Варп';el('deckCount').style.display='block';el('deckSlots').style.display='flex';el('deckCount').textContent='Выбрано: '+selectedDeck.length+' / 3';renderDeckSlots();setBattleButton(true,selectedDeck.length===3);
         socket.emit('getShop');
       }
       renderShop();
@@ -1006,7 +1006,7 @@ let cardUpgrades={};
 let playerMMR=0;
 let premiumUntil=null;
 let shopCards=[];
-let currentTab='shop';
+let currentTab='inv';
 const gridRendered={shop:false,inv:false,chaos:false};
 let turnLocked=false,critActivated=false,fireballActive=false,firstTurn=true,waitingForCritTarget=null,abilityTimeout=null;
 let roundTimerInterval=null,roundSeconds=20,stuckWatchdog=null,battleGen=0,battleCardsReady=false,aiAnimating=false;
@@ -1845,9 +1845,9 @@ function showGameEnd(gameEnd){
 }
 
 // ═══ NAVIGATION ═══
-function backToShop(){stopRoundTimer();showScreen('shop');currentTab='shop';
-  el('tabShopBtn').classList.add('active');el('tabInvBtn').classList.remove('active');el('tabChaosBtn').classList.remove('active');
-  el('shopTabTitle').textContent='Склеп';el('deckCount').style.display='none';setBattleButton(false,false);
+function backToShop(){stopRoundTimer();showScreen('shop');currentTab='inv';
+  el('tabInvBtn').classList.add('active');el('tabShopBtn').classList.remove('active');el('tabChaosBtn').classList.remove('active');
+  el('shopTabTitle').textContent='Варп';el('deckCount').style.display='block';el('deckSlots').style.display='flex';el('deckCount').textContent='Выбрано: '+selectedDeck.length+' / 3';renderDeckSlots();setBattleButton(true,selectedDeck.length===3);
   socket.emit('getShop');}
 function backToShopFromResult(){el('resultOverlay').classList.remove('show');backToShop();resumeParticlesIfNeeded()}
 

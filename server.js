@@ -857,6 +857,9 @@ async function saveBattleResult(
 // ═══ BATTLE SESSIONS (in-memory) ═══
 const sessions = {};
 
+// Защита от двойного нажатия "Принять вызов" (race condition в инлайн-дуэлях)
+const duelLocks = new Set();
+
 function createBlankCard(cardId) {
 	const base = byId(cardId);
 	return {
@@ -1634,6 +1637,21 @@ APP.post("/bot/webhook", express.json(), async (req, res) => {
 				return res.sendStatus(200);
 			}
 
+			// Race condition: два человека жмут "Принять" почти одновременно —
+			// обрабатываем только первого, остальным отвечаем, что дуэль уже принята
+			if (inlineMessageId) {
+				if (duelLocks.has(inlineMessageId)) {
+					await tgApiRequest("answerCallbackQuery", {
+						callback_query_id: callbackQuery.id,
+						text: "Дуэль уже принята 😉",
+						show_alert: true,
+					});
+					return res.sendStatus(200);
+				}
+				duelLocks.add(inlineMessageId);
+				setTimeout(() => duelLocks.delete(inlineMessageId), 10 * 60 * 1000); // авто-очистка, иначе Set растёт
+			}
+
 			const { player: challenger } = await getOrCreatePlayer(challengerTgId, {});
 			const { player: opponent, isNew } = await getOrCreatePlayer(opponentTgId, {
 				first_name: callbackQuery.from.first_name,
@@ -1650,7 +1668,7 @@ APP.post("/bot/webhook", express.json(), async (req, res) => {
 					text: `🏆 <b>${escapeHtml(result.winnerName)}</b> победил в дуэли ${result.score}!\n\n${escapeHtml(challenger.username || challenger.first_name || "Челленджер")} vs ${escapeHtml(opponent.username || opponent.first_name || "Игрок")}`,
 					reply_markup: {
 						inline_keyboard: [[
-							{ text: "🎮 Играть в Triad Duel", url: "https://t.me/triad_duel_bot/app" },
+							{ text: "🎮 Играть в Triad Duel", url: `https://t.me/triad_duel_bot/app?startapp=ref${challengerTgId}` },
 						]],
 					},
 				});
@@ -1921,11 +1939,11 @@ IO.on("connection", (socket) => {
 			socket.emit("error", "Сессия не найдена. Перезайдите в игру.");
 			return;
 		}
-		s.selectedDeck = [];
+		s.selectedDeck = isValidDeck(s.selectedDeck) ? s.selectedDeck : [];
 		s.battle = null;
 		s.shopCards = eraDef();
 		socket.emit("stateUpdate", getSessionState(sessionId));
-		// БД не трогаем — selectedDeck очищается только в памяти
+		// БД не трогаем — валидная колода сохраняется, сбрасываем только невалидную (память)
 	});
 
 	// ═══ PREMIUM ═══
