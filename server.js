@@ -42,6 +42,17 @@ function isValidIdx(idx, array) {
 	return Number.isInteger(idx) && idx >= 0 && idx < array.length;
 }
 
+// Экранирует HTML-спецсимволы для Telegram parse_mode=HTML (защита от XSS через имена юзеров)
+function escapeHtml(str) {
+	return String(str ?? "").replace(/[&<>"']/g, (ch) => ({
+		"&": "&amp;",
+		"<": "&lt;",
+		">": "&gt;",
+		'"': "&quot;",
+		"'": "&#39;",
+	}[ch]));
+}
+
 // ═══ PREMIUM (Telegram Stars) ═══
 const PREMIUM_PRICE_STARS = 149; // цена в Telegram Stars (XTR)
 const PREMIUM_DURATION_DAYS = 7;
@@ -88,22 +99,49 @@ function isPremiumActive(s) {
 	);
 }
 
-// ═══ MMR (уровень игрока для матчмейкинга) ═══
-function calcMMR(s) {
+// ═══ БОЕВАЯ МОЩЬ (для матчмейкинга и инлайн-дуэлей) ═══
+function calcCombatPower(s) {
 	if (!s) return 0;
 	const upgradesTotal = Object.values(s.cardUpgrades || {}).reduce(
 		(sum, up) => sum + (up.hp || 0) + (up.atk || 0) + (up.mana || 0),
 		0,
 	);
 	const collectionCount = (s.playerCollection || []).length;
-	const combatPower =
-		(s.wins || 0) * 100 +
-		(s.losses || 0) * 20 +
-		Math.max(0, collectionCount - 3) * 25 +
-		upgradesTotal * 40;
-	const premiumMult = isPremiumActive(s) ? 1.5 : 1.0;
-	const score = combatPower * premiumMult;
-	return Math.floor(Math.sqrt(score / 100));
+	return (
+		((s.wins || 0) * 100 +
+			(s.losses || 0) * 20 +
+			Math.max(0, collectionCount - 3) * 25 +
+			upgradesTotal * 40) *
+		(isPremiumActive(s) ? 1.5 : 1.0)
+	);
+}
+
+// ═══ MMR (уровень игрока для матчмейкинга) ═══
+function calcMMR(s) {
+	if (!s) return 0;
+	return Math.floor(Math.sqrt(calcCombatPower(s) / 100));
+}
+
+// ═══ INLINE DUEL: мгновенный расчёт дуэли без полного боя ═══
+// Приводим поля из БД (snake_case) к формату, который ожидает calcCombatPower
+function dbPlayerToCombatShape(p) {
+	return {
+		wins: p.wins || 0,
+		losses: p.losses || 0,
+		playerCollection: p.collection || [],
+		cardUpgrades: p.card_upgrades || {},
+		premiumUntil: p.premium_until || null,
+	};
+}
+
+function quickResolveDuel(challenger, opponent) {
+	const cScore = calcCombatPower(dbPlayerToCombatShape(challenger)) * (0.85 + Math.random() * 0.3);
+	const oScore = calcCombatPower(dbPlayerToCombatShape(opponent)) * (0.85 + Math.random() * 0.3);
+	const winner = cScore >= oScore ? challenger : opponent;
+	return {
+		winnerName: winner.username || "Игрок",
+		score: `${Math.round(Math.max(cScore, oScore))} : ${Math.round(Math.min(cScore, oScore))}`,
+	};
 }
 
 function getMMRRange(mmr) {
@@ -1544,6 +1582,86 @@ APP.post("/bot/webhook", express.json(), async (req, res) => {
 				pre_checkout_query_id: preCheckout.id,
 				ok: true,
 			});
+			return res.sendStatus(200);
+		}
+
+		// ═══ INLINE MODE: вызов на дуэль прямо из любого чата ═══
+		// @triad_duel_bot <query> → Telegram сам показывает карточку вызова
+		const inlineQuery = req.body?.inline_query;
+		if (inlineQuery && inlineQuery.from?.id) {
+			const telegramId = inlineQuery.from.id.toString();
+			const { player } = await getOrCreatePlayer(telegramId, {
+				first_name: inlineQuery.from.first_name,
+				username: inlineQuery.from.username,
+			});
+			const name = player.username || player.first_name || "Игрок";
+			await tgApiRequest("answerInlineQuery", {
+				inline_query_id: inlineQuery.id,
+				cache_time: 0,
+				results: [{
+					type: "article",
+					id: "challenge_" + Date.now(),
+					title: "⚔️ Бросить вызов в Triad Duel",
+					description: `${name} вызывает на карточную дуэль`,
+					input_message_content: {
+						message_text: `🃏 <b>${escapeHtml(name)}</b> бросает вызов на дуэль!\n\nКто примет бой?`,
+						parse_mode: "HTML",
+					},
+					reply_markup: {
+						inline_keyboard: [[
+							{ text: "⚔️ Принять вызов", callback_data: `duel_accept:${telegramId}` },
+						]],
+					},
+				}],
+			});
+			return res.sendStatus(200);
+		}
+
+		// ═══ CALLBACK: принятие вызова, мгновенный расчёт дуэли ═══
+		const callbackQuery = req.body?.callback_query;
+		if (callbackQuery?.data?.startsWith("duel_accept:")) {
+			const challengerTgId = callbackQuery.data.split(":")[1];
+			const opponentTgId = callbackQuery.from.id.toString();
+			const inlineMessageId = callbackQuery.inline_message_id;
+
+			if (challengerTgId === opponentTgId) {
+				await tgApiRequest("answerCallbackQuery", {
+					callback_query_id: callbackQuery.id,
+					text: "Нельзя вызвать самого себя 😅",
+					show_alert: true,
+				});
+				return res.sendStatus(200);
+			}
+
+			const { player: challenger } = await getOrCreatePlayer(challengerTgId, {});
+			const { player: opponent, isNew } = await getOrCreatePlayer(opponentTgId, {
+				first_name: callbackQuery.from.first_name,
+				username: callbackQuery.from.username,
+			});
+
+			const result = quickResolveDuel(challenger, opponent);
+
+			// Редактируем исходную карточку вызова — результат видят все в чате
+			if (inlineMessageId) {
+				await tgApiRequest("editMessageText", {
+					inline_message_id: inlineMessageId,
+					parse_mode: "HTML",
+					text: `🏆 <b>${escapeHtml(result.winnerName)}</b> победил в дуэли ${result.score}!\n\n${escapeHtml(challenger.username || "Челленджер")} vs ${escapeHtml(opponent.username || "Игрок")}`,
+					reply_markup: {
+						inline_keyboard: [[
+							{ text: "🎮 Играть в Triad Duel", url: "https://t.me/triad_duel_bot/app" },
+						]],
+					},
+				});
+			}
+
+			await tgApiRequest("answerCallbackQuery", { callback_query_id: callbackQuery.id });
+
+			logEvent(opponentTgId, "inline_duel_accepted", {
+				challenger: challengerTgId,
+				is_new_user: isNew,
+			});
+			console.log(`[inline-duel] tg${opponentTgId} принял вызов tg${challengerTgId} (isNew=${isNew})`);
 			return res.sendStatus(200);
 		}
 
