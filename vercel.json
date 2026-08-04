@@ -1,9 +1,0 @@
-{
-	"functions": {
-		"api/auth.js": {
-			"memory": 256,
-			"maxDuration": 10
-		}
-	},
-	"rewrites": [{ "source": "/api/auth/:path*", "destination": "/api/auth" }]
-}
