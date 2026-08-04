@@ -2256,6 +2256,12 @@ IO.on("connection", (socket) => {
 
 		const { type, attackerIdx, defenderIdx } = action;
 
+		if (type === "endTurn") {
+			process.env.DEBUG && console.log("[action] endTurn → executePlayerEndTurn");
+			executePlayerEndTurn(s, socket, userId);
+			return;
+		}
+
 		if (!Number.isInteger(attackerIdx) || attackerIdx < 0 || attackerIdx >= battle.playerCards.length) return;
 
 		if (type === "endTurn") {
@@ -2549,7 +2555,7 @@ function getBattleState(b) {
 function executeAttack(battle, attIdx, defIdx, _isPlayer) {
 	const attacker = battle.playerCards[attIdx];
 	const defender = battle.enemyCards[defIdx];
-	if (!attacker || !defender || defender.hp <= 0) return null;
+	if (!attacker || attacker.hp <= 0 || !defender || defender.hp <= 0) return null;
 
 	const base = byId(attacker.baseId);
 	const isCrit = false;
@@ -2682,6 +2688,7 @@ function executeAttack(battle, attIdx, defIdx, _isPlayer) {
 
 function executeCrit(battle, attIdx, defIdx) {
 	const attacker = battle.playerCards[attIdx];
+	if (!attacker || attacker.hp <= 0) return null;
 	if (!defIdx && defIdx !== 0) {
 		// No target yet - activate crit mode
 		battle.critActivated = true;
@@ -2810,6 +2817,7 @@ function executeCrit(battle, attIdx, defIdx) {
 
 function executeFireball(battle, attIdx, defIdx, cardUpgrades) {
 	const attacker = battle.playerCards[attIdx];
+	if (!attacker || attacker.hp <= 0) return null;
 	if (!defIdx && defIdx !== 0) {
 		// No target yet - activate fireball mode
 		battle.fireballActive = true;
