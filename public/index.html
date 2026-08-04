@@ -131,9 +131,11 @@
   .menu-gmenu,.menu-inner{width:min(480px,92%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 16px}
   .menu-inner{background:url('img/game/gmenu.png') center/contain no-repeat}
   .menu-buttons .btn,.menu-buttons .btn:hover,.menu-buttons .btn:active{background:transparent;border:none;box-shadow:none;color:var(--accent-gold-bright);padding:10px 20px;text-shadow:0 2px 8px rgba(0,0,0,.9),0 0 20px rgba(0,0,0,.8);transform:none}
-  #settingsOverlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(3,3,4,.95) url('img/game/gmenu.png') center/cover no-repeat;backdrop-filter:blur(10px);z-index:1000;justify-content:center;align-items:center;flex-direction:column;gap:32px;padding-top:var(--safe-top)}#settingsOverlay.show{display:flex;animation:fadeIn .3s ease-out}
-  #premiumOverlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(3,3,4,.95) url('img/game/gmenu.png') center/cover no-repeat;backdrop-filter:blur(10px);z-index:1000;justify-content:center;align-items:center;flex-direction:column;gap:20px;padding:24px;padding-top:calc(24px + var(--safe-top))}#premiumOverlay.show{display:flex;animation:fadeIn .3s ease-out}
-  #inviteOverlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(3,3,4,.95) url('img/game/gmenu.png') center/cover no-repeat;backdrop-filter:blur(10px);z-index:1000;justify-content:center;align-items:center;flex-direction:column;gap:20px;padding:24px;padding-top:calc(24px + var(--safe-top))}#inviteOverlay.show{display:flex;animation:fadeIn .3s ease-out}
+  #settingsOverlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(3,3,4,.95);backdrop-filter:blur(10px);z-index:1000;justify-content:center;align-items:center;flex-direction:column;gap:32px;padding-top:var(--safe-top)}#settingsOverlay.show{display:flex;animation:fadeIn .3s ease-out}
+  #settingsOverlay::before,#premiumOverlay::before,#inviteOverlay::before{content:'';position:absolute;inset:0;margin:auto;width:min(480px,92%);height:min(480px,92%);background:url('img/game/gmenu.png') center/contain no-repeat;pointer-events:none;z-index:0}
+  #settingsOverlay>*,#premiumOverlay>*,#inviteOverlay>*{position:relative;z-index:1}
+  #premiumOverlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(3,3,4,.95);backdrop-filter:blur(10px);z-index:1000;justify-content:center;align-items:center;flex-direction:column;gap:20px;padding:24px;padding-top:calc(24px + var(--safe-top))}#premiumOverlay.show{display:flex;animation:fadeIn .3s ease-out}
+  #inviteOverlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(3,3,4,.95);backdrop-filter:blur(10px);z-index:1000;justify-content:center;align-items:center;flex-direction:column;gap:20px;padding:24px;padding-top:calc(24px + var(--safe-top))}#inviteOverlay.show{display:flex;animation:fadeIn .3s ease-out}
   .premium-card{max-width:380px;width:100%;background:rgba(20,16,10,.6);border:1px solid var(--accent-gold);border-radius:8px;padding:28px 24px;display:flex;flex-direction:column;align-items:center;gap:18px;box-shadow:0 0 40px rgba(196,162,101,.15)}
   .premium-crown{font-size:40px;filter:drop-shadow(0 0 12px rgba(240,214,138,.6))}
   .premium-title{font-family:'Cinzel',serif;font-size:22px;color:var(--accent-gold-bright);letter-spacing:3px;text-transform:uppercase;text-align:center}
@@ -171,7 +173,7 @@
   .shop-card{width:180px;height:270px;background:var(--bg-surface);border:1px solid var(--border-dim);transition:all .3s ease;position:relative;overflow:hidden;border-radius:4px}
   .shop-card:hover{border-color:var(--accent-gold);transform:translateY(-6px) scale(1.02);box-shadow:0 20px 40px rgba(0,0,0,.7),0 0 25px rgba(138,115,85,.15)}
   .shop-card-img{width:100%;height:100%;object-fit:cover;display:block;filter:brightness(1.06);transition:filter .4s ease,transform .5s ease;image-rendering:auto}.shop-card:hover .shop-card-img{filter:brightness(1.25);transform:scale(1.06)}
-  .shop-card-name{position:absolute;bottom:48px;left:50%;transform:translateX(-50%);z-index:5;pointer-events:none;font-family:'Sirona','Cinzel',serif;font-size:11px;font-weight:400;color:#e0d8c8;text-align:center;letter-spacing:.5px;text-transform:uppercase;text-shadow:0 1px 3px rgba(0,0,0,.95);background:rgba(0,0,0,.65);padding:4px 8px;border-radius:2px;border:1px solid rgba(255,255,255,.06);white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis}
+  .shop-card-name{position:absolute;bottom:18%;left:50%;transform:translateX(-50%);z-index:5;pointer-events:none;font-family:'Sirona','Cinzel',serif;font-size:11px;font-weight:400;color:#e0d8c8;text-align:center;letter-spacing:.5px;text-transform:uppercase;text-shadow:0 1px 3px rgba(0,0,0,.95);background:rgba(0,0,0,.65);padding:4px 8px;border-radius:2px;border:1px solid rgba(255,255,255,.06);white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis}
   .shop-card-price{position:absolute;bottom:12px;left:12px;font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:var(--accent-gold-bright);text-shadow:0 1px 6px rgba(0,0,0,.95);z-index:5;pointer-events:none}.shop-card-price img{width:16px;height:16px;vertical-align:middle;margin-right:3px}
   .shop-card-passive{position:absolute;bottom:34px;left:50%;transform:translateX(-50%);z-index:5;pointer-events:none;font-family:'Inter',sans-serif;font-size:7px;color:#9a8aae;text-align:center;text-shadow:0 1px 3px rgba(0,0,0,.95);white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis}
   .shop-card-buy{position:absolute;bottom:10px;right:10px;font-size:11px;padding:5px 14px;z-index:5;background:rgba(0,0,0,.75);border:1px solid var(--accent-gold);color:var(--accent-gold-bright);cursor:pointer;font-family:'Cinzel',serif;font-weight:600;transition:all .25s ease;border-radius:2px}
@@ -242,9 +244,9 @@
   .card-image{width:100%;height:100%;object-fit:cover;image-rendering:auto;filter:brightness(1.08)}
   .card-overlay{position:absolute;bottom:0;left:0;right:0;height:50%;background:linear-gradient(to top,rgba(3,3,4,.95) 0%,rgba(3,3,4,.7) 50%,transparent 100%);padding:40px 12px 12px;pointer-events:none;display:flex;flex-direction:column;justify-content:flex-end}
   .card-name{font-family:'Sirona','Cinzel',serif;font-size:11px;font-weight:400;color:#e0d8c8;text-align:center;margin-bottom:2px;letter-spacing:.5px;text-transform:uppercase;text-shadow:0 1px 3px rgba(0,0,0,.95);line-height:1.2;background:rgba(0,0,0,.65);padding:4px 6px;border-radius:2px;border:1px solid rgba(255,255,255,.06);display:inline-block;max-width:100%}
-  .card-role{position:absolute;bottom:8px;right:10px;font-family:'Inter',sans-serif;font-size:7px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;pointer-events:none;z-index:5;background:rgba(0,0,0,.7);padding:2px 6px;border-radius:2px;border:1px solid rgba(255,255,255,.08)}
-  .shop-card .card-role,.deck-card .card-role{bottom:28px}
-  .deck-card .card-overlay{padding-bottom:30px;background:none;height:auto}.deck-card .card-name{position:absolute;bottom:48px;left:50%;transform:translateX(-50%);width:auto;white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis;z-index:5;pointer-events:none}
+  .card-role{position:absolute;bottom:8%;left:50%;transform:translateX(-50%);right:auto;font-family:'Inter',sans-serif;font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;pointer-events:none;z-index:5;background:rgba(0,0,0,.7);padding:2px 8px;border-radius:2px;border:1px solid rgba(255,255,255,.08);white-space:nowrap}
+  .shop-card .card-role,.deck-card .card-role,.chaos-card .card-role{bottom:26%}
+  .deck-card .card-overlay{padding-bottom:30px;background:none;height:auto}.deck-card .card-name{position:absolute;bottom:18%;left:50%;transform:translateX(-50%);width:auto;white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis;z-index:5;pointer-events:none}
   .hp-bar-wrap{position:absolute;top:0;left:0;right:0;height:3px;background:rgba(0,0,0,.8);z-index:5}.hp-bar{height:100%;background:#3a5a3a;transition:width .5s cubic-bezier(.4,0,.2,1),background .3s;box-shadow:0 0 8px currentColor}.hp-bar.warning{background:#7a6a2a}.hp-bar.danger{background:#8a2a2a;box-shadow:0 0 10px rgba(138,42,42,.8)}
   .hp-text{position:absolute;top:8px;right:8px;font-family:'Cinzel',serif;font-size:11px;font-weight:700;color:rgba(255,255,255,.9);text-shadow:0 0 6px rgba(0,0,0,.9),0 0 2px black;pointer-events:none;z-index:5;background:rgba(0,0,0,.6);padding:2px 6px;border-radius:2px;border:1px solid rgba(255,255,255,.1)}
   .atk-badge{position:absolute;top:8px;left:8px;font-family:'Cinzel',serif;font-size:14px;font-weight:900;color:#d47050;text-shadow:0 0 6px rgba(0,0,0,.9);pointer-events:none;z-index:5;background:rgba(0,0,0,.7);padding:3px 8px;border-radius:2px;border:1px solid rgba(180,80,50,.4);line-height:1}
@@ -329,13 +331,13 @@
     .shop-card,.deck-card,.chaos-card{width:96px;height:144px}
     .shop-card-img,.deck-card-img,.chaos-card-img{width:96px;height:144px}
     .chaos-card,.chaos-card-frame{width:96px;height:144px}
-    .shop-card-name{font-size:7px;bottom:26px;padding:2px 4px;max-width:80px}.deck-card .card-name{bottom:26px;font-size:7px;padding:2px 4px;max-width:80px}
+    .shop-card-name{font-size:7px;padding:2px 4px;max-width:80px}.deck-card .card-name{bottom:18%;font-size:7px;padding:2px 4px;max-width:80px}
     .shop-card-price{font-size:8px;bottom:4px;left:5px}.shop-card-price img{width:12px;height:12px}
     .shop-card-passive{font-size:5px;bottom:19px;max-width:80px}
     .shop-card-buy{font-size:7px;padding:2px 5px;bottom:3px;right:3px}
     .deck-card-name{font-size:7px;padding:3px}
     .deck-info-btn{width:14px;height:14px;font-size:8px;top:3px}
-    .chaos-card-name{font-size:7px;bottom:34px}
+    .chaos-card-name{font-size:7px;bottom:38px;max-width:92px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:2px 4px}
     .chaos-upgrades{padding:4px 0 0;gap:1px}
     .chaos-upg-btn{font-size:7px;min-height:34px}
     .chaos-upg-btn::after{font-size:8px}
@@ -361,7 +363,7 @@
     .battlefield{gap:20px;/*padding:8px 0*/}
     .atk-badge{font-size:9px;padding:2px 4px;top:4px;left:4px}
     .hp-text{font-size:7px;padding:1px 3px;top:4px;right:4px}
-    .card-role{font-size:5px;bottom:4px;right:4px}
+    .card-role{font-size:6px}
     /* ═══ AUTH ═══ */
     .auth-form{padding:24px 16px;max-width:100%;gap:12px}
     .auth-title{font-size:28px;letter-spacing:3px}
@@ -449,7 +451,7 @@
     .battlefield{gap:14px;/*padding:4px 0*/}
     .atk-badge{font-size:7px;padding:1px 3px;top:3px;left:3px}
     .hp-text{font-size:6px;padding:1px 2px;top:3px;right:3px}
-    .card-role{font-size:5px;bottom:3px;right:3px;padding:1px 3px}
+    .card-role{font-size:5px;padding:1px 4px}
     .mana-orb{width:4px;height:4px}.mana-orbs{bottom:3px;left:3px;gap:1px}
     .action-hint{font-size:8px}
     .round-timer-text{font-size:14px}
